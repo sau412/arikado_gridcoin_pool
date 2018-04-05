@@ -4,7 +4,7 @@ Simple gridcoin pool
 # Requirements
 1) PHP 5
 2) Apache web server
-3) At least 2000 gridcoins
+3) At least 2000 gridcoins (more GRC means faster stakes)
 4) Gridcoin Research client
 5) crypt_prog from BOINC for signing urls
 
