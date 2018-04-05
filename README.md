@@ -10,7 +10,7 @@ Simple gridcoin pool
 
 # Installation
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
-2) Run setup via setup.php
+2) Run setup via setup.php (not ready yet)
 3) Set cron 1h to update_projects_data.php
 
 # Mining guide
