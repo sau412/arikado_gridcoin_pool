@@ -20,5 +20,11 @@ Simple gridcoin pool
 4) After 1 day check that your host appears in BOINC hosts
 5) Wait for pool stake, then do billing and receive rewards
 
+# User and project control (for admins)
+1) Banned users are not receive rewards
+2) Greylisted projects are not receive rewards too
+
 # Billing
-Billing works in manual mode. Check boincmgr_payouts for manual rewards
+Billing works in manual mode. Check table boincmgr_payouts for manual rewards
+a) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
+b) Other billings: when pools wallet stakes, write previous stake date, current stake date and rewards, click "send rewards"
