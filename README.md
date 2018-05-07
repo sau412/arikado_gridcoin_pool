@@ -10,10 +10,12 @@ Simple gridcoin pool
 
 # Manual installation
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
-2) Create DB and user for pool, register at every whitelisted BOINC project
-3) Change settings in your settings.php
-4) Set cron 1h to update_projects_data.php
-5) Regiter new user via web, then change his status to "admin" in boincmgs_users
+2) Create DB and user for pool
+3) Run manual.sql in pool's DB
+4) Register at every whitelisted BOINC project with one login and password
+5) Change settings in your settings.php
+6) Set cron 1h to update_projects_data.php
+7) Regiter new user via web, then change his status to "admin" in boincmgs_users
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
