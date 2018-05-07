@@ -1,6 +1,9 @@
 <?php
 // Get hosts data from BOINC project
 
+// Disable run from web
+if(!isset($argc)) die();
+
 require_once("settings.php");
 require_once("db.php");
 require_once("billing.php");
