@@ -35,5 +35,5 @@ Simple gridcoin pool
 
 # Billing
 Billing works in manual mode. Check table boincmgr_payouts for manual rewards
-a) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
-b) Other billings: when pools wallet stakes, write previous stake date, current stake date and rewards, click "send rewards"
+1) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
+2) Other billings: when pools wallet stakes, write previous stake date, current stake date and rewards, click "send rewards"
