@@ -2,11 +2,11 @@
 Simple gridcoin pool
 
 # Requirements
-1) PHP 5
+1) PHP 5/PHP 7
 2) Apache web server
-3) At least 2000 gridcoins (more GRC means faster stakes)
+3) At least 2000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
-5) crypt_prog from BOINC for signing urls
+5) Optionally crypt_prog from BOINC for signing urls
 
 # Installation
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
@@ -21,4 +21,4 @@ Simple gridcoin pool
 5) Wait for pool stake, then do billing and receive rewards
 
 # Billing
-Billing works in manual mode. Not implemented yet.
+Billing works in manual mode. Check boincmgr_payouts for manual rewards
