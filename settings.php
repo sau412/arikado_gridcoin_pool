@@ -1,26 +1,38 @@
 <?php
+// Settings file
+
+// DB variables
 $db_host="localhost";
 $db_login="login";
 $db_password="password";
 $db_base="database";
 
+// Pool variables
 $pool_name="pool name";
 $pool_message="Welcome to $pool_name pool";
 $pool_min_password_length=8;
 
+// BOINC variables
 $boinc_account="your boinc account here";
 // Password hash is
 // echo -n '<password><login>' | md5sum
 $boinc_passwd_hash="your password hash here";
 
-$message_logout_success="Logout successfull";
-$message_login_error="Incorrect login/password";
+// Salt for token
+$token_salt="your_salt";
 
-$message_register_fail="Register fail";
-$message_register_success="Registration complete. Enter your login and password to login";
+// Language file
+require_once("language.php");
 
-$message_guide="Guide: 1) Register, 2) Use this pool as account manager, 3) Set your GRC address, 4) Wait for rewards";
-$message_pool_info="Pool $pool_name working!";
-$message_about="About info";
-
+// Public signing key for URLs
+$signing_key="1024
+e509d39ea20f7e16de049929fee95de785f6656baa318ba4504b8ded011296f9
+08168b995d29e5398afbfb446ecc55ea8e7ad25d0b9dd29680023a96f28d3b49
+615f86c92acaadfa91079991c95bdb17cff02d83feb71175b748a2dd32c16277
+f2996330badc2aac8475e3a99e1a106f0538afc6162f770c22b32618078e1c21
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000010001
+.";
 ?>
