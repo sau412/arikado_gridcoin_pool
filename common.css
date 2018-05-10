@@ -1,10 +1,39 @@
 table {
-	border: 1px solid gray;
-	border-collapse: collapse;
+        border: 1px solid gray;
+        border-collapse: collapse;
 }
 
 table tr, table td, table th {
-	border: 1px solid gray;
-	padding: 0.5px 1em;
+        border: 1px solid gray;
+        padding: 0.5px 1em;
 }
 
+.selectable_block {
+        display: none;
+}
+
+/* Thanks for https://www.w3schools.com/html/tryit.asp?filename=tryhtml_lists_menu
+*/
+ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #DDD;
+}
+
+li {
+    float: left;
+}
+
+li a {
+    display: block;
+    color: black;
+    text-align: center;
+    padding: 16px;
+    text-decoration: none;
+}
+
+li a:hover {
+    background-color: #AAF;
+}
