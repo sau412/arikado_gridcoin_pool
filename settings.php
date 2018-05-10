@@ -16,7 +16,15 @@ $pool_min_password_length=8;
 $boinc_account="your boinc account here";
 // Password hash is
 // echo -n '<password><login>' | md5sum
+// Login should be lowercase
 $boinc_passwd_hash="your password hash here";
+
+// Gridcoin RPC variables
+$grc_rpc_host="localhost";
+$grc_rpc_port="port";
+$grc_rpc_login="login";
+$grc_rpc_password="password";
+$grc_rpc_wallet_passphrase="wallet passphrase";
 
 // Salt for token
 $token_salt="your_salt";
