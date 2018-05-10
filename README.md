@@ -1,18 +1,24 @@
 # General
 Simple gridcoin pool
 
+# Warnings
+1) Send rewards automatically not implemended yet (testing now)
+
 # Requirements
 1) PHP 5/PHP 7
-2) Apache web server
+2) Apache web server, mysql, tested in ubuntu
 3) At least 2000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
 5) Optionally crypt_prog from BOINC for signing urls
+6) If you want more security: second computer for storing staking wallet outside of web server
 
 # Manual installation
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
 2) Create DB and user for pool
 3) Run manual.sql in pool's DB
 4) Register at every whitelisted BOINC project with one login and password
+4.1) You name in World Community Grid should be same as your email
+4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
 5) Change settings in your settings.php
 6) Set cron 1h to update_projects_data.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
