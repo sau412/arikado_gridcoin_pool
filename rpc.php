@@ -8,20 +8,28 @@ require_once("auth.php");
 db_connect();
 
 $data=file_get_contents("php://input");
-$data_escaped=db_escape($data);
-
-db_query("INSERT INTO boincmgr_log (message) VALUES ('$data_escaped')");
-
+$data=iconv('WINDOWS-1250','UTF-8',$data);
 libxml_use_internal_errors(TRUE);
 libxml_disable_entity_loader(TRUE);
+
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (message) VALUES ('$data_escaped')");
 
 $xml_data = simplexml_load_string($data);
 
 if($xml_data === FALSE) {
-    echo "Error parsing XML";
-    db_query("INSERT INTO boincmgr_log (message) VALUES ('Error parsing XML')");
-//    echo "Also, current key is\n$signing_key";
-    die();
+        echo <<<_END
+<?xml version="1.0" encoding="UTF-8" ?>
+<acct_mgr_reply>
+    <error_num>-101</error_num>
+    <error_msg>$message_xml_error</error_msg>
+    <error>$message_xml_error</error>
+    <name>$pool_name</name>
+</acct_mgr_reply>
+
+_END;
+        auth_log("Sync error parsing XML");
+        die();
 }
 
 $name=(string)$xml_data->name;
@@ -41,26 +49,20 @@ $p_model_escaped=db_escape($p_model);
 $p_ncpus_escaped=db_escape($p_ncpus);
 $n_usable_coprocs_escaped=db_escape($n_usable_coprocs);
 
-/*$query="INSERT INTO `boincmgr_hosts` (`username`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
-VALUES ('$name_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
-ON DUPLICATE KEY UPDATE `username`=VALUES(`username`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`)";
-
-db_query("INSERT INTO boincmgr_log (message) VALUES ('".db_escape($query)."')");;
-*/
 db_query("INSERT INTO `boincmgr_hosts` (`username`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
 VALUES ('$name_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
 ON DUPLICATE KEY UPDATE `username`=VALUES(`username`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`)");
 
 foreach($xml_data->project as $project_data) {
-    $project_url=(string)$project_data->url;
-    $project_name=(string)$project_data->project_name;
-    $project_host_id=(string)$project_data->hostid;
+        $project_url=(string)$project_data->url;
+        $project_name=(string)$project_data->project_name;
+        $project_host_id=(string)$project_data->hostid;
 
-    $project_url_escaped=db_escape($project_url);
-    $project_name_escaped=db_escape($project_name);
-    $project_host_id_escaped=db_escape($project_host_id);
+        $project_url_escaped=db_escape($project_url);
+        $project_name_escaped=db_escape($project_name);
+        $project_host_id_escaped=db_escape($project_host_id);
 
-    db_query("INSERT INTO `boincmgr_host_projects` (`url`,`project_name`,`host_id`,`host_cpid`)
+        db_query("INSERT INTO `boincmgr_host_projects` (`url`,`project_name`,`host_id`,`host_cpid`)
 VALUES ('$project_url_escaped','$project_name_escaped','$project_host_id_escaped','$host_cpid_escaped')
 ON DUPLICATE KEY UPDATE `url`=VALUES(`url`),`project_name`=VALUES(`project_name`),`host_id`=VALUES(`host_id`)");
 }
@@ -120,7 +122,9 @@ _END;
 
 $reply_xml_escaped=db_escape($reply_xml);
 
-db_query("INSERT INTO boincmgr_log (message) VALUES ('$reply_xml_escaped')");
+auth_log("Sync username '$name' host '$domain_name' p_model '$p_model' cpid '$external_host_cpid'");
+
+db_query("INSERT INTO boincmgr_xml (message) VALUES ('$reply_xml_escaped')");
 
 echo $reply_xml;
 ?>
