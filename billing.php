@@ -1,37 +1,43 @@
 <?php
 
 // Calculate rewards for hosts and add to db
-function bill_close_period($start_date,$stop_date,$total_reward) {
-    $start_date_escaped=db_escape($start_date);
-    $stop_date_escaped=db_escape($stop_date);
-    $total_reward_escaped=db_escape($total_reward);
+function bill_close_period($start_date,$stop_date,$total_reward,$check_rewards) {
+        $start_date_escaped=db_escape($start_date);
+        $stop_date_escaped=db_escape($stop_date);
+        $total_reward_escaped=db_escape($total_reward);
 
-    db_query("INSERT INTO `boincmgr_billing_periods` (`start_date`,`stop_date`,`reward`) VALUES ('$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
+        if(!$check_rewards) db_query("INSERT INTO `boincmgr_billing_periods` (`start_date`,`stop_date`,`reward`) VALUES ('$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
 
-    $reward_array=array();
-    $whitelisted_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='whitelisted'");
+        $reward_array=array();
+        $whitelisted_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='whitelisted' ORDER BY `name` ASC");
 
-    $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
+        $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
 
-    // Calculate rewards for each project
-    foreach($whitelisted_projects_array as $project) {
-        $project_uid=$project['uid'];
-        $project_name=$project['name'];
-        $project_uid_escaped=db_escape($project_uid);
+        // Calculate rewards for each project
+        foreach($whitelisted_projects_array as $project) {
+                $project_uid=$project['uid'];
+                $project_name=$project['name'];
+                $project_uid_escaped=db_escape($project_uid);
 
-        $project_reward=$proportions_array[$project_uid]*$total_reward;
+                $project_reward=$proportions_array[$project_uid]*$total_reward;
 
-        $current_reward=bill_single_project($project_uid,$start_date,$stop_date,$project_reward);
+                $current_reward=bill_single_project($project_uid,$start_date,$stop_date,$project_reward,$check_rewards);
 
-        $reward_array=reward_array_combine($reward_array,$current_reward);
-    }
+                $reward_array=reward_array_combine($reward_array,$current_reward);
+        }
 
-    // Write rewards to db
-    foreach($reward_array as $grc_address => $reward) {
-        $grc_address_escaped=db_escape($grc_address);
-        $reward_escaped=db_escape($reward);
-        db_query("INSERT INTO `boincmgr_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$reward_escaped')");
-    }
+        if($check_rewards) echo "Total results:<br>\n";
+        // Write rewards to db
+        foreach($reward_array as $grc_address => $reward) {
+                $grc_address_escaped=db_escape($grc_address);
+                $reward_escaped=db_escape($reward);
+                if($check_rewards) echo "$grc_address $reward<br>\n";
+                else db_query("INSERT INTO `boincmgr_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$reward_escaped')");
+        }
+        if($check_rewards) {
+                flush();
+                die();
+        }
 }
 
 // Calculate projects proportions
@@ -46,8 +52,8 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
                 $project_uid=$project['uid'];
                 $project_name=$project['name'];
                 $project_uid_escaped=db_escape($project_uid);
-                $pool_expavg_sum=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
-                $team_expavg_sum=db_query_to_variable("SELECT SUM(`team_expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+                $pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+                $team_expavg_sum=db_query_to_variable("SELECT AVG(`team_expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
                 if($team_expavg_sum==0 || $pool_expavg_sum==0) continue;
                 $contrib_pool_to_team=$pool_expavg_sum/$team_expavg_sum;
                 $contrib_sum+=$contrib_pool_to_team;
@@ -68,7 +74,11 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
 }
 
 // Calculate rewards for single project
-function bill_single_project($project_uid,$start_date,$stop_date,$project_reward) {
+function bill_single_project($project_uid,$start_date,$stop_date,$project_reward,$check_rewards) {
+        if($check_rewards) {
+                $project_name=boincmgr_get_project_name($project_uid);
+                echo "Calculating project $project_name, reward for this project: $project_reward<br>\n";
+        }
         $reward_array=array();
         $start_date_escaped=db_escape($start_date);
         $stop_date_escaped=db_escape($stop_date);
@@ -77,6 +87,7 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         if($project_total_rac==0) return array();
         $projects_hosts_array=db_query_to_array("SELECT DISTINCT `host_cpid`,`username` FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped' AND `username`<>''");
 
+        if($check_rewards) echo "Project RAC $project_total_rac<br>\n";
         foreach($projects_hosts_array as $host_data) {
                 $host_cpid=$host_data['host_cpid'];
                 $username=$host_data['username'];
@@ -87,8 +98,15 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
                 if($host_rac==0) continue;
                 $user_reward=($project_reward/$project_total_rac)*$host_rac;
                 if($user_reward==0) continue;
+
+                if($check_rewards) echo "Host $host_cpid RAC $host_rac reward $user_reward<br>\n";
+
                 $grc_address=db_query_to_variable("SELECT `grc_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
                 if($grc_address!='') $reward_array[$grc_address]=$user_reward;
+        }
+        if($check_rewards) {
+                echo "<br>\n";
+                flush();
         }
         return $reward_array;
 }
