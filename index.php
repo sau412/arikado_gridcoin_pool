@@ -4,6 +4,7 @@ require_once("db.php");
 require_once("auth.php");
 require_once("html.php");
 require_once("billing.php");
+require_once("boincmgr.php");
 
 db_connect();
 
@@ -62,6 +63,10 @@ if(auth_check($username,$passwd_hash)) {
 
             $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username`='$username_escaped'");
             if($host_uid) {
+                $project_name=boincmgr_get_project_name($project_uid);
+                $host_name=boincmgr_get_host_name($host_uid);
+
+                auth_log("Attach username '$username' project '$project_name' to host '$host_name'");
                 $host_uid_escaped=db_escape($host_uid);
                 db_query("INSERT INTO `boincmgr_attach_projects` (`project_uid`,`host_uid`) VALUES ('$project_uid_escaped','$host_uid_escaped')
 ON DUPLICATE KEY UPDATE `detach`=0");
@@ -81,6 +86,8 @@ ON DUPLICATE KEY UPDATE `detach`=0");
             $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username`='$username_escaped'");
 
             if($host_uid) {
+                $host_name=boincmgr_get_host_name($host_uid);
+                auth_log("Detach username '$username' attach_uid '$attached_uid' from host '$host_name'");
                 $host_uid_escaped=db_escape($host_uid);
                 db_query("UPDATE `boincmgr_attach_projects` SET detach=1 WHERE `uid`='$attached_uid_escaped' AND `host_uid`='$host_uid_escaped'");
             }
@@ -91,6 +98,10 @@ ON DUPLICATE KEY UPDATE `detach`=0");
         } else if($_POST['action']=='change_user_status') {
             $user_uid=html_strip($_POST['user_uid']);
             $status=html_strip($_POST['status']);
+
+            $username=boincmgr_get_user_name($user_uid);
+            auth_log("Admin change user status user '$username' status '$status'");
+
             $user_uid_escaped=db_escape($user_uid);
             $status_escaped=db_escape($status);
             db_query("UPDATE `boincmgr_users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
@@ -101,6 +112,10 @@ ON DUPLICATE KEY UPDATE `detach`=0");
         } else if($_POST['action']=='change_project_status') {
             $project_uid=html_strip($_POST['project_uid']);
             $status=html_strip($_POST['status']);
+
+            $project_name=boincmgr_get_project_name($project_uid);
+            auth_log("Admin change project status project '$project_name' status '$status'");
+
             $project_uid_escaped=db_escape($project_uid);
             $status_escaped=db_escape($status);
             db_query("UPDATE `boincmgr_projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
@@ -112,8 +127,12 @@ ON DUPLICATE KEY UPDATE `detach`=0");
             $start_date=html_strip($_POST['start_date']);
             $stop_date=html_strip($_POST['stop_date']);
             $reward=html_strip($_POST['reward']);
+            $check_rewards=html_strip($_POST['check_rewards']);
 
-            bill_close_period($start_date,$stop_date,$reward);
+            if(!$check_rewards) auth_log("Admin billing from '$start_date' to '$stop_date' reward '$reward'");
+            else auth_log("Admin check rewards from '$start_date' to '$stop_date' reward '$reward'");
+
+            bill_close_period($start_date,$stop_date,$reward,$check_rewards);
             setcookie("action_message",$message_billing_ok);
             header("Location: ./");
             die();
@@ -135,7 +154,11 @@ ON DUPLICATE KEY UPDATE `detach`=0");
     echo html_page_begin();
 
     // Menu for registered user
-    echo html_page_header(array("logout"));
+    if(auth_is_admin($username)) {
+        echo html_page_header("admin");
+    } else {
+        echo html_page_header("user");
+    }
 
     // Pool info
     echo html_pool_info();
@@ -149,19 +172,28 @@ ON DUPLICATE KEY UPDATE `detach`=0");
     // Current user BOINC results (for his hosts)
     echo html_boinc_results();
 
+    // Payouts
+    echo html_payouts();
+
+    // Pool stats
+    echo html_pool_stats();
+
+    // Your stats
+//    echo html_user_stats();
+
     // Admin menu
     if(auth_is_admin($username)) {
         // Grant user privelegies
-        echo "<h2>User control</h2>\n";
         echo html_user_control_form();
 
         // Control projects
-        echo "<h2>Projects control</h2>\n";
         echo html_project_control_form();
 
         // Calculate rewards
-        echo "<h2>Billing</h2>\n";
         echo html_billing_form();
+
+        // View log
+        echo html_view_log();
     }
 
     // Standard page end
@@ -201,17 +233,22 @@ ON DUPLICATE KEY UPDATE `detach`=0");
     echo html_page_begin();
 
     // For register form we have link to login, then register form
-    if(isset($_GET['action']) && $_GET['action']=='register') {
-        echo html_page_header(array("login"));
-        echo html_register_form();
-    // For login form we have link to register, then login form
-    } else {
-        echo html_page_header(array("register"));
-        echo html_login_form();
-    }
+    echo html_page_header("unknown");
 
     // Pool info
     echo html_pool_info();
+
+    // Login form
+    echo html_login_form();
+
+    // Register form
+    echo html_register_form();
+
+    // Payouts
+    echo html_payouts();
+
+    // Pool stats
+    echo html_pool_stats();
 
     // End page
     echo html_page_end();
