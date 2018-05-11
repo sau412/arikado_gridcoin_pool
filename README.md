@@ -19,9 +19,11 @@ Simple gridcoin pool
 4) Register at every whitelisted BOINC project with one login and password
 4.1) You name in World Community Grid should be same as your email
 4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
+4.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
 5) Change settings in your settings.php
 6) Set cron 1h to update_projects_data.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
+8) Setup gridcoinresearch wallets, send beacon, wait for rewards
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
