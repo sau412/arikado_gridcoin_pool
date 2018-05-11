@@ -1,9 +1,10 @@
 <?php
-// PRC for BOINC client
+// RPC for BOINC client
 
 require_once("settings.php");
 require_once("db.php");
 require_once("auth.php");
+require_once("boincmgr.php");
 
 db_connect();
 
@@ -32,7 +33,7 @@ _END;
         die();
 }
 
-$name=(string)$xml_data->name;
+$username=(string)$xml_data->name;
 $password_hash=(string)$xml_data->password_hash;
 $host_cpid=(string)$xml_data->host_cpid;
 $external_host_cpid=md5($host_cpid.$boinc_account);
@@ -41,7 +42,7 @@ $p_model=(string)$xml_data->host_info->p_model;
 $p_ncpus=(string)$xml_data->host_info->p_ncpus;
 $n_usable_coprocs=(string)$xml_data->host_info->n_usable_coprocs;
 
-$name_escaped=db_escape($name);
+$username_escaped=db_escape($username);
 $host_cpid_escaped=db_escape($host_cpid);
 $external_host_cpid_escaped=db_escape($external_host_cpid);
 $domain_name_escaped=db_escape($domain_name);
@@ -49,31 +50,13 @@ $p_model_escaped=db_escape($p_model);
 $p_ncpus_escaped=db_escape($p_ncpus);
 $n_usable_coprocs_escaped=db_escape($n_usable_coprocs);
 
-db_query("INSERT INTO `boincmgr_hosts` (`username`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
-VALUES ('$name_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
-ON DUPLICATE KEY UPDATE `username`=VALUES(`username`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`)");
-
-foreach($xml_data->project as $project_data) {
-        $project_url=(string)$project_data->url;
-        $project_name=(string)$project_data->project_name;
-        $project_host_id=(string)$project_data->hostid;
-
-        $project_url_escaped=db_escape($project_url);
-        $project_name_escaped=db_escape($project_name);
-        $project_host_id_escaped=db_escape($project_host_id);
-
-        db_query("INSERT INTO `boincmgr_host_projects` (`url`,`project_name`,`host_id`,`host_cpid`)
-VALUES ('$project_url_escaped','$project_name_escaped','$project_host_id_escaped','$host_cpid_escaped')
-ON DUPLICATE KEY UPDATE `url`=VALUES(`url`),`project_name`=VALUES(`project_name`),`host_id`=VALUES(`host_id`)");
-}
-
 $reply_xml=<<<_END
 <?xml version="1.0" encoding="UTF-8" ?>
 <acct_mgr_reply>
 
 _END;
 
-if(auth_check_hash($name,$password_hash)==FALSE) {
+if(auth_check_hash($username,$password_hash)==FALSE) {
     $reply_xml.=<<<_END
     <error_num>-100</error_num>
     <error_msg>$message_login_error</error_msg>
@@ -82,38 +65,61 @@ if(auth_check_hash($name,$password_hash)==FALSE) {
 
 _END;
 } else {
-    $reply_xml.=<<<_END
-    <name>$pool_name</name>
-    <message>$pool_message</message>
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
+VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
+ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`),`timestamp`=CURRENT_TIMESTAMP");
+
+        $host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
+        $host_uid_escaped=db_escape($host_uid);
+
+        foreach($xml_data->project as $project_data) {
+                $project_name=(string)$project_data->project_name;
+                $project_host_id=(string)$project_data->hostid;
+                $project_uid=boincmgr_get_project_uid($project_name);
+
+                $project_name_escaped=db_escape($project_name);
+                $project_host_id_escaped=db_escape($project_host_id);
+                $project_uid_escaped=db_escape($project_uid);
+
+                db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
+VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
+ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
+        }
+
+        $project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`detach` FROM `boincmgr_attach_projects` AS bap
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
+WHERE bap.`host_uid`='$host_uid_escaped'");
+
+        $reply_xml.=<<<_END
+<name>$pool_name</name>
+<message>$pool_message</message>
 <signing_key>
 $signing_key
 </signing_key>
 
 _END;
 
-    $project_data_array=db_query_to_array("SELECT p.`project_url`,p.`url_signature`,p.`weak_auth`,ap.`detach` FROM `boincmgr_attach_projects` AS ap
-    LEFT JOIN `boincmgr_projects` AS p ON p.`uid`=ap.`project_uid`
-    LEFT JOIN `boincmgr_hosts` AS h ON h.`uid`=ap.`host_uid`
-    WHERE h.internal_host_cpid='$host_cpid_escaped'");
+        foreach($project_data_array as $project_data) {
+                $project_url=$project_data['project_url'];
+                $weak_auth=$project_data['weak_auth'];
+                $url_signature=$project_data['url_signature'];
+                $detach=$project_data['detach'];
 
-    foreach($project_data_array as $project_data) {
-        $project_url=$project_data['project_url'];
-        $weak_auth=$project_data['weak_auth'];
-        $url_signature=$project_data['url_signature'];
-        $detach=$project_data['detach'];
-
-    $reply_xml.=<<<_END
-        <account>
-           <url>$project_url</url>
-           <url_signature>
+                $reply_xml.=<<<_END
+<account>
+<url>$project_url</url>
+<url_signature>
 $url_signature
-                </url_signature>
-           <authenticator>$weak_auth</authenticator>
-           <detach>$detach</detach>
-        </account>
+</url_signature>
+<authenticator>$weak_auth</authenticator>
+<detach>$detach</detach>
+</account>
 
 _END;
-    }
+        }
 }
 $reply_xml.=<<<_END
 </acct_mgr_reply>
@@ -122,7 +128,7 @@ _END;
 
 $reply_xml_escaped=db_escape($reply_xml);
 
-auth_log("Sync username '$name' host '$domain_name' p_model '$p_model' cpid '$external_host_cpid'");
+auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
 
 db_query("INSERT INTO boincmgr_xml (message) VALUES ('$reply_xml_escaped')");
 
