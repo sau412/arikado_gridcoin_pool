@@ -144,19 +144,19 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
             $expavg_credit_escaped=db_escape($expavg_credit);
             $expavg_time_escaped=db_escape($expavg_time);
 
-            $username=db_query_to_variable("SELECT `username` FROM `boincmgr_hosts` WHERE `external_host_cpid`='$host_cpid_escaped'");
+            $project_name_escaped=db_escape($project_name);
+            $username=db_query_to_variable("SELECT `username` FROM `boincmgr_host_projects` WHERE `host_id`='$id_escaped' AND `project_name`='$project_name_escaped'");
 
             $username_escaped=db_escape($username);
 
-            // Write last results
-            db_query("INSERT INTO `boincmgr_project_hosts_last` (`project_uid`,`host_id`,`host_cpid`,`username`,`domain_name`,`p_model`,`expavg_credit`,`expavg_time`)
+                // Write last results
+                db_query("INSERT INTO `boincmgr_project_hosts_last` (`project_uid`,`host_id`,`host_cpid`,`username`,`domain_name`,`p_model`,`expavg_credit`,`expavg_time`)
 VALUES ($project_uid,'$id_escaped','$host_cpid_escaped','$username_escaped','$domain_name_escaped','$p_model_escaped','$expavg_credit_escaped','$expavg_time_escaped')
 ON DUPLICATE KEY UPDATE `host_cpid`=VALUES(`host_cpid`),`username`=VALUES(`username`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`expavg_credit`=VALUES(`expavg_credit`),`expavg_time`=VALUES(`expavg_time`)");
 
-            // Write hosts expavg_credit for billing purposes
-            db_query("INSERT INTO `boincmgr_project_host_stats` (`project_uid`,`host_id`,`host_cpid`,`username`,`expavg_credit`)
+                // Write hosts expavg_credit for billing purposes
+                db_query("INSERT INTO `boincmgr_project_host_stats` (`project_uid`,`host_id`,`host_cpid`,`username`,`expavg_credit`)
 VALUES ('$project_uid','$id_escaped','$host_cpid_escaped','$username_escaped','$expavg_credit_escaped')");
-
         }
         echo "----\n";
         $full_sync_count++;
