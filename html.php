@@ -203,46 +203,52 @@ _END;
 
 // Show user hosts
 function html_user_hosts() {
-    global $username,$username_token;
+        global $username,$username_token;
 
-    $result="";
-    $result.="<div id=your_hosts class=selectable_block>\n";
-    $result.="<h2>Your hosts</h2>\n";
-    $result.="<p>That information will be synced to your BOINC client. Sync second time after 10-20 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
-    $result.="<table>\n";
-    $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
+        $result="";
+        $result.="<div id=your_hosts class=selectable_block>\n";
+        $result.="<h2>Your hosts</h2>\n";
+        $result.="<p>That information will be synced to your BOINC client. Sync second time after 10-20 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
+        $result.="<table>\n";
+        $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
 
-    $username_escaped=db_escape($username);
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+        $hosts_array=db_query_to_array("SELECT `uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid_escaped'");
 
-    $hosts_array=db_query_to_array("SELECT `uid`,`external_host_cpid`,`domain_name`,`p_model` FROM `boincmgr_hosts` WHERE `username`='$username_escaped'");
+        foreach($hosts_array as $host) {
+                $host_uid=$host['uid'];
+                $host_cpid=$host['external_host_cpid'];
+                $internal_host_cpid=$host['internal_host_cpid'];
+                $domain_name=$host['domain_name'];
+                $p_mode=$host['p_model'];
 
-    foreach($hosts_array as $host) {
-        $host_uid=$host['uid'];
-        $host_cpid=$host['external_host_cpid'];
-        $domain_name=$host['domain_name'];
-        $p_mode=$host['p_model'];
+                $host_cpid_html=htmlspecialchars($host_cpid);
+                $domain_name_html=htmlspecialchars($domain_name);
+                $p_mode_html=htmlspecialchars($p_mode);
 
-        $host_cpid_html=htmlspecialchars($host_cpid);
-        $domain_name_html=htmlspecialchars($domain_name);
-        $p_mode_html=htmlspecialchars($p_mode);
+                $host_uid_escaped=db_escape($host_uid);
 
-        $host_cpid_escaped=db_escape($host_cpid);
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`detach`,bhp.`host_id` FROM `boincmgr_attach_projects` AS bap
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
+LEFT JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
+WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC");
 
-        $attached_projects_array=db_query_to_array("SELECT ap.`uid`,ap.`host_uid`,p.`name`,ap.`detach` FROM `boincmgr_attach_projects` AS ap
-LEFT JOIN `boincmgr_projects` AS p ON p.`uid`=ap.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS h ON h.`uid`=ap.`host_uid`
-WHERE h.external_host_cpid='$host_cpid_escaped' AND ap.`detach`=0 ORDER BY p.`name` ASC");
+                $projects_str="";
+                foreach($attached_projects_array as $project_data) {
+                        $attached_project_uid=$project_data['uid'];
+                        $host_uid=$project_data['host_uid'];
+                        $host_id=$project_data['host_id'];
+                        $project_name=$project_data['name'];
+                        $project_uid=$project_data['project_uid'];
 
-        $projects_str="";
-        foreach($attached_projects_array as $project_data)
-            {
-            $attached_project_uid=$project_data['uid'];
-            $host_uid=$project_data['host_uid'];
-            $project_name=$project_data['name'];
+                        $project_uid_escaped=db_escape($project_uid);
+                        $project_name_html=htmlspecialchars($project_name);
 
-            $project_name_html=htmlspecialchars($project_name);
+                        if($host_id=="" || $host_id==0) $attached_project_msg="not synced properly";
+                        else $attached_project_msg="";
 
-            $detach_form=<<<_END
+                        $detach_form=<<<_END
 <form name=detach method=post>
 $project_name_html
 <input type=hidden name=action value='detach'>
@@ -250,6 +256,7 @@ $project_name_html
 <input type=hidden name=host_uid value='$host_uid'>
 <input type=hidden name=token value='$username_token'>
 <input type=submit value='detach'>
+$attached_project_msg
 </form>
 _END;
 
@@ -258,9 +265,9 @@ _END;
 
         $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
 WHERE `status` IN ('whitelisted') AND `uid` NOT IN (
-        SELECT `project_uid` FROM `boincmgr_hosts` h
+        SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
-        WHERE `external_host_cpid`='$host_cpid_escaped' AND bap.detach=0
+        WHERE `host_uid`='$host_uid_escaped' AND bap.detach=0
 ) ORDER BY `name` ASC");
         if(count($projects_array)==0) {
                 $projects_str.="No more projects to attach<br>";
@@ -294,41 +301,43 @@ _END;
 
 // Show BOINC results for user
 function html_boinc_results() {
-    global $username;
+        global $username;
 
-    $result="";
+        $result="";
 
-    $result.="<div id=boinc_results class=selectable_block>\n";
-    $result.="<h2>BOINC results:</h2>\n";
-    $result.="<p>That information we received from various BOINC projects:</p>\n";
+        $result.="<div id=boinc_results class=selectable_block>\n";
+        $result.="<h2>BOINC results:</h2>\n";
+        $result.="<p>That information we received from various BOINC projects:</p>\n";
 
-    $result.="<table>\n";
-    $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th></tr>\n";
+        $result.="<table>\n";
+        $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th></tr>\n";
 
-    $username_escaped=db_escape($username);
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
 
-    $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
+        $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-WHERE bphl.`host_cpid` IN (SELECT `external_host_cpid` FROM `boincmgr_hosts` WHERE `username`='$username_escaped')");
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`name` ASC");
 
-    foreach($boinc_host_data_array as $boinc_host_data) {
-        $host_cpid=$boinc_host_data['host_cpid'];
-        $domain_name=$boinc_host_data['domain_name'];
-        $p_model=$boinc_host_data['p_model'];
-        $expavg_credit=$boinc_host_data['expavg_credit'];
-        $project_name=$boinc_host_data['name'];
+        foreach($boinc_host_data_array as $boinc_host_data) {
+                $host_cpid=$boinc_host_data['host_cpid'];
+                $domain_name=$boinc_host_data['domain_name'];
+                $p_model=$boinc_host_data['p_model'];
+                $expavg_credit=$boinc_host_data['expavg_credit'];
+                $project_name=$boinc_host_data['name'];
 
-        $host_cpid_html=htmlspecialchars($host_cpid);
-        $domain_name_html=htmlspecialchars($domain_name);
-        $p_model_html=htmlspecialchars($p_model);
-        $expavg_credit_html=htmlspecialchars($expavg_credit);
-        $project_name_html=htmlspecialchars($project_name);
+                $host_cpid_html=htmlspecialchars($host_cpid);
+                $domain_name_html=htmlspecialchars($domain_name);
+                $p_model_html=htmlspecialchars($p_model);
+                $expavg_credit_html=htmlspecialchars($expavg_credit);
+                $project_name_html=htmlspecialchars($project_name);
 
-        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
-    }
-    $result.="</table>\n";
-    $result.="</div>\n";
-    return $result;
+                $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
+        }
+        $result.="</table>\n";
+        $result.="</div>\n";
+        return $result;
 }
 
 // Show billing form
