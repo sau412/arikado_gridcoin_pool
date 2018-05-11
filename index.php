@@ -59,9 +59,10 @@ if(auth_check($username,$passwd_hash)) {
 
             $project_uid_escaped=db_escape($project_uid);
             $host_uid_escaped=db_escape($host_uid);
-            $username_escaped=db_escape($username);
+            $username_uid=boincmgr_get_username_uid($username);
+            $username_uid_escaped=db_escape($username_uid);
 
-            $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username`='$username_escaped'");
+            $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
             if($host_uid) {
                 $project_name=boincmgr_get_project_name($project_uid);
                 $host_name=boincmgr_get_host_name($host_uid);
@@ -82,8 +83,9 @@ ON DUPLICATE KEY UPDATE `detach`=0");
 
             $attached_uid_escaped=db_escape($attached_uid);
             $host_uid_escaped=db_escape($host_uid);
-            $username_escaped=db_escape($username);
-            $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username`='$username_escaped'");
+            $username_uid=boincmgr_get_username_uid($username);
+            $username_uid_escaped=db_escape($username_uid);
+            $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
 
             if($host_uid) {
                 $host_name=boincmgr_get_host_name($host_uid);
