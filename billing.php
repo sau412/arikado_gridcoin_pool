@@ -83,26 +83,28 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         $start_date_escaped=db_escape($start_date);
         $stop_date_escaped=db_escape($stop_date);
 
-        $project_total_rac=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped' AND `username`<>''");
-        if($project_total_rac==0) return array();
-        $projects_hosts_array=db_query_to_array("SELECT DISTINCT `host_cpid`,`username` FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped' AND `username`<>''");
-
+        $project_total_rac=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
         if($check_rewards) echo "Project RAC $project_total_rac<br>\n";
-        foreach($projects_hosts_array as $host_data) {
-                $host_cpid=$host_data['host_cpid'];
-                $username=$host_data['username'];
+        if($project_total_rac!=0) {
+                $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
+LEFT JOIN `boincmgr_host_projects` AS bhp ON bhp.`host_uid`=bphs.`host_uid` AND bhp.`host_id`=bphs.`host_id` AND bhp.`project_uid`=bphs.`project_uid`
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bhp.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`project_uid`='$project_uid' AND `status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
+GROUP BY bu.`grc_address`");
 
-                $username_escaped=db_escape($username);
+                foreach($user_stats_array as $user_data) {
+                        $host_rac=$user_data['sum_credit'];
+                        $grc_address=$user_data['grc_address'];
+                        if($host_rac==0) continue;
 
-                $host_rac=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped' AND `username`='$username_escaped'");
-                if($host_rac==0) continue;
-                $user_reward=($project_reward/$project_total_rac)*$host_rac;
-                if($user_reward==0) continue;
+                        $user_reward=($project_reward/$project_total_rac)*$host_rac;
+                        if($user_reward==0) continue;
 
-                if($check_rewards) echo "Host $host_cpid RAC $host_rac reward $user_reward<br>\n";
+                        if($check_rewards) echo "Host $host_cpid RAC $host_rac reward $user_reward<br>\n";
 
-                $grc_address=db_query_to_variable("SELECT `grc_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
-                if($grc_address!='') $reward_array[$grc_address]=$user_reward;
+                        if($grc_address!='') $reward_array[$grc_address]=$user_reward;
+                }
         }
         if($check_rewards) {
                 echo "<br>\n";
