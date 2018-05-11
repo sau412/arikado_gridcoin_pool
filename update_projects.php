@@ -1,130 +1,166 @@
 <?php
-// RPC for BOINC client
+// Get hosts data from BOINC project
+
+if(!isset($argc)) die();
 
 require_once("settings.php");
 require_once("db.php");
+require_once("billing.php");
 require_once("auth.php");
 
 db_connect();
 
-$data=file_get_contents("php://input");
-$data=iconv('WINDOWS-1250','UTF-8',$data);
-libxml_use_internal_errors(TRUE);
-libxml_disable_entity_loader(TRUE);
+// Get whitelisted and greylisted projects
+$project_data_array=db_query_to_array("SELECT * FROM `boincmgr_projects` WHERE `status` IN ('whitelisted','greylisted')");
 
-$data_escaped=db_escape($data);
-db_query("INSERT INTO boincmgr_xml (message) VALUES ('$data_escaped')");
+// Setup cURL
+$ch=curl_init();
+curl_setopt($ch,CURLOPT_RETURNTRANSFER,TRUE);
+curl_setopt($ch,CURLOPT_FOLLOWLOCATION,TRUE);
 
-$xml_data = simplexml_load_string($data);
-
-if($xml_data === FALSE) {
-        echo <<<_END
-<?xml version="1.0" encoding="UTF-8" ?>
-<acct_mgr_reply>
-    <error_num>-101</error_num>
-    <error_msg>$message_xml_error</error_msg>
-    <error>$message_xml_error</error>
-    <name>$pool_name</name>
-</acct_mgr_reply>
-
-_END;
-        auth_log("Sync error parsing XML");
-        die();
-}
-
-$name=(string)$xml_data->name;
-$password_hash=(string)$xml_data->password_hash;
-$host_cpid=(string)$xml_data->host_cpid;
-$external_host_cpid=md5($host_cpid.$boinc_account);
-$domain_name=(string)$xml_data->host_info->domain_name;
-$p_model=(string)$xml_data->host_info->p_model;
-$p_ncpus=(string)$xml_data->host_info->p_ncpus;
-$n_usable_coprocs=(string)$xml_data->host_info->n_usable_coprocs;
-
-$name_escaped=db_escape($name);
-$host_cpid_escaped=db_escape($host_cpid);
-$external_host_cpid_escaped=db_escape($external_host_cpid);
-$domain_name_escaped=db_escape($domain_name);
-$p_model_escaped=db_escape($p_model);
-$p_ncpus_escaped=db_escape($p_ncpus);
-$n_usable_coprocs_escaped=db_escape($n_usable_coprocs);
-
-db_query("INSERT INTO `boincmgr_hosts` (`username`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
-VALUES ('$name_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
-ON DUPLICATE KEY UPDATE `username`=VALUES(`username`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`)");
-
-foreach($xml_data->project as $project_data) {
-        $project_url=(string)$project_data->url;
-        $project_name=(string)$project_data->project_name;
-        $project_host_id=(string)$project_data->hostid;
-
-        $project_url_escaped=db_escape($project_url);
-        $project_name_escaped=db_escape($project_name);
-        $project_host_id_escaped=db_escape($project_host_id);
-
-        db_query("INSERT INTO `boincmgr_host_projects` (`username`,`url`,`project_name`,`host_id`,`host_cpid`)
-VALUES ('$name_escaped','$project_url_escaped','$project_name_escaped','$project_host_id_escaped','$host_cpid_escaped')
-ON DUPLICATE KEY UPDATE `username`=VALUES(`username`),`url`=VALUES(`url`),`project_name`=VALUES(`project_name`),`host_id`=VALUES(`host_id`)");
-}
-
-$reply_xml=<<<_END
-<?xml version="1.0" encoding="UTF-8" ?>
-<acct_mgr_reply>
-
-_END;
-
-if(auth_check_hash($name,$password_hash)==FALSE) {
-    $reply_xml.=<<<_END
-    <error_num>-100</error_num>
-    <error_msg>$message_login_error</error_msg>
-    <error>$message_login_error</error>
-    <name>$pool_name</name>
-
-_END;
-} else {
-    $reply_xml.=<<<_END
-    <name>$pool_name</name>
-    <message>$pool_message</message>
-<signing_key>
-$signing_key
-</signing_key>
-
-_END;
-
-    $project_data_array=db_query_to_array("SELECT p.`project_url`,p.`url_signature`,p.`weak_auth`,ap.`detach` FROM `boincmgr_attach_projects` AS ap
-    LEFT JOIN `boincmgr_projects` AS p ON p.`uid`=ap.`project_uid`
-    LEFT JOIN `boincmgr_hosts` AS h ON h.`uid`=ap.`host_uid`
-    WHERE h.internal_host_cpid='$host_cpid_escaped'");
-
-    foreach($project_data_array as $project_data) {
+// For each project
+$project_count=count($project_data_array);
+$full_sync_count=0;
+foreach($project_data_array as $project_data)
+        {
+        $project_uid=$project_data['uid'];
+        $project_name=$project_data['name'];
         $project_url=$project_data['project_url'];
-        $weak_auth=$project_data['weak_auth'];
-        $url_signature=$project_data['url_signature'];
-        $detach=$project_data['detach'];
 
-    $reply_xml.=<<<_END
-        <account>
-           <url>$project_url</url>
-           <url_signature>
-$url_signature
-                </url_signature>
-           <authenticator>$weak_auth</authenticator>
-           <detach>$detach</detach>
-        </account>
+        $project_uid_escaped=db_escape($project_uid);
+echo "Updating data for $project_name\n";
 
-_END;
-    }
+        // Get project config (name, master url,platforms)
+        curl_setopt($ch,CURLOPT_POST,FALSE);
+        curl_setopt($ch,CURLOPT_URL,$project_url."get_project_config.php");
+        $data = curl_exec ($ch);
+if($data=="") { echo "No data from project\n"; continue; }
+//      var_dump($data);
+        $xml=simplexml_load_string($data);
+
+        if($xml==FALSE)
+                {
+                echo "Error: $project_url\n\n";
+                continue;
+                }
+
+        $name=(string)$xml->name;
+        $rpc_url=(string)$xml->web_rpc_url_base;
+        $master_url=(string)$xml->master_url;
+        if($rpc_url=="") $rpc_url=$master_url;
+
+echo "web_rpc_url_base: $rpc_url\n";
+        $platform_names="";
+        foreach($xml->platforms->platform as $platform)
+                {
+                //var_dump($platform);
+                $pl_name=$platform->platform_name;
+                $pl_fr_name=$platform->user_friendly_name;
+                $plan_class=$platform->plan_class;
+                if($plan_class)
+                        $platform_names.="$pl_name -- $pl_fr_name -- $plan_class\n";
+                else
+                        $platform_names.="$pl_name -- $pl_fr_name -- no plan class\n";
+                }
+
+        //echo "Project $name ($master_url)\n";
+        //echo "$platform_names\n";
+        $name_escaped=db_escape($name);
+        $master_url_escaped=db_escape($master_url);
+
+        // Login to project
+        curl_setopt($ch,CURLOPT_URL,$rpc_url."lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash");
+        $data=curl_exec($ch);
+
+        $xml=simplexml_load_string($data);
+        if($xml==FALSE) { echo "Login to project error\n"; echo $rpc_url."/lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n"; continue; }
+        $auth=$xml->authenticator;
+
+        // Get weak auth key
+        curl_setopt($ch,CURLOPT_URL,$rpc_url."am_get_info.php?account_key=$auth");
+        $data=curl_exec($ch);
+
+        $xml=simplexml_load_string($data);
+        if($xml==FALSE) { echo "Get weak auth key error\n"; continue; }
+        $weak_auth=$xml->weak_auth;
+        $weak_auth_escaped=db_escape($weak_auth);
+
+        // World Community Grid returns wrong weak key
+        //db_query("UPDATE `boincmgr_projects` SET `name`='$name_escaped',`project_url`='$master_url_escaped',`weak_auth`='$weak_auth_escaped' WHERE `uid`='$project_uid'");
+        db_query("UPDATE `boincmgr_projects` SET `name`='$name_escaped',`project_url`='$master_url_escaped' WHERE `uid`='$project_uid_escaped'");
+
+        // Get Gridcoin team stats (for billing purposes)
+        curl_setopt($ch,CURLOPT_URL,$rpc_url."team_lookup.php?team_name=Gridcoin&format=xml");
+        $data=curl_exec($ch);
+        $xml=simplexml_load_string($data);
+        if($xml==FALSE) { echo "Get gridcoin team stats error\n"; continue; }
+
+        $gridcoin_team_stats_found=FALSE;
+        foreach($xml->team as $team_info) {
+                if($team_info->name=="Gridcoin") {
+                        $team_expavg_credit=(string)$team_info->expavg_credit;
+                        $team_expavg_credit_escaped=db_escape($team_expavg_credit);
+                        $gridcoin_team_stats_found=TRUE;
+                        break;
+                }
+        }
+
+        // Get pool account stats (for billing purposes)
+        curl_setopt($ch,CURLOPT_URL,$rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml");
+        $data=curl_exec($ch);
+        $xml=simplexml_load_string($data);
+        if($xml==FALSE) { echo "Get hosts info error\n"; echo $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml\n"; continue; }
+//var_dump($data);
+        $project_cpid=(string)$xml->cpid;
+        $expavg_credit=(string)$xml->expavg_credit;
+        $expavg_credit_escaped=db_escape($expavg_credit);
+
+        // Expavg credit and gridcoin team expavg credit
+        if($gridcoin_team_stats_found==FALSE) {
+                auth_log("Sync error: gridcoin team not found for project $project_name");
+        } else {
+                // Write project expavg_credit for billing purposes
+                db_query("INSERT INTO `boincmgr_project_stats` (`project_uid`,`expavg_credit`,`team_expavg_credit`)
+VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')");
+
+                db_query("UPDATE `boincmgr_projects` SET `expavg_credit`='$expavg_credit_escaped',`team_expavg_credit`='$team_expavg_credit_escaped',`timestamp`=CURRENT_TIMESTAMP WHERE `uid`='$project_uid_escaped'");
+        }
+
+        // Update project CPID
+        $project_cpid_escaped=db_escape($project_cpid);
+        db_query("UPDATE `boincmgr_projects` SET `cpid`='$project_cpid_escaped' WHERE uid='$project_uid_escaped'");
+
+        foreach($xml->host as $host_data) {
+                $host_id=(string)$host_data->id;
+                $host_cpid=(string)$host_data->host_cpid;
+                $domain_name=(string)$host_data->domain_name;
+                $p_model=(string)$host_data->p_model;
+                $expavg_credit=(string)$host_data->expavg_credit;
+                $expavg_time=(string)$host_data->expavg_time;
+
+                $host_id_escaped=db_escape($host_id);
+                $host_cpid_escaped=db_escape($host_cpid);
+                $domain_name_escaped=db_escape($domain_name);
+                $p_model_escaped=db_escape($p_model);
+                $expavg_credit_escaped=db_escape($expavg_credit);
+                $expavg_time_escaped=db_escape($expavg_time);
+
+                $host_uid=db_query_to_variable("SELECT `host_uid` FROM `boincmgr_host_projects` WHERE `host_id`='$host_id_escaped' AND `project_uid`='$project_uid_escaped'");
+                if($host_uid=='') $host_uid=0;
+                $host_uid_escaped=db_escape($host_uid);
+
+                // Write last results
+                db_query("INSERT INTO `boincmgr_project_hosts_last` (`project_uid`,`host_uid`,`host_id`,`host_cpid`,`domain_name`,`p_model`,`expavg_credit`,`expavg_time`)
+VALUES ($project_uid_escaped,'$host_uid_escaped','$host_id_escaped','$host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$expavg_credit_escaped','$expavg_time_escaped')
+ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`expavg_credit`=VALUES(`expavg_credit`),`expavg_time`=VALUES(`expavg_time`),`timestamp`=CURRENT_TIMESTAMP");
+
+                // Write hosts expavg_credit for billing purposes
+                db_query("INSERT INTO `boincmgr_project_host_stats` (`project_uid`,`host_uid`,`host_id`,`expavg_credit`)
+VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
+        }
+        echo "----\n";
+        $full_sync_count++;
 }
-$reply_xml.=<<<_END
-</acct_mgr_reply>
 
-_END;
-
-$reply_xml_escaped=db_escape($reply_xml);
-
-auth_log("Sync username '$name' host '$domain_name' p_model '$p_model' cpid '$external_host_cpid'");
-
-db_query("INSERT INTO boincmgr_xml (message) VALUES ('$reply_xml_escaped')");
-
-echo $reply_xml;
+auth_log("Projects to sync $project_count, synced $full_sync_count");
 ?>
