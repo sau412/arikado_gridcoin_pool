@@ -10,9 +10,13 @@ function db_connect() {
 
 // Query
 function db_query($query) {
-    $result=mysql_query($query);
-    if($result===FALSE) die("Query error: $query");
-    return $result;
+        $result=mysql_query($query);
+        if($result===FALSE) {
+                $query_escaped=db_escape($query);
+                auth_log("Query error: $query");
+                die("Query error");
+        }
+        return $result;
 }
 
 // Query and return results array
