@@ -21,7 +21,7 @@ Simple gridcoin pool
 4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
 4.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
 5) Change settings in your settings.php
-6) Set cron 1h to update_projects_data.php
+6) Set cron 1h to update_projects_data.php, 1d to send_rewards.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
 8) Setup gridcoinresearch wallets, send beacon, wait for rewards
 
@@ -42,13 +42,12 @@ Simple gridcoin pool
 2) Greylisted projects are not receive rewards too
 
 # Billing
-Billing works in manual mode. Check table boincmgr_payouts for manual rewards
+Billing works in manual mode. After billing rewards send automatically.
 1) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
-2) Other billings: when pools wallet stakes, write previous stake date, current stake date and rewards, click "send rewards"
+2) Other billings: when pools wallet stakes, write current stake date (previous stake date is autom-filled) and rewards, click "send rewards"
 
 # Todo
 * BOINC client can send incorrect XML, so we need more robust parser
 * Filter unknown projects from clients
 * Show error when somebody try to steal host (attach host with same host_id and host cpid)
 * Make attach and detach projects functions in boincmgr.php
-* Automated payments (admin just click "send rewards" and rewards sent automatically)
