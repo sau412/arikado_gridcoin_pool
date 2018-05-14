@@ -6,7 +6,10 @@ function bill_close_period($start_date,$stop_date,$total_reward,$check_rewards) 
         $stop_date_escaped=db_escape($stop_date);
         $total_reward_escaped=db_escape($total_reward);
 
-        if(!$check_rewards) db_query("INSERT INTO `boincmgr_billing_periods` (`start_date`,`stop_date`,`reward`) VALUES ('$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
+        if(!$check_rewards) {
+                db_query("INSERT INTO `boincmgr_billing_periods` (`start_date`,`stop_date`,`reward`) VALUES ('$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
+                $billing_uid=mysql_insert_id();
+        }
 
         $reward_array=array();
         $whitelisted_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='whitelisted' ORDER BY `name` ASC");
@@ -31,8 +34,9 @@ function bill_close_period($start_date,$stop_date,$total_reward,$check_rewards) 
         foreach($reward_array as $grc_address => $reward) {
                 $grc_address_escaped=db_escape($grc_address);
                 $reward_escaped=db_escape($reward);
+                $billing_uid_escaped=db_escape($billing_uid);
                 if($check_rewards) echo "$grc_address $reward<br>\n";
-                else db_query("INSERT INTO `boincmgr_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$reward_escaped')");
+                else db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`grc_address`,`amount`) VALUES ('$billing_uid_escaped','$grc_address_escaped','$reward_escaped')");
         }
         if($check_rewards) {
                 flush();
