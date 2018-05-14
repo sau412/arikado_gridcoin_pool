@@ -78,5 +78,9 @@ if(!function_exists("mysql_pconnect")) {
                 global $mysqli_res;
                 return mysqli_real_escape_string($mysqli_res,$str);
         }
+        function mysql_insert_id() {
+                global $mysqli_res;
+                return mysqli_insert_id($mysqli_res);
+        }
 }
 ?>
