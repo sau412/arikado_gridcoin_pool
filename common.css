@@ -22,11 +22,11 @@ ul {
     background-color: #DDD;
 }
 
-li {
+ul li {
     float: left;
 }
 
-li a {
+ul li a {
     display: block;
     color: black;
     text-align: center;
@@ -34,6 +34,6 @@ li a {
     text-decoration: none;
 }
 
-li a:hover {
+ul li a:hover {
     background-color: #AAF;
 }
