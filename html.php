@@ -49,6 +49,24 @@ function html_p($message) {
     return "<p>$message</p>\n";
 }
 
+// Return project name as url
+function html_project_name_link($project_name,$project_url) {
+        $project_name_html=htmlspecialchars($project_name);
+        return "<a href='$project_url'>$project_name</a>";
+}
+
+// Return grc address as URL
+function html_grc_address_link($grc_address) {
+        $grc_address_html=htmlspecialchars($grc_address);
+        return "<a href='https://www.gridcoinstats.eu/address/$grc_address'>$grc_address</a>";
+}
+
+// Return txid as URL
+function html_txid_link($txid) {
+        return "<a href='https://www.gridcoinstats.eu/tx/$txid'>$txid</a>";
+}
+
+
 // User menu and options
 function html_page_header($flags_array) {
     global $action_message;
@@ -142,11 +160,11 @@ function html_register_form() {
 <div id=register_form class=selectable_block>
 <form name=register_form method=POST>
 <h2>Register</h2>
-<p>Username: <input type=text name=username></p>
-<p>Password 1: <input type=password name=password_1></p>
-<p>Password 2: <input type=password name=password_2></p>
-<p>E-mail: <input type=text name=email> for password recovery</p>
-<p>GRC address: <input type=text name=grc_address></p>
+<p>Username: <input type=text name=username> required</p>
+<p>Password 1: <input type=password name=password_1> required</p>
+<p>Password 2: <input type=password name=password_2> re-type password</p>
+<p>E-mail: <input type=text name=email> for password recovery (you can write me, and I send you new password for account)</p>
+<p>GRC address: <input type=text name=grc_address> required</p>
 <p><input type=hidden name="action" value="register"></p>
 <p><input type=submit value="Register"></p>
 </form>
@@ -307,8 +325,60 @@ function html_boinc_results() {
 
         $result.="<div id=boinc_results class=selectable_block>\n";
         $result.="<h2>BOINC results:</h2>\n";
+
         $result.="<p>That information we received from various BOINC projects:</p>\n";
 
+        $result.="<h3>Results by host</h3>\n";
+        $result.="<table>\n";
+        $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th></tr>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $boinc_host_data_array=db_query_to_array("SELECT bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`domain_name`,bphl.`p_model` ORDER BY bphl.`domain_name`,bphl.`p_model` ASC");
+
+        foreach($boinc_host_data_array as $boinc_host_data) {
+                $host_cpid=$boinc_host_data['host_cpid'];
+                $domain_name=$boinc_host_data['domain_name'];
+                $p_model=$boinc_host_data['p_model'];
+                $expavg_credit=round($boinc_host_data['rac']);
+
+                $host_cpid_html=htmlspecialchars($host_cpid);
+                $domain_name_html=htmlspecialchars($domain_name);
+                $p_model_html=htmlspecialchars($p_model);
+                $expavg_credit_html=htmlspecialchars($expavg_credit);
+
+                $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$expavg_credit_html</td></tr>\n";
+        }
+        $result.="</table>\n";
+
+        $result.="<h3>Results by project</h3>\n";
+        $result.="<table>\n";
+        $result.="<tr><th>Project</th><th>&Sigma; RAC</th></tr>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $boinc_host_data_array=db_query_to_array("SELECT bp.`name`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bp.`name` ORDER BY bp.`name` ASC");
+
+        foreach($boinc_host_data_array as $boinc_host_data) {
+                $expavg_credit=round($boinc_host_data['rac']);
+                $project_name=$boinc_host_data['name'];
+
+                $expavg_credit_html=htmlspecialchars($expavg_credit);
+                $project_name_html=htmlspecialchars($project_name);
+
+                $result.="<tr><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
+        }
+        $result.="</table>\n";
+
+        $result.="<h3>Results for each project and each host</h3>\n";
         $result.="<table>\n";
         $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th></tr>\n";
 
@@ -337,6 +407,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
         }
         $result.="</table>\n";
         $result.="</div>\n";
+
         return $result;
 }
 
@@ -446,8 +517,37 @@ function html_payouts() {
         $result="";
         $result.="<div id=payouts class=selectable_block>\n";
         $result.="<h2>Payouts</h2>\n";
-        $result.="<p>Last 100 payouts from pool:</p>\n";
-        $result.="<p><table>\n";
+        $result.="<p>Last 10 billings from pool:</p>\n";
+        $billings_array=db_query_to_array("SELECT `uid`,`start_date`,`stop_date`,`reward` FROM `boincmgr_billing_periods` ORDER BY `stop_date` DESC");
+        foreach($billings_array as $billing) {
+                $billing_uid=$billing['uid'];
+                $start_date=$billing['start_date'];
+                $stop_date=$billing['stop_date'];
+                $reward=$billing['reward'];
+
+                $billing_uid_escaped=db_escape($billing_uid);
+
+                $result.="<h3>At $stop_date pool rewarded with $reward gridcoins</h3>\n";
+//              $result.="<p>Rewards distribution</p>\n";
+                $payout_data_array=db_query_to_array("SELECT `grc_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` WHERE `billing_uid`='$billing_uid_escaped' ORDER BY `grc_address` ASC");
+                $result.="<p><table>\n";
+                $result.="<tr><th>GRC address</th><th>TX ID</th><th>Amount</th><th>Timestamp</th></tr>\n";
+                foreach($payout_data_array as $payout_data) {
+                        $grc_address=$payout_data['grc_address'];
+                        $amount=$payout_data['amount'];
+                        $txid=$payout_data['txid'];
+                        $timestamp=$payout_data['timestamp'];
+
+                        $grc_address_link=html_grc_address_link($grc_address);
+                        $amount_html=htmlspecialchars($amount);
+                        $txid_link=html_txid_link($txid);
+                        $timestamp_html=htmlspecialchars($timestamp);
+
+                        $result.="<tr><td>$grc_address_link</td><td>$txid_link</td><td>$amount_html</td><td>$timestamp_html</td></tr>\n";
+                }
+        $result.="</table></p>\n";
+        }
+/*      $result.="<p><table>\n";
         $result.="<tr><th>GRC address</th><th>TX ID</th><th>Amount</th><th>Timestamp</th></tr>\n";
         $payout_data_array=db_query_to_array("SELECT `grc_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` ORDER BY `timestamp` DESC LIMIT 100");
         foreach($payout_data_array as $payout_data) {
@@ -463,7 +563,7 @@ function html_payouts() {
 
                 $result.="<tr><td>$grc_address_html</td><td>$txid_html</td><td>$amount_html</td><td>$timestamp_html</td></tr>\n";
         }
-        $result.="</table></p>\n";
+        $result.="</table></p>\n";*/
         $result.="</div>\n";
         return $result;
 }
@@ -504,9 +604,10 @@ function html_pool_stats() {
         $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th></tr>\n";
         $proportions=bill_calculate_projects_proportion($start_date,$stop_date);
 //      var_dump($proportions);
-        $project_array=db_query_to_array("SELECT `uid`,`name`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
+        $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
         foreach($project_array as $project_data) {
                 $name=$project_data['name'];
+                $project_url=$project_data['project_url'];
                 $uid=$project_data['uid'];
                 $expavg_credit=$project_data['expavg_credit'];
                 $team_expavg_credit=$project_data['team_expavg_credit'];
@@ -515,14 +616,16 @@ function html_pool_stats() {
                 else $team_proportion=0;
                 $proportion=round($proportions[$uid]*100,2);
 
-                $name_html=htmlspecialchars($name);
+                $expavg_credit=round($expavg_credit);
+
+                $name_link=html_project_name_link($name,$project_url);
                 $team_expavg_credit_html=htmlspecialchars($team_expavg_credit);
                 $expavg_credit_html=htmlspecialchars($expavg_credit);
                 $team_proportion_html=htmlspecialchars($team_proportion);
                 $proportion_html=htmlspecialchars($proportion);
                 $status_html=htmlspecialchars($status);
 
-                $result.="<tr><td>$name_html</td><td>$team_expavg_credit_html</td><td>$expavg_credit_html</td><td>$team_proportion_html %</td><td>$proportion_html %</td><td>$status_html</td></tr>\n";
+                $result.="<tr><td>$name_link</td><td>$team_expavg_credit_html</td><td>$expavg_credit_html</td><td>$team_proportion_html %</td><td>$proportion_html %</td><td>$status_html</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
