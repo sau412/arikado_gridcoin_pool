@@ -45,3 +45,10 @@ Simple gridcoin pool
 Billing works in manual mode. Check table boincmgr_payouts for manual rewards
 1) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
 2) Other billings: when pools wallet stakes, write previous stake date, current stake date and rewards, click "send rewards"
+
+# Todo
+* BOINC client can send incorrect XML, so we need more robust parser
+* Filter unknown projects from clients
+* Show error when somebody try to steal host (attach host with same host_id and host cpid)
+* Make attach and detach projects functions in boincmgr.php
+* Automated payments (admin just click "send rewards" and rewards sent automatically)
