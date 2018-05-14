@@ -2,6 +2,8 @@
 // Get hosts data from BOINC project
 
 if(!isset($argc)) die();
+if(isset($argv[1]) && $argv[1]=="test") $test_mode=TRUE;
+else $test_mode=FALSE;
 
 require_once("settings.php");
 require_once("db.php");
@@ -11,7 +13,7 @@ require_once("auth.php");
 db_connect();
 
 // Get whitelisted and greylisted projects
-$project_data_array=db_query_to_array("SELECT * FROM `boincmgr_projects` WHERE `status` IN ('whitelisted','greylisted')");
+$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url` FROM `boincmgr_projects` WHERE `status` IN ('whitelisted','greylisted')");
 
 // Setup cURL
 $ch=curl_init();
@@ -43,6 +45,8 @@ if($data=="") { echo "No data from project\n"; continue; }
                 echo "Error: $project_url\n\n";
                 continue;
                 }
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name get_project_config','$data_escaped')");
 
         $name=(string)$xml->name;
         $rpc_url=(string)$xml->web_rpc_url_base;
@@ -74,6 +78,8 @@ echo "web_rpc_url_base: $rpc_url\n";
 
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Login to project error\n"; echo $rpc_url."/lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n"; continue; }
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name lookup_account','$data_escaped')");
         $auth=$xml->authenticator;
 
         // Get weak auth key
@@ -82,10 +88,13 @@ echo "web_rpc_url_base: $rpc_url\n";
 
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Get weak auth key error\n"; continue; }
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name am_get_info','$data_escaped')");
+
         $weak_auth=$xml->weak_auth;
         $weak_auth_escaped=db_escape($weak_auth);
 
-        // World Community Grid returns wrong weak key
+        // World Community Grid returns wrong weak key, so do not update keys for now
         //db_query("UPDATE `boincmgr_projects` SET `name`='$name_escaped',`project_url`='$master_url_escaped',`weak_auth`='$weak_auth_escaped' WHERE `uid`='$project_uid'");
         db_query("UPDATE `boincmgr_projects` SET `name`='$name_escaped',`project_url`='$master_url_escaped' WHERE `uid`='$project_uid_escaped'");
 
@@ -94,6 +103,8 @@ echo "web_rpc_url_base: $rpc_url\n";
         $data=curl_exec($ch);
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Get gridcoin team stats error\n"; continue; }
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name team_lookup','$data_escaped')");
 
         $gridcoin_team_stats_found=FALSE;
         foreach($xml->team as $team_info) {
@@ -111,6 +122,9 @@ echo "web_rpc_url_base: $rpc_url\n";
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Get hosts info error\n"; echo $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml\n"; continue; }
 //var_dump($data);
+$data_escaped=db_escape($data);
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name show_user','$data_escaped')");
+
         $project_cpid=(string)$xml->cpid;
         $expavg_credit=(string)$xml->expavg_credit;
         $expavg_credit_escaped=db_escape($expavg_credit);
@@ -145,18 +159,35 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
                 $expavg_credit_escaped=db_escape($expavg_credit);
                 $expavg_time_escaped=db_escape($expavg_time);
 
-                $host_uid=db_query_to_variable("SELECT `host_uid` FROM `boincmgr_host_projects` WHERE `host_id`='$host_id_escaped' AND `project_uid`='$project_uid_escaped'");
-                if($host_uid=='') $host_uid=0;
+                // Get host uid by project_uid, host_id and host_cpid - most secure
+                // Sometimes BOINC returns internal cpid, sometimes external cpid
+                $host_uid=db_query_to_variable("SELECT bhp.`host_uid` FROM `boincmgr_host_projects` AS bhp
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bhp.`host_uid`
+WHERE bhp.`host_id`='$host_id_escaped' AND bhp.`project_uid`='$project_uid_escaped' AND (bh.`external_host_cpid`='$host_cpid_escaped' OR bh.`internal_host_cpid`='$host_cpid_escaped')");
+
+                // If host not found - check host by host cpid only (may be user didn't finish synchronization) - less secure, but rewards are not lost
+                if($host_uid=='') {
+                        $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `external_host_cpid`='$host_cpid_escaped' OR `internal_host_cpid`='$host_cpid_escaped'");
+                        // Unknown host - we can't find anything
+                        if($host_uid=='') {
+                                echo "Host host_id '$host_id' domain '$domain_name' model '$p_model' cpid $host_cpid not found\n";
+                                $host_uid=0;
+                        } else {
+                                echo "Host host_id '$host_id' domain '$domain_name' model '$p_model' cpid '$host_cpid' not fully synced, found by cpid\n";
+                        }
+                }
                 $host_uid_escaped=db_escape($host_uid);
 
                 // Write last results
-                db_query("INSERT INTO `boincmgr_project_hosts_last` (`project_uid`,`host_uid`,`host_id`,`host_cpid`,`domain_name`,`p_model`,`expavg_credit`,`expavg_time`)
+                if($test_mode==FALSE) {
+                        db_query("INSERT INTO `boincmgr_project_hosts_last` (`project_uid`,`host_uid`,`host_id`,`host_cpid`,`domain_name`,`p_model`,`expavg_credit`,`expavg_time`)
 VALUES ($project_uid_escaped,'$host_uid_escaped','$host_id_escaped','$host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$expavg_credit_escaped','$expavg_time_escaped')
 ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`expavg_credit`=VALUES(`expavg_credit`),`expavg_time`=VALUES(`expavg_time`),`timestamp`=CURRENT_TIMESTAMP");
 
-                // Write hosts expavg_credit for billing purposes
-                db_query("INSERT INTO `boincmgr_project_host_stats` (`project_uid`,`host_uid`,`host_id`,`expavg_credit`)
+                        // Write hosts expavg_credit for billing purposes
+                        db_query("INSERT INTO `boincmgr_project_host_stats` (`project_uid`,`host_uid`,`host_id`,`expavg_credit`)
 VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
+                }
         }
         echo "----\n";
         $full_sync_count++;
