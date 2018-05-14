@@ -14,7 +14,7 @@ libxml_use_internal_errors(TRUE);
 libxml_disable_entity_loader(TRUE);
 
 $data_escaped=db_escape($data);
-db_query("INSERT INTO boincmgr_xml (message) VALUES ('$data_escaped')");
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client request','$data_escaped')");
 
 $xml_data = simplexml_load_string($data);
 
@@ -130,7 +130,7 @@ $reply_xml_escaped=db_escape($reply_xml);
 
 auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
 
-db_query("INSERT INTO boincmgr_xml (message) VALUES ('$reply_xml_escaped')");
+db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client reply','$reply_xml_escaped')");
 
 echo $reply_xml;
 ?>
