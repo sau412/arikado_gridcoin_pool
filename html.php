@@ -16,7 +16,7 @@ function html_page_begin() {
 <!DOCTYPE html>
 <html>
 <head>
-<title>$pool_name</title>
+<title>$pool_name gridcoin pool</title>
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="stylesheet" type="text/css" href="common.css">
@@ -63,7 +63,13 @@ function html_grc_address_link($grc_address) {
 
 // Return txid as URL
 function html_txid_link($txid) {
-        return "<a href='https://www.gridcoinstats.eu/tx/$txid'>$txid</a>";
+        if($txid=="") {
+                return "no txid";
+        } else {
+                $txid_short=substr($txid,0,10);
+                $txid_short_html=htmlspecialchars($txid_short);
+                return "<a href='https://www.gridcoinstats.eu/tx/$txid'>$txid_short_html...</a>";
+        }
 }
 
 
@@ -145,9 +151,8 @@ function html_pool_info() {
         global $pool_name,$message_pool_info;
 
         return <<<_END
-<div id=pool_info class=selectable_block>
+<div id=pool_info_block class=selectable_block>
 <h2>Pool info</h2>
-<p>Welcome to $pool_name</p>
 $message_pool_info
 </div>
 
@@ -156,14 +161,15 @@ _END;
 
 // Register form
 function html_register_form() {
-    return <<<_END
-<div id=register_form class=selectable_block>
+        global $pool_min_password_length;
+        return <<<_END
+<div id=register_form_block class=selectable_block>
 <form name=register_form method=POST>
 <h2>Register</h2>
 <p>Username: <input type=text name=username> required</p>
-<p>Password 1: <input type=password name=password_1> required</p>
-<p>Password 2: <input type=password name=password_2> re-type password</p>
-<p>E-mail: <input type=text name=email> for password recovery (you can write me, and I send you new password for account)</p>
+<p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
+<p>Re-type password: <input type=password name=password_2></p>
+<p>E-mail: <input type=text name=email> for password recovery (you can write me from that mail, and I send you new password for account)</p>
 <p>GRC address: <input type=text name=grc_address> required</p>
 <p><input type=hidden name="action" value="register"></p>
 <p><input type=submit value="Register"></p>
@@ -176,7 +182,7 @@ _END;
 // Login form
 function html_login_form() {
     return <<<_END
-<div id=login_form class=selectable_block>
+<div id=login_form_block class=selectable_block>
 <form name=login_form method=POST>
 <h2>Login</h2>
 <p>Username: <input type=text name=username></p>
@@ -202,7 +208,7 @@ function html_change_settings_form() {
     $grc_address_html=htmlspecialchars($grc_address);
 
     return <<<_END
-<div id=settings class=selectable_block>
+<div id=settings_block class=selectable_block>
 <h2>Settings</h2>
 <form name=change_settings_form method=POST>
 <p><input type=hidden name="action" value="change_settings"></p>
@@ -211,7 +217,7 @@ function html_change_settings_form() {
 <p>GRC address: <input type=text name=grc_address value='$grc_address_html'></p>
 <p>Password: <input type=password name=password> the password is required to change settings</p>
 <p>New password: <input type=password name=new_password1> only if you wish to change password</p>
-<p>New password: <input type=password name=new_password2></p>
+<p>Re-type new password: <input type=password name=new_password2></p>
 <p><input type=submit value="Update"></p>
 </form>
 </div>
@@ -224,7 +230,7 @@ function html_user_hosts() {
         global $username,$username_token;
 
         $result="";
-        $result.="<div id=your_hosts class=selectable_block>\n";
+        $result.="<div id=your_hosts_block class=selectable_block>\n";
         $result.="<h2>Your hosts</h2>\n";
         $result.="<p>That information will be synced to your BOINC client. Sync second time after 10-20 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
         $result.="<table>\n";
@@ -282,7 +288,7 @@ _END;
             }
 
         $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
-WHERE `status` IN ('whitelisted') AND `uid` NOT IN (
+WHERE `status` IN ('enabled') AND `uid` NOT IN (
         SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
         WHERE `host_uid`='$host_uid_escaped' AND bap.detach=0
@@ -323,7 +329,7 @@ function html_boinc_results() {
 
         $result="";
 
-        $result.="<div id=boinc_results class=selectable_block>\n";
+        $result.="<div id=boinc_results_block class=selectable_block>\n";
         $result.="<h2>BOINC results:</h2>\n";
 
         $result.="<p>That information we received from various BOINC projects:</p>\n";
@@ -420,7 +426,7 @@ function html_billing_form() {
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         return <<<_END
-<div id=billing class=selectable_block>
+<div id=billing_block class=selectable_block>
 <h2>Billing</h2>
 <form name=billing method=post>
 <p>Fill data carefully, that cannot be undone!</p>
@@ -442,7 +448,7 @@ function html_user_control_form() {
 
         $result="";
         $users_array=db_query_to_array("SELECT `uid`,`username`,`email`,`grc_address`,`status` FROM `boincmgr_users`");
-        $result.="<div id=user_control class=selectable_block>\n";
+        $result.="<div id=user_control_block class=selectable_block>\n";
         $result.="<h2>User control</h2>\n";
         $result.="<p><table>\n";
         $result.="<tr><th>Username</th><th>email</th><th>grc_address</th><th>Status</th><th>Action</th></tr>\n";
@@ -478,15 +484,16 @@ function html_project_control_form() {
         global $username_token;
         $result="";
         $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
-        $result.="<div id=project_control class=selectable_block>\n";
+        $result.="<div id=project_control_block class=selectable_block>\n";
         $result.="<h2>Project control</h2>\n";
-        $result.="<p>Whitelisted means project data updated and rewards are on. Greylisted - only update project data, blacklisted - do not check anything about this project.</p>";
+        $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
+        $result.="<p>Whitelisted projects should be enabled, others ore stats only or disabled.</p>";
         $result.="<p><table>\n";
         $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_project_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
-        $project_options="<select name=status><option>whitelisted</option><option>greylisted</option><option>blacklisted</option></select>";
+        $project_options="<select name=status><option>enabled</option><option>stats only</option><option>disabled</option></select>";
         $submit_button="<input type=submit value='change'>";
 
         foreach($projects_array as $project_record) {
@@ -515,7 +522,7 @@ function html_project_control_form() {
 // Show payouts
 function html_payouts() {
         $result="";
-        $result.="<div id=payouts class=selectable_block>\n";
+        $result.="<div id=payouts_block class=selectable_block>\n";
         $result.="<h2>Payouts</h2>\n";
         $result.="<p>Last 10 billings from pool:</p>\n";
         $billings_array=db_query_to_array("SELECT `uid`,`start_date`,`stop_date`,`reward` FROM `boincmgr_billing_periods` ORDER BY `stop_date` DESC");
@@ -571,7 +578,7 @@ function html_payouts() {
 // Show log
 function html_view_log() {
         $result="";
-        $result.="<div id=log class=selectable_block>\n";
+        $result.="<div id=log_block class=selectable_block>\n";
         $result.="<h2>View log</h2>\n";
         $result.="<p>Last 100 messages:</p>\n";
         $result.="<p><table>\n";
@@ -594,8 +601,9 @@ function html_view_log() {
 // Show pool stats
 function html_pool_stats() {
         $result="";
-        $result.="<div id=pool_stats class=selectable_block>\n";
+        $result.="<div id=pool_stats_block class=selectable_block>\n";
         $result.="<h2>Pool stats</h2>\n";
+        $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
         $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
         if($start_date=="") $start_date="2018-01-01 20:20:16";
         $stop_date=db_query_to_variable("SELECT NOW()");
@@ -635,7 +643,7 @@ function html_pool_stats() {
 // Show user stats
 function html_user_stats() {
         $result="";
-        $result.="<div id=your_stats class=selectable_block>\n";
+        $result.="<div id=your_stats_block class=selectable_block>\n";
         $result.="<h2>Your stats</h2>\n";
         $result.="</div>\n";
         return $result;
