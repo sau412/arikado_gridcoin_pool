@@ -12,8 +12,8 @@ require_once("auth.php");
 
 db_connect();
 
-// Get whitelisted and greylisted projects
-$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url` FROM `boincmgr_projects` WHERE `status` IN ('whitelisted','greylisted')");
+// Get enabled and stats only projects
+$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url` FROM `boincmgr_projects` WHERE `status` IN ('enabled','stats only')");
 
 // Setup cURL
 $ch=curl_init();
