@@ -12,12 +12,12 @@ function bill_close_period($start_date,$stop_date,$total_reward,$check_rewards) 
         }
 
         $reward_array=array();
-        $whitelisted_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='whitelisted' ORDER BY `name` ASC");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='enabled' ORDER BY `name` ASC");
 
         $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
 
         // Calculate rewards for each project
-        foreach($whitelisted_projects_array as $project) {
+        foreach($enabled_projects_array as $project) {
                 $project_uid=$project['uid'];
                 $project_name=$project['name'];
                 $project_uid_escaped=db_escape($project_uid);
@@ -50,9 +50,9 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
         $stop_date_escaped=db_escape($stop_date);
         $pre_result=array();
         $result=array();
-        $whitelisted_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='whitelisted'");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='enabled'");
         $contrib_sum=0;
-        foreach($whitelisted_projects_array as $project) {
+        foreach($enabled_projects_array as $project) {
                 $project_uid=$project['uid'];
                 $project_name=$project['name'];
                 $project_uid_escaped=db_escape($project_uid);
