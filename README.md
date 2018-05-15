@@ -16,12 +16,12 @@ Simple gridcoin pool
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
 2) Create DB and user for pool
 3) Run manual.sql in pool's DB
-4) Register at every whitelisted BOINC project with one login and password
+4) Register at every whitelisted BOINC project with one login and password.
 4.1) You name in World Community Grid should be same as your email
 4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
 4.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
 5) Change settings in your settings.php
-6) Set cron 1h to update_projects_data.php, 1d to send_rewards.php
+6) Set cron 1h to update_projects_data.php and send_rewards.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
 8) Setup gridcoinresearch wallets, send beacon, wait for rewards
 
@@ -39,7 +39,11 @@ Simple gridcoin pool
 
 # User and project control (for admins)
 1) Banned users are not receive rewards
-2) Greylisted projects are not receive rewards too
+2) Stats only and disabled projects are not receiving rewards too
+3) If you not interested in any projects within the pool change their state to disabled
+
+# How rewarding works
+In gridcoin you receive rewards for BOINC projects when your coins stake. You need about 2000 gridcoins to stake at least once a 6 months (payout horizont). So, if you haven't much coins, you can use one of pools to receive rewards. Each whitelisted project rewarded equally, as I know. Rewards distributed between members of Gridcoin team in BOINC in accordance with contribution. When reward received (and admin clicks 'send rewards' button), rewards distributed between all projects using pool proportion (see Pool stats page). Each project reward distributed between contributors in accordance with contribution.
 
 # Billing
 Billing works in manual mode. After billing rewards send automatically.
