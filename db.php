@@ -1,11 +1,12 @@
-<?php
+[B<?php
 // Various DB functions
 
 // Connect to DB
 function db_connect() {
-    global $db_host,$db_login,$db_password,$db_base;
-    $res=mysql_pconnect($db_host,$db_login,$db_password);
-    mysql_select_db($db_base);
+        global $db_host,$db_login,$db_password,$db_base;
+        $res=mysql_pconnect($db_host,$db_login,$db_password);
+        mysql_select_db($db_base);
+        //db_query("SET NAMES 'utf8'");
 }
 
 // Query
@@ -21,31 +22,31 @@ function db_query($query) {
 
 // Query and return results array
 function db_query_to_array($query) {
-    $result_array=array();
-    $result=db_query($query);
-    if(mysql_num_rows($result)) {
-        while($row=mysql_fetch_assoc($result)) {
-            $result_array[]=$row;
+        $result_array=array();
+        $result=db_query($query);
+        if(mysql_num_rows($result)) {
+                while($row=mysql_fetch_assoc($result)) {
+                        $result_array[]=$row;
+                }
         }
-    }
-    return $result_array;
+        return $result_array;
 }
 
 // Escape string
 function db_escape($string) {
-    return mysql_real_escape_string($string);
+        return mysql_real_escape_string($string);
 }
 
 // Query and return value from first row first column
 function db_query_to_variable($query) {
-    $result=db_query($query);
-    if(mysql_num_rows($result)) {
-        $row=mysql_fetch_array($result);
-        $res=$row[0];
-    } else {
-        $res="";
-    }
-    return $res;
+        $result=db_query($query);
+        if(mysql_num_rows($result)) {
+                $row=mysql_fetch_array($result);
+                $res=$row[0];
+        } else {
+                $res="";
+        }
+        return $res;
 }
 
 // For php7
