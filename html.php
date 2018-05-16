@@ -298,7 +298,7 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC
                                 $project_uid_escaped=db_escape($project_uid);
                                 $project_name_html=html_escape($project_name);
 
-                                if($host_id=="" || $host_id==0) $attached_project_msg="not synced properly";
+                                if($host_id=="" || $host_id==0) $attached_project_msg="<span class=not_synced>not synced properly</span>";
                                 else $attached_project_msg="";
 
                                 $detach_form=<<<_END
@@ -306,7 +306,6 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC
 $project_name_html
 <input type=hidden name=action value='detach'>
 <input type=hidden name=attached_uid value='$attached_project_uid'>
-<input type=hidden name=host_uid value='$host_uid'>
 <input type=hidden name=token value='$username_token'>
 <input type=submit value='detach'>
 $attached_project_msg
