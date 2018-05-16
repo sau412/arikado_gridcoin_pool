@@ -50,8 +50,7 @@ Billing works in manual mode. After billing rewards send automatically.
 1) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
 2) Other billings: when pools wallet stakes, write current stake date (previous stake date is autom-filled) and rewards, click "send rewards"
 
-# Todo
-* BOINC client can send incorrect XML, so we need more robust parser
-* Filter unknown projects from clients
-* Show error when somebody try to steal host (attach host with same host_id and host cpid)
-* Make attach and detach projects functions in boincmgr.php
+# To do
+* Graphs
+* Automatic pool setup
+* Pool info editor
