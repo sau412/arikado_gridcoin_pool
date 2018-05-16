@@ -61,13 +61,13 @@ function html_top_message($message) {
 
 // Return project name as url
 function html_project_name_link($project_name,$project_url) {
-        $project_name_html=htmlspecialchars($project_name);
+        $project_name_html=html_escape($project_name);
         return "<a href='$project_url'>$project_name</a>";
 }
 
 // Return grc address as URL
 function html_grc_address_link($grc_address) {
-        $grc_address_html=htmlspecialchars($grc_address);
+        $grc_address_html=html_escape($grc_address);
         return "<a href='https://www.gridcoinstats.eu/address/$grc_address'>$grc_address</a>";
 }
 
@@ -77,7 +77,7 @@ function html_txid_link($txid) {
                 return "no txid";
         } else {
                 $txid_short=substr($txid,0,10);
-                $txid_short_html=htmlspecialchars($txid_short);
+                $txid_short_html=html_escape($txid_short);
                 return "<a href='https://www.gridcoinstats.eu/tx/$txid'>$txid_short_html...</a>";
         }
 }
@@ -94,7 +94,7 @@ function html_page_header($flags_array) {
         $menu=html_get_menu($flags_array);
 
         if($action_message!='') {
-                $action_message_html=htmlspecialchars($action_message);
+                $action_message_html=html_escape($action_message);
                 $action_message_result=html_top_message($action_message_html);
         } else {
                 $action_message_result="";
@@ -149,7 +149,7 @@ function html_greeting_user() {
         global $username,$username_token;
 
         if($username!='') {
-        $username_html=htmlspecialchars($username);
+        $username_html=html_escape($username);
                 return "Welcome, $username_html (<a href='./?action=logout&token=$username_token'>logout</a>)";
         } else {
                 return "Hello, stranger";
@@ -214,8 +214,8 @@ function html_change_settings_form() {
         $email=db_query_to_variable("SELECT `email` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
         $grc_address=db_query_to_variable("SELECT `grc_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
 
-        $email_html=htmlspecialchars($email);
-        $grc_address_html=htmlspecialchars($grc_address);
+        $email_html=html_escape($email);
+        $grc_address_html=html_escape($grc_address);
 
         return <<<_END
 <div id=settings_block class=selectable_block>
@@ -258,9 +258,9 @@ ORDER BY bh.`domain_name` ASC");
                         $p_mode=$host['p_model'];
                         $projects=$host['projects'];
 
-                        $domain_name_html=htmlspecialchars($domain_name);
-                        $p_mode_html=htmlspecialchars($p_mode);
-                        $projects_html=htmlspecialchars($projects);
+                        $domain_name_html=html_escape($domain_name);
+                        $p_mode_html=html_escape($p_mode);
+                        $projects_html=html_escape($projects);
 
                         $result.="<tr><td>$domain_name_html</td><td>$p_mode_html</td><td>$projects_html</td></tr>\n";
                 }
@@ -276,9 +276,9 @@ ORDER BY bh.`domain_name` ASC");
                         $domain_name=$host['domain_name'];
                         $p_mode=$host['p_model'];
 
-                        $host_cpid_html=htmlspecialchars($host_cpid);
-                        $domain_name_html=htmlspecialchars($domain_name);
-                        $p_mode_html=htmlspecialchars($p_mode);
+                        $host_cpid_html=html_escape($host_cpid);
+                        $domain_name_html=html_escape($domain_name);
+                        $p_mode_html=html_escape($p_mode);
 
                         $host_uid_escaped=db_escape($host_uid);
 
@@ -296,7 +296,7 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC
                                 $project_uid=$project_data['project_uid'];
 
                                 $project_uid_escaped=db_escape($project_uid);
-                                $project_name_html=htmlspecialchars($project_name);
+                                $project_name_html=html_escape($project_name);
 
                                 if($host_id=="" || $host_id==0) $attached_project_msg="not synced properly";
                                 else $attached_project_msg="";
@@ -385,9 +385,9 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`domain_name`,bphl
                 $p_model=$boinc_host_data['p_model'];
                 $expavg_credit=round($boinc_host_data['rac']);
 
-                $domain_name_html=htmlspecialchars($domain_name);
-                $p_model_html=htmlspecialchars($p_model);
-                $expavg_credit_html=htmlspecialchars($expavg_credit);
+                $domain_name_html=html_escape($domain_name);
+                $p_model_html=html_escape($p_model);
+                $expavg_credit_html=html_escape($expavg_credit);
 
                 $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$expavg_credit_html</td></tr>\n";
         }
@@ -415,8 +415,8 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bp.`name` ORDER BY bp.`
                 $expavg_credit=round($boinc_host_data['rac']);
                 $project_name=$boinc_host_data['name'];
 
-                $expavg_credit_html=htmlspecialchars($expavg_credit);
-                $project_name_html=htmlspecialchars($project_name);
+                $expavg_credit_html=html_escape($expavg_credit);
+                $project_name_html=html_escape($project_name);
 
                 $result.="<tr><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
         }
@@ -446,11 +446,11 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
                 $expavg_credit=$boinc_host_data['expavg_credit'];
                 $project_name=$boinc_host_data['name'];
 
-                $host_cpid_html=htmlspecialchars($host_cpid);
-                $domain_name_html=htmlspecialchars($domain_name);
-                $p_model_html=htmlspecialchars($p_model);
-                $expavg_credit_html=htmlspecialchars($expavg_credit);
-                $project_name_html=htmlspecialchars($project_name);
+                $host_cpid_html=html_escape($host_cpid);
+                $domain_name_html=html_escape($domain_name);
+                $p_model_html=html_escape($p_model);
+                $expavg_credit_html=html_escape($expavg_credit);
+                $project_name_html=html_escape($project_name);
 
                 $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
         }
@@ -508,10 +508,10 @@ function html_user_control_form() {
                 $grc_address=$user_record['grc_address'];
                 $status=$user_record['status'];
 
-                $username_html=htmlspecialchars($username);
-                $email_html=htmlspecialchars($email);
-                $grc_address_html=htmlspecialchars($grc_address);
-                $status_html=htmlspecialchars($status);
+                $username_html=html_escape($username);
+                $email_html=html_escape($email);
+                $grc_address_html=html_escape($grc_address);
+                $status_html=html_escape($status);
                 $form_hidden_user_uid="<input type=hidden name=user_uid value='$uid'>";
 
                 $actions="<form name=change_user method=post>".$form_hidden_action.$form_hidden_user_uid.$form_hidden_token.$user_options.$submit_button."</form>";
@@ -547,11 +547,11 @@ function html_project_control_form() {
                 $status=$project_record['status'];
                 $cpid=$project_record['cpid'];
 
-                $name_html=htmlspecialchars($name);
-                $project_url_html=htmlspecialchars($project_url);
-                $url_signature_html=htmlspecialchars($url_signature);
-                $status_html=htmlspecialchars($status);
-                $cpid_html=htmlspecialchars($cpid);
+                $name_html=html_escape($name);
+                $project_url_html=html_escape($project_url);
+                $url_signature_html=html_escape($url_signature);
+                $status_html=html_escape($status);
+                $cpid_html=html_escape($cpid);
                 $form_hidden_project_uid="<input type=hidden name=project_uid value='$uid'>";
 
                 $actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
@@ -589,9 +589,9 @@ function html_payouts() {
                         $timestamp=$payout_data['timestamp'];
 
                         $grc_address_link=html_grc_address_link($grc_address);
-                        $amount_html=htmlspecialchars($amount);
+                        $amount_html=html_escape($amount);
                         $txid_link=html_txid_link($txid);
-                        $timestamp_html=htmlspecialchars($timestamp);
+                        $timestamp_html=html_escape($timestamp);
 
                         $result.="<tr><td>$grc_address_link</td><td>$txid_link</td><td>$amount_html</td><td>$timestamp_html</td></tr>\n";
                 }
@@ -614,8 +614,8 @@ function html_view_log() {
                 $message=$data['message'];
                 $timestamp=$data['timestamp'];
 
-                $message_html=htmlspecialchars($message);
-                $timestamp_html=htmlspecialchars($timestamp);
+                $message_html=html_escape($message);
+                $timestamp_html=html_escape($timestamp);
 
                 $result.="<tr><td>$timestamp_html</td><td>$message_html</td></tr>\n";
         }
@@ -655,11 +655,11 @@ function html_pool_stats() {
                 $expavg_credit=round($expavg_credit);
 
                 $name_link=html_project_name_link($name,$project_url);
-                $team_expavg_credit_html=htmlspecialchars($team_expavg_credit);
-                $expavg_credit_html=htmlspecialchars($expavg_credit);
-                $team_proportion_html=htmlspecialchars($team_proportion);
-                $proportion_html=htmlspecialchars($proportion);
-                $status_html=htmlspecialchars($status);
+                $team_expavg_credit_html=html_escape($team_expavg_credit);
+                $expavg_credit_html=html_escape($expavg_credit);
+                $team_proportion_html=html_escape($team_proportion);
+                $proportion_html=html_escape($proportion);
+                $status_html=html_escape($status);
 
                 $result.="<tr><td>$name_link</td><td>$team_expavg_credit_html</td><td>$expavg_credit_html</td><td>$team_proportion_html %</td><td>$proportion_html %</td><td>$status_html</td></tr>\n";
         }
