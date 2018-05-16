@@ -119,12 +119,12 @@ GROUP BY bu.`grc_address`");
 
 // Combine rewards arrays to avoid multiple payouts to single address
 function reward_array_combine($reward_array_1,$reward_array_2) {
-    $reward_array=$reward_array_1;
-    foreach($reward_array_2 as $grc_address => $reward) {
-        if(isset($reward_array[$grc_address])) $reward_array[$grc_address]+=$reward;
-        else $reward_array[$grc_address]=$reward;
-    }
-    return $reward_array;
+        $reward_array=$reward_array_1;
+        foreach($reward_array_2 as $grc_address => $reward) {
+                if(isset($reward_array[$grc_address])) $reward_array[$grc_address]+=$reward;
+                else $reward_array[$grc_address]=$reward;
+        }
+        return $reward_array;
 }
 
 ?>
