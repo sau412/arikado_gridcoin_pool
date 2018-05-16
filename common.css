@@ -43,3 +43,8 @@ ul li a:hover {
         background-color: #FFA;
         padding: 0.1em 1em;
 }
+
+.not_synced {
+        color: #F00;
+        font-weight: bold;
+}
