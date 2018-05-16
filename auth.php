@@ -1,14 +1,34 @@
 <?php
 // Contains authorization and authentification functions
 
+// Costants and messages
+define(AUTH_REGISTER_OK,1);
+define(AUTH_REGISTER_FAIL_LOGIN,2);
+define(AUTH_REGISTER_FAIL_PASSWORD,3);
+define(AUTH_REGISTER_FAIL_PASSWORD_MISMATCH,4);
+define(AUTH_REGISTER_FAIL_EMAIL,5);
+define(AUTH_REGISTER_FAIL_GRC_ADDRESS,6);
+define(AUTH_REGISTER_FAIL_DB,7);
+define(AUTH_REGISTER_FAIL_USERNAME_EXISTS,8);
+
+$auth_register_result_to_message=array(
+        AUTH_REGISTER_OK=>$message_register_success,
+        AUTH_REGISTER_FAIL_LOGIN=>$message_register_fail_login,
+        AUTH_REGISTER_FAIL_PASSWORD=>$message_register_fail_password,
+        AUTH_REGISTER_FAIL_EMAIL=>$message_register_fail_email,
+        AUTH_REGISTER_FAIL_GRC_ADDRESS=>$message_register_fail_grc_address,
+        AUTH_REGISTER_FAIL_DB=>$message_register_fail_db,
+        AUTH_REGISTER_FAIL_USERNAME_EXISTS=>$message_register_fail_username_exists,
+);
+
 // Check auth
 function auth_check() {
-    if(isset($_COOKIE['username'])) $username=$_COOKIE['username'];
-    else return FALSE;
-    if(isset($_COOKIE['passwd_hash'])) $passwd_hash=$_COOKIE['passwd_hash'];
-    else return FALSE;
+        if(isset($_COOKIE['username'])) $username=$_COOKIE['username'];
+        else return FALSE;
+        if(isset($_COOKIE['passwd_hash'])) $passwd_hash=$_COOKIE['passwd_hash'];
+        else return FALSE;
 
-    return auth_check_hash($username,$passwd_hash);
+        return auth_check_hash($username,$passwd_hash);
 }
 
 // Check auth
@@ -38,8 +58,8 @@ function auth_validate_username($username) {
 }
 
 // Check email format
-function auth_validate_mail($email) {
-        if(preg_match('/^[A-Za-z0-9_-.@+]+$/',$email)) return TRUE;
+function auth_validate_email($email) {
+        if(preg_match('/^.{0,100}$/',$email)) return TRUE;
         else return FALSE;
 }
 
@@ -58,23 +78,29 @@ function auth_validate_grc_address($grc_address) {
 
 // Register new user
 function auth_add_user($username,$email,$password_1,$password_2,$grc_address) {
-        if($password_1 != $password_2) return FALSE;
-        if(auth_validate_username($username)==FALSE) return FALSE;
-        // Email has too complex format
-        //if(auth_validate_email($email)==FALSE) return FALSE;
-        if(auth_validate_password($password_1)==FALSE) return FALSE;
-        if(auth_validate_grc_address($grc_address)==FALSE) return FALSE;
+        // Various checks
+        if($password_1 != $password_2) return AUTH_REGISTER_FAIL_PASSWORD_MISMATCH;
+        if(auth_validate_username($username)==FALSE) return AUTH_REGISTER_FAIL_LOGIN;
+        if(auth_validate_email($email)==FALSE) return AUTH_REGISTER_FAIL_EMAIL;
+        if(auth_validate_password($password_1)==FALSE) return AUTH_REGISTER_FAIL_PASSWORD;
+        if(auth_validate_grc_address($grc_address)==FALSE) return AUTH_REGISTER_FAIL_GRC_ADDRESS;
 
-        auth_log("Register username '$username' mail '$email' grc_address '$grc_address'");
-
+        // Escaping and lowercasing
         $username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
         $grc_address_escaped=db_escape($grc_address);
         $password_hash=auth_hash($username,$password_1);
+
+        // Check is username exists
+        $username_exists_flag=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        if($username_exists_flag) return AUTH_REGISTER_FAIL_USERNAME_EXISTS;
+
+        // Add new user
+        auth_log("Register username '$username' mail '$email' grc_address '$grc_address'");
         $result=db_query("INSERT INTO `boincmgr_users` (`username`,`email`,`passwd_hash`,`grc_address`,`status`) VALUES ('$username_escaped','$email_escaped','$password_hash','$grc_address_escaped','user')");
-        if($result) return TRUE;
-        else return FALSE;
+        if($result) return AUTH_REGISTER_OK;
+        else return AUTH_REGISTER_FAIL_DB;
 }
 
 // Change password and other settings
@@ -108,8 +134,10 @@ function auth_login($username,$password) {
                 auth_log("Login username '$username'");
                 setcookie("username",$username);
                 setcookie("passwd_hash",$passwd_hash);
+                return TRUE;
         } else {
                 auth_log("Login failed username '$username'");
+                return FALSE;
         }
 }
 
