@@ -70,12 +70,19 @@ _END;
 $username_uid=boincmgr_get_username_uid($username);
 $username_uid_escaped=db_escape($username_uid);
 
+$host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
+$host_uid_escaped=db_escape($host_uid);
+
+$host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
+if($username_uid!=$host_owner_uid) {
+        auth_log("Sync username '$username' error, username is not owner host_uid '$host_uid'");
+        echo xml_error_message($message_host_error,-102);
+        die();
+}
+
 db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
 VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
 ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`),`timestamp`=CURRENT_TIMESTAMP");
-
-$host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
-$host_uid_escaped=db_escape($host_uid);
 
 foreach($xml_data["projects"] as $project_data) {
         $project_name=$project_data["project_name"];
