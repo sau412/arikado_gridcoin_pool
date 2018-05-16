@@ -37,14 +37,13 @@ echo "Updating data for $project_name\n";
         curl_setopt($ch,CURLOPT_URL,$project_url."get_project_config.php");
         $data = curl_exec ($ch);
 if($data=="") { echo "No data from project\n"; continue; }
-//      var_dump($data);
+        //var_dump($data);
         $xml=simplexml_load_string($data);
 
-        if($xml==FALSE)
-                {
+        if($xml==FALSE) {
                 echo "Error: $project_url\n\n";
                 continue;
-                }
+        }
 $data_escaped=db_escape($data);
 db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name get_project_config','$data_escaped')");
 
@@ -53,29 +52,13 @@ db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_
         $master_url=(string)$xml->master_url;
         if($rpc_url=="") $rpc_url=$master_url;
 
-echo "web_rpc_url_base: $rpc_url\n";
-        $platform_names="";
-        foreach($xml->platforms->platform as $platform)
-                {
-                //var_dump($platform);
-                $pl_name=$platform->platform_name;
-                $pl_fr_name=$platform->user_friendly_name;
-                $plan_class=$platform->plan_class;
-                if($plan_class)
-                        $platform_names.="$pl_name -- $pl_fr_name -- $plan_class\n";
-                else
-                        $platform_names.="$pl_name -- $pl_fr_name -- no plan class\n";
-                }
-
-        //echo "Project $name ($master_url)\n";
-        //echo "$platform_names\n";
         $name_escaped=db_escape($name);
         $master_url_escaped=db_escape($master_url);
 
         // Login to project
         curl_setopt($ch,CURLOPT_URL,$rpc_url."lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash");
         $data=curl_exec($ch);
-
+//var_dump($data);
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Login to project error\n"; echo $rpc_url."/lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n"; continue; }
 $data_escaped=db_escape($data);
@@ -87,6 +70,7 @@ db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_
         $data=curl_exec($ch);
 
         $xml=simplexml_load_string($data);
+//var_dump($data);
         if($xml==FALSE) { echo "Get weak auth key error\n"; continue; }
 $data_escaped=db_escape($data);
 db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name am_get_info','$data_escaped')");
@@ -101,6 +85,7 @@ db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_
         // Get Gridcoin team stats (for billing purposes)
         curl_setopt($ch,CURLOPT_URL,$rpc_url."team_lookup.php?team_name=Gridcoin&format=xml");
         $data=curl_exec($ch);
+//var_dump($data);
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Get gridcoin team stats error\n"; continue; }
 $data_escaped=db_escape($data);
@@ -119,12 +104,14 @@ db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_
         // Get pool account stats (for billing purposes)
         curl_setopt($ch,CURLOPT_URL,$rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml");
         $data=curl_exec($ch);
+//var_dump($data);
         $xml=simplexml_load_string($data);
         if($xml==FALSE) { echo "Get hosts info error\n"; echo $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml\n"; continue; }
 //var_dump($data);
 $data_escaped=db_escape($data);
+//echo "INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name show_user','$data_escaped')";
 db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name show_user','$data_escaped')");
-
+//echo "done\n";flush();
         $project_cpid=(string)$xml->cpid;
         $expavg_credit=(string)$xml->expavg_credit;
         $expavg_credit_escaped=db_escape($expavg_credit);
@@ -193,5 +180,9 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
         $full_sync_count++;
 }
 
-auth_log("Projects to sync $project_count, synced $full_sync_count");
+if($test_mode==FALSE) {
+        auth_log("Projects to sync $project_count, synced $full_sync_count");
+} else {
+        auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count");
+}
 ?>
