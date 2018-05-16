@@ -3,10 +3,49 @@
 
 // Attach project
 function boincmgr_attach($username,$host_uid,$project_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $host_uid_escaped=db_escape($host_uid);
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        // Check if host_uid belongs to this user
+        $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
+        if($host_uid) {
+                $project_name=boincmgr_get_project_name($project_uid);
+                $host_name=boincmgr_get_host_name($host_uid);
+                auth_log("Attach username '$username' project '$project_name' to host '$host_name'");
+                $host_uid_escaped=db_escape($host_uid);
+                db_query("INSERT INTO `boincmgr_attach_projects` (`project_uid`,`host_uid`) VALUES ('$project_uid_escaped','$host_uid_escaped') ON DUPLICATE KEY UPDATE `detach`=0");
+                return TRUE;
+        } else {
+                return FALSE;
+        }
 }
 
 // Detach project
-function boincmgr_detach($username,$attach_uid) {
+function boincmgr_detach($username,$attached_uid) {
+        $attached_uid_escaped=db_escape($attached_uid);
+        $host_uid=db_query_to_variable("SELECT `host_uid` FROM `boincmgr_attach_projects` WHERE `uid`='$attached_uid_escaped'");
+        $project_uid=db_query_to_variable("SELECT `project_uid` FROM `boincmgr_attach_projects` WHERE `uid`='$attached_uid_escaped'");
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+        $host_uid_escaped=db_escape($host_uid);
+
+        // Check if host_uid belongs to this user
+        $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
+        if($host_uid) {
+                $host_uid_escaped=db_escape($host_uid);
+                $host_name=boincmgr_get_host_name($host_uid);
+
+                auth_log("Detach username '$username' project '$project_name' from host '$host_name'");
+                $host_uid_escaped=db_escape($host_uid);
+
+                db_query("UPDATE `boincmgr_attach_projects` SET `detach`=1 WHERE `uid`='$attached_uid_escaped'");
+                return TRUE;
+        } else {
+                return FALSE;
+        }
 }
 
 // Get project name by uid
@@ -29,7 +68,7 @@ function boincmgr_get_user_name($uid) {
 
 // Get user uid by username
 function boincmgr_get_username_uid($username) {
-        $username_escaped=db_escape($username);
+        $username_escaped=db_escape(strtolower($username));
         return db_query_to_variable("SELECT `uid` FROM `boincmgr_users` WHERE `username` = '$username_escaped'");
 }
 
@@ -39,10 +78,20 @@ function boincmgr_get_project_uid($project_name) {
         return db_query_to_variable("SELECT `uid` FROM `boincmgr_projects` WHERE `name` = '$project_name_escaped'");
 }
 
+// Check project weak key
+function boincmgr_check_weak_key($project_uid,$weak_key) {
+        $project_uid_escaped=db_escape($project_uid);
+        $weak_key_escaped=db_escape($weak_key);
+        $weak_key_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_projects` WHERE `uid` = '$project_uid_escaped' AND `weak_auth` = '$weak_key_escaped'");
+        if($weak_key_exists) return TRUE;
+        else return FALSE;
+}
+
 // Get host uid by user name and host_cpid
 function boincmgr_get_host_uid($username_uid,$host_cpid) {
         $username_uid_escaped=db_escape($username_uid);
         $host_cpid_escaped=db_escape($host_cpid);
         return db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid` = '$username_uid_escaped' AND `internal_host_cpid`='$host_cpid_escaped'");
 }
+
 ?>
