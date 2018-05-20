@@ -51,16 +51,11 @@ if($username!="") {
                         $new_password1=html_strip($_POST['new_password1']);
                         $new_password2=html_strip($_POST['new_password2']);
 
-                        $passwd_hash2=auth_hash($username,$password);
-                        if($passwd_hash2==$passwd_hash) {
-                                $result=auth_change_settings($username,$email,$new_password1,$new_password2,$grc_address);
-                                if($result==TRUE) {
-                                        setcookie("action_message",$message_change_settings_ok);
-                                } else {
-                                        setcookie("action_message",$message_change_settings_validation_fail);
-                                }
+                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$grc_address);
+                        if($result==TRUE) {
+                                setcookie("action_message",$message_change_settings_ok);
                         } else {
-                                setcookie("action_message",$message_change_settings_password_fail);
+                                setcookie("action_message",$message_change_settings_validation_fail);
                         }
                         header("Location: ./");
                         die();
