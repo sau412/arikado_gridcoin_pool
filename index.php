@@ -5,14 +5,26 @@ require_once("auth.php");
 require_once("html.php");
 require_once("billing.php");
 require_once("boincmgr.php");
+require_once("canvas.php");
 
 db_connect();
 
-// Get auth variables from cookies
-if(isset($_COOKIE['username'])) $username=html_strip($_COOKIE['username']);
-else $username="";
-if(isset($_COOKIE['passwd_hash'])) $passwd_hash=html_strip($_COOKIE['passwd_hash']);
-else $passwd_hash="";
+// Get auth_cookie from cookies and check authentification
+if(isset($_COOKIE['auth_cookie']) && auth_validate_auth_cookie($_COOKIE['auth_cookie'])) {
+        $auth_cookie=html_strip($_COOKIE['auth_cookie']);
+        $auth_cookie_escaped=db_escape($auth_cookie);
+        $username_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_user_auth_cookies` WHERE `cookie_token`='$auth_cookie_escaped' AND `expire_date`>CURRENT_TIMESTAMP");
+        if($username_uid) {
+                $username=boincmgr_get_user_name($username_uid);
+                db_query("UPDATE `boincmgr_user_auth_cookies` SET `expire_date`=DATE_ADD(NOW(),INTERVAL 2 DAY) WHERE `cookie_token`='$auth_cookie_escaped'");
+        } else {
+                $username="";
+        }
+} else {
+        $username="";
+}
+
+// Check if action message exists
 if(isset($_COOKIE['action_message'])) {
         $action_message=html_strip($_COOKIE['action_message']);
         setcookie("action_message",'');
@@ -22,12 +34,12 @@ if(isset($_COOKIE['action_message'])) {
 
 // Get token from variables and from db
 $username_token=auth_get_current_token($username);
-if(isset($_GET['token'])) $received_token=html_strip($_GET['token']);
-else if(isset($_POST['token'])) $received_token=html_strip($_POST['token']);
+if(isset($_GET['token']) && auth_validate_hash($_GET['token'])) $received_token=html_strip($_GET['token']);
+else if(isset($_POST['token']) && auth_validate_hash($_POST['token'])) $received_token=html_strip($_POST['token']);
 else $received_token="";
 
 // Branch for registered user
-if(auth_check($username,$passwd_hash)) {
+if($username!="") {
         if(isset($_POST['action'])) {
                 if($username_token!=$received_token) die($message_bad_token);
 
@@ -70,48 +82,59 @@ if(auth_check($username,$passwd_hash)) {
                         setcookie("action_message",$message_project_detached);
                         header("Location: ./");
                         die();
-                // Change user status (for admin)
-                } else if($_POST['action']=='change_user_status') {
-                        $user_uid=html_strip($_POST['user_uid']);
-                        $status=html_strip($_POST['status']);
+                // Next actions for admins
+                } else if(auth_is_admin($username)) {
+                        // Change user status (for admin)
+                        if($_POST['action']=='change_user_status') {
+                                $user_uid=html_strip($_POST['user_uid']);
+                                $status=html_strip($_POST['status']);
 
-                        $username=boincmgr_get_user_name($user_uid);
-                        auth_log("Admin change user status user '$username' status '$status'");
+                                if(auth_validate_ascii($status)==FALSE) die("Status validation error");
 
-                        $user_uid_escaped=db_escape($user_uid);
-                        $status_escaped=db_escape($status);
-                        db_query("UPDATE `boincmgr_users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
-                        setcookie("action_message",$message_user_status_changed);
-                        header("Location: ./");
-                        die();
-                // Change project_status (for admin)
-                } else if($_POST['action']=='change_project_status') {
-                        $project_uid=html_strip($_POST['project_uid']);
-                        $status=html_strip($_POST['status']);
+                                $username=boincmgr_get_user_name($user_uid);
+                                auth_log("Admin change user status user '$username' status '$status'");
 
-                        $project_name=boincmgr_get_project_name($project_uid);
-                        auth_log("Admin change project status project '$project_name' status '$status'");
+                                $user_uid_escaped=db_escape($user_uid);
+                                $status_escaped=db_escape($status);
+                                db_query("UPDATE `boincmgr_users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
+                                setcookie("action_message",$message_user_status_changed);
+                                header("Location: ./");
+                                die();
+                        // Change project_status (for admin)
+                        } else if($_POST['action']=='change_project_status') {
+                                $project_uid=html_strip($_POST['project_uid']);
+                                $status=html_strip($_POST['status']);
 
-                        $project_uid_escaped=db_escape($project_uid);
-                        $status_escaped=db_escape($status);
-                        db_query("UPDATE `boincmgr_projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
-                        setcookie("action_message",$message_project_status_changed);
-                        header("Location: ./");
-                        die();
-                // Calculate payouts
-                } else if($_POST['action']=='billing') {
-                        $start_date=html_strip($_POST['start_date']);
-                        $stop_date=html_strip($_POST['stop_date']);
-                        $reward=html_strip($_POST['reward']);
-                        $check_rewards=html_strip($_POST['check_rewards']);
+                                if(auth_validate_ascii($status)==FALSE) die("Status validation error");
 
-                        if(!$check_rewards) auth_log("Admin billing from '$start_date' to '$stop_date' reward '$reward'");
-                        else auth_log("Admin check rewards from '$start_date' to '$stop_date' reward '$reward'");
+                                $project_name=boincmgr_get_project_name($project_uid);
+                                auth_log("Admin change project status project '$project_name' status '$status'");
 
-                        bill_close_period($start_date,$stop_date,$reward,$check_rewards);
-                        setcookie("action_message",$message_billing_ok);
-                        header("Location: ./");
-                        die();
+                                $project_uid_escaped=db_escape($project_uid);
+                                $status_escaped=db_escape($status);
+                                db_query("UPDATE `boincmgr_projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
+                                setcookie("action_message",$message_project_status_changed);
+                                header("Location: ./");
+                                die();
+                        // Calculate payouts
+                        } else if($_POST['action']=='billing') {
+                                $start_date=html_strip($_POST['start_date']);
+                                $stop_date=html_strip($_POST['stop_date']);
+                                $reward=html_strip($_POST['reward']);
+                                $check_rewards=html_strip($_POST['check_rewards']);
+
+                                if(auth_validate_timestamp($start_date)==FALSE) die("Start date validation error");
+                                if(auth_validate_timestamp($stop_date)==FALSE) die("Stop date validation error");
+                                if(auth_validate_float($reward)==FALSE) die("Reward validation error");
+
+                                if(!$check_rewards) auth_log("Admin billing from '$start_date' to '$stop_date' reward '$reward'");
+                                else auth_log("Admin check rewards from '$start_date' to '$stop_date' reward '$reward'");
+
+                                bill_close_period($start_date,$stop_date,$reward,$check_rewards);
+                                setcookie("action_message",$message_billing_ok);
+                                header("Location: ./");
+                                die();
+                        }
                 }
         }
         // Logout
