@@ -35,8 +35,8 @@ function auth_check() {
 function auth_is_admin($username) {
         $username=strtolower($username);
         $username_escaped=db_escape($username);
-        $count=db_query_to_variable("SELECT count(*) FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `status`='admin'");
-        if($count==1) return TRUE;
+        $admin_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `status`='admin'");
+        if($admin_exists==1) return TRUE;
         else return FALSE;
 }
 
@@ -155,10 +155,12 @@ VALUES ('$username_escaped','$email_escaped','$salt_escaped','$password_hash_sal
 }
 
 // Change password and other settings
-function auth_change_settings($username,$email,$password_1,$password_2,$grc_address) {
-        if($password_1 != $password_2) return FALSE;
+function auth_change_settings($username,$email,$current_password,$new_password_1,$new_password_2,$grc_address) {
+        if(auth_validate_password($current_password)==FALSE) return FALSE;
+
+        if($new_password_1 != $new_password_2) return FALSE;
         if(auth_validate_grc_address($grc_address)==FALSE) return FALSE;
-        if($password_1 != '' && auth_validate_password($password_1)==FALSE) return FALSE;
+        if($new_password_1 != '' && auth_validate_password($new_password_1)==FALSE) return FALSE;
 
         auth_log("Change settings username '$username' mail '$email' grc_address '$grc_address'");
 
@@ -166,12 +168,20 @@ function auth_change_settings($username,$email,$password_1,$password_2,$grc_addr
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
         $grc_address_escaped=db_escape($grc_address);
-        if($password_1!='') {
-                $password_hash=auth_hash($username,$password_1);
+
+        $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $password_hash=auth_hash($username,$current_password);
+        $password_hash_salted=hash("sha256",$password_hash.$salt);
+        $password_user_match=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `passwd_hash`='$password_hash_salted'");
+        if($password_user_match==FALSE) return FALSE;
+
+        if($new_password_1!='') {
+                $password_hash=auth_hash($username,$new_password_1);
                 auth_log("Change password username '$username'");
                 $salt=bin2hex(random_bytes(16));
                 $salt_escaped=db_escape($salt);
-                $result=db_query("UPDATE `boincmgr_users` SET `salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash',`grc_address`='$grc_address_escaped' WHERE `username`='$username_escaped'");
+                $password_hash_salted=hash("sha256",$password_hash.$salt);
+                $result=db_query("UPDATE `boincmgr_users` SET `salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`grc_address`='$grc_address_escaped' WHERE `username`='$username_escaped'");
         } else {
                 $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`grc_address`='$grc_address_escaped' WHERE `username`='$username_escaped'");
         }
@@ -257,4 +267,10 @@ function auth_log($message) {
         $message_escaped=db_escape($message);
         db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
 }
+
+// Write debug log
+//function auth_log_debug($type,$message) {
+//        $message_escaped=db_escape($message);
+//        db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
+//}
 ?>
