@@ -97,11 +97,20 @@ CREATE TABLE `boincmgr_users` (
   `uid` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
+  `salt` varchar(100) DEFAULT NULL,
   `passwd_hash` varchar(100) NOT NULL,
   `grc_address` varchar(100) NOT NULL,
   `status` varchar(100) DEFAULT NULL,
-  `token` varchar(100) NOT NULL DEFAULT ''
+  `token` varchar(100) NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE `boincmgr_user_auth_cookies` (
+  `uid` int(11) NOT NULL,
+  `username_uid` int(11) NOT NULL,
+  `cookie_token` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `expire_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE `boincmgr_xml` (
   `uid` int(11) NOT NULL,
@@ -182,6 +191,10 @@ ALTER TABLE `boincmgr_users`
   ADD UNIQUE KEY `username` (`username`),
   ADD KEY `token` (`token`);
 
+ALTER TABLE `boincmgr_user_auth_cookies`
+  ADD PRIMARY KEY (`uid`),
+  ADD UNIQUE KEY `cookie_token` (`cookie_token`);
+
 ALTER TABLE `boincmgr_xml`
   ADD PRIMARY KEY (`uid`);
 
@@ -207,6 +220,8 @@ ALTER TABLE `boincmgr_project_host_stats`
 ALTER TABLE `boincmgr_project_stats`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_users`
+  MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `boincmgr_user_auth_cookies`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_xml`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
