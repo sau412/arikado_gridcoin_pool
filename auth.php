@@ -181,6 +181,9 @@ function auth_change_settings($username,$email,$password_1,$password_2,$grc_addr
 
 // Auth existing user
 function auth_login($username,$password) {
+        if(auth_validate_username($username)==FALSE) return FALSE;
+        if(auth_validate_password($password)==FALSE) return FALSE;
+
         $passwd_hash=auth_hash($username,$password);
 
         if(auth_check_hash($username,$passwd_hash)) {
