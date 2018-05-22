@@ -90,6 +90,9 @@ db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`ext
 VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped')
 ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`timestamp`=CURRENT_TIMESTAMP");
 
+// Attached projects list (for deleting detached projects)
+$client_still_attached_project_uids=array();
+
 foreach($xml_data["projects"] as $project_data) {
         // Get user data
         $project_name=$project_data["project_name"];
@@ -111,6 +114,7 @@ foreach($xml_data["projects"] as $project_data) {
                         $project_name_escaped=db_escape($project_name);
                         $project_host_id_escaped=db_escape($project_host_id);
                         $project_uid_escaped=db_escape($project_uid);
+                        $client_still_attached_project_uids[]=$project_uid_escaped;
 
                         db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
 VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
@@ -119,6 +123,11 @@ ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
         }
 }
 
+// Delete detached projects from db
+$client_still_attached_project_uids_string=implode("','",$client_still_attached_project_uids);
+db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `detach`=1 AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
+
+// Get project data for this host
 $project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`detach` FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.`host_uid`='$host_uid_escaped'");
