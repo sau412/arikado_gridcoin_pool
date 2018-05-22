@@ -38,14 +38,19 @@ if(count($xml_data)==0) {
         die();
 }
 
+// Get data from array
 $username=$xml_data["name"];
 $password_hash=$xml_data["password_hash"];
 $host_cpid=$xml_data["host_cpid"];
-$external_host_cpid=md5($host_cpid.$boinc_account);
 $domain_name=$xml_data["domain_name"];
 $p_model=$xml_data["p_model"];
-$p_ncpus=$xml_data["p_ncpus"];
-$n_usable_coprocs=$xml_data["n_usable_coprocs"];
+
+// Validate host data
+if(auth_validate_username($username)==FALSE) xml_error_message("Username validation error",-99);
+if(auth_validate_hash($password_hash)==FALSE) xml_error_message("Password hash validation error",-98);
+if(auth_validate_hash($host_cpid)==FALSE) xml_error_message("Host cpid validation error",-97);
+if(auth_validate_domain($domain_name)==FALSE) { xml_error_message("Host domain name validation error\n",-96); }
+if(auth_validate_ascii($p_model)==FALSE) xml_error_message("CPU model validation error",-96);
 
 if(auth_check_hash($username,$password_hash)==FALSE) {
         echo xml_error_message($message_login_error,-100);
@@ -53,13 +58,14 @@ if(auth_check_hash($username,$password_hash)==FALSE) {
         die();
 }
 
+// Calculate external host cpid
+$external_host_cpid=md5($host_cpid.$boinc_account);
+
 $username_escaped=db_escape($username);
 $host_cpid_escaped=db_escape($host_cpid);
 $external_host_cpid_escaped=db_escape($external_host_cpid);
-$domain_name_escaped=db_escape($domain_name);
+$domain_name_escaped=db_escape(boincmgr_domain_encode($domain_name));
 $p_model_escaped=db_escape($p_model);
-$p_ncpus_escaped=db_escape($p_ncpus);
-$n_usable_coprocs_escaped=db_escape($n_usable_coprocs);
 
 $reply_xml=<<<_END
 <?xml version="1.0" encoding="UTF-8" ?>
@@ -74,20 +80,28 @@ $host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
 $host_uid_escaped=db_escape($host_uid);
 
 $host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
-if($username_uid!=$host_owner_uid) {
+if($host_owner_uid!="" && $username_uid!=$host_owner_uid) {
         auth_log("Sync username '$username' error, username is not owner host_uid '$host_uid'");
         echo xml_error_message($message_host_error,-102);
         die();
 }
 
-db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`p_ncpus`,`n_usable_coprocs`)
-VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$p_ncpus_escaped','$n_usable_coprocs_escaped')
-ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`p_ncpus`=VALUES(`p_ncpus`),`n_usable_coprocs`=VALUES(`n_usable_coprocs`),`timestamp`=CURRENT_TIMESTAMP");
+db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`)
+VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped')
+ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`timestamp`=CURRENT_TIMESTAMP");
 
 foreach($xml_data["projects"] as $project_data) {
+        // Get user data
         $project_name=$project_data["project_name"];
         $project_host_id=$project_data["hostid"];
         $weak_key=$project_data["account_key"];
+
+        // Validate data
+        if(auth_validate_ascii($project_name)==FALSE) continue;
+        if(auth_validate_integer($project_host_id)==FALSE) continue;
+        if(auth_validate_ascii($weak_key)==FALSE) continue;
+
+        // Get project uid
         $project_uid=boincmgr_get_project_uid($project_name);
 
         // If project exists
