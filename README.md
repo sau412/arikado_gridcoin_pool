@@ -1,9 +1,6 @@
 # General
 Simple gridcoin pool
 
-# Warnings
-1) Send rewards automatically not implemended yet (testing now)
-
 # Requirements
 1) PHP 5/PHP 7
 2) Apache web server, mysql, tested in ubuntu
