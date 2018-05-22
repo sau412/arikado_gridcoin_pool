@@ -51,6 +51,11 @@ Billing works in manual mode. After billing rewards send automatically.
 2) Other billings: when pools wallet stakes, write current stake date (previous stake date is autom-filled) and rewards, click "send rewards"
 
 # To do
-* Graphs
-* Automatic pool setup
 * Pool info editor
+* You need three synchonizations to attach project to new pc (two to existing) - first to attach host to account, second to send attached projects to host, third to send host id back to pool. I'll do more specific messages than 'not synced properly'.
+* Feedback page for questions, requests and answers from pool administration (it's me for that pool implementation).
+* Automated payments.
+* More detail stats, graphs, estimations and gridcoin exchange rate.
+* Opportunity to delete host and user.
+* If someone wants install their own pool with my sources, I'll do installer (web page for automated pool setup - create settings.php, create and fill tables with data).
+* If someone wants it, I could check how it works on raspberry and do raspberry image (or instrunctions) with that pool, if possible.
