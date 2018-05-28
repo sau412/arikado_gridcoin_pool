@@ -11,6 +11,11 @@ function html_strip($variable) {
 
 // Escape for html facade
 function html_escape($variable) {
+        $result=htmlspecialchars($variable);
+        if($variable!="" && $result=="") {
+                $variable=iconv("WINDOWS-1252","UTF-8",$variable);
+                $result=htmlspecialchars($variable);
+        }
         return htmlspecialchars($variable);
 }
 
@@ -26,6 +31,7 @@ function html_page_begin() {
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="stylesheet" type="text/css" href="common.css">
 <script src="common.js"></script>
+<link rel="icon" href="favicon.png" type="image/png">
 </head>
 <body>
 
@@ -82,6 +88,11 @@ function html_txid_link($txid) {
         }
 }
 
+// Number with delimiters
+function html_format_number($number) {
+        if($number<10000) return $number;
+        return number_format($number,0,".","&nbsp;");
+}
 
 // User menu and options
 function html_page_header($flags_array) {
@@ -176,7 +187,7 @@ function html_register_form() {
 <div id=register_form_block class=selectable_block>
 <form name=register_form method=POST>
 <h2>Register</h2>
-<p>Username: <input type=text name=username> required</p>
+<p>Username: <input type=text name=username> required, only letters A-Z, a-z, </p>
 <p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
 <p>Re-type password: <input type=password name=password_2></p>
 <p>E-mail: <input type=text name=email> for password recovery (you can write me from that mail, and I send you new password for account)</p>
@@ -242,66 +253,63 @@ function html_user_hosts() {
         $result="";
         $result.="<div id=your_hosts_block class=selectable_block>\n";
         $result.="<h2>Your hosts</h2>\n";
-        $result.="<p>That information will be synced to your BOINC client. Sync second time after 10-20 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
+        $result.="<p>That information will be synced to your BOINC client. When attaching new project sync second time after 1-2 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
         $result.="<table>\n";
-        $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
 
         if(auth_is_admin($username)) {
-                $hosts_array=db_query_to_array("SELECT bh.`domain_name`,bh.`p_model`,GROUP_CONCAT(bp.`name` SEPARATOR ', ') AS projects FROM `boincmgr_hosts` AS bh
-LEFT JOIN `boincmgr_attach_projects` AS bap ON bap.host_uid=bh.uid
-LEFT JOIN `boincmgr_projects` AS bp ON bp.uid=bap.project_uid
-WHERE bap.`detach`=0
-GROUP BY bh.`domain_name`,bh.`p_model`
-ORDER BY bh.`domain_name` ASC");
-                foreach($hosts_array as $host) {
-                        $domain_name=$host['domain_name'];
-                        $p_mode=$host['p_model'];
-                        $projects=$host['projects'];
-
-                        $domain_name_html=html_escape($domain_name);
-                        $p_mode_html=html_escape($p_mode);
-                        $projects_html=html_escape($projects);
-
-                        $result.="<tr><td>$domain_name_html</td><td>$p_mode_html</td><td>$projects_html</td></tr>\n";
-                }
+                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
+                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model` FROM `boincmgr_hosts` AS bh
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+ORDER BY bu.`username`,bh.`domain_name` ASC");
         } else {
+                $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
                 $username_uid=boincmgr_get_username_uid($username);
                 $username_uid_escaped=db_escape($username_uid);
-                $hosts_array=db_query_to_array("SELECT `uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid_escaped' ORDER BY `domain_name` ASC");
+                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model` FROM `boincmgr_hosts` AS bh
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bh.`domain_name` ASC");
+        }
+        foreach($hosts_array as $host) {
+                $host_username=$host['username'];
+                $host_uid=$host['uid'];
+                $host_cpid=$host['external_host_cpid'];
+                $internal_host_cpid=$host['internal_host_cpid'];
+                $domain_name=$host['domain_name'];
+//              $domain_name=boincmgr_domain_decode($host['domain_name']);
+                $domain_name_decoded=boincmgr_domain_decode($host['domain_name']);
+                $fict_name=boincmgr_generate_fict_name($host_uid,3);
+                if(auth_validate_ascii($domain_name_decoded)==TRUE) {
+                        $domain_name=$domain_name_decoded;
+                }
+                $p_model=$host['p_model'];
 
-                foreach($hosts_array as $host) {
-                        $host_uid=$host['uid'];
-                        $host_cpid=$host['external_host_cpid'];
-                        $internal_host_cpid=$host['internal_host_cpid'];
-                        $domain_name=$host['domain_name'];
-                        $p_mode=$host['p_model'];
+                $host_username_html=html_escape($host_username);
+                $host_cpid_html=html_escape($host_cpid);
+                $domain_name_html=html_escape($domain_name);
+                $p_model_html=html_escape($p_model);
 
-                        $host_cpid_html=html_escape($host_cpid);
-                        $domain_name_html=html_escape($domain_name);
-                        $p_mode_html=html_escape($p_mode);
+                $host_uid_escaped=db_escape($host_uid);
 
-                        $host_uid_escaped=db_escape($host_uid);
-
-                        $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`detach`,bhp.`host_id` FROM `boincmgr_attach_projects` AS bap
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`detach`,bhp.`host_id` FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 LEFT JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
 WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC");
 
-                        $projects_str="";
-                        foreach($attached_projects_array as $project_data) {
-                                $attached_project_uid=$project_data['uid'];
-                                $host_uid=$project_data['host_uid'];
-                                $host_id=$project_data['host_id'];
-                                $project_name=$project_data['name'];
-                                $project_uid=$project_data['project_uid'];
+                $projects_str="";
+                foreach($attached_projects_array as $project_data) {
+                        $attached_project_uid=$project_data['uid'];
+                        $host_uid=$project_data['host_uid'];
+                        $host_id=$project_data['host_id'];
+                        $project_name=$project_data['name'];
+                        $project_uid=$project_data['project_uid'];
 
-                                $project_uid_escaped=db_escape($project_uid);
-                                $project_name_html=html_escape($project_name);
+                        $project_uid_escaped=db_escape($project_uid);
+                        $project_name_html=html_escape($project_name);
 
-                                if($host_id=="" || $host_id==0) $attached_project_msg="<span class=not_synced>not synced properly</span>";
-                                else $attached_project_msg="";
+                        if($host_id=="" || $host_id==0) $attached_project_msg="<span class=host_status_not_synced>not synced properly</span>";
+                        else $attached_project_msg="<span class=host_status_synced>ok</span>";
 
-                                $detach_form=<<<_END
+                        $detach_form=<<<_END
 <form name=detach method=post>
 $project_name_html
 <input type=hidden name=action value='detach'>
@@ -312,39 +320,44 @@ $attached_project_msg
 </form>
 _END;
 
-                                $projects_str.="$detach_form<br>";
-                        }
+                        $projects_str.="$detach_form<br>";
+                }
 
-                        $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
+                $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
 WHERE `status` IN ('enabled') AND `uid` NOT IN (
         SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
         WHERE `host_uid`='$host_uid_escaped' AND bap.detach=0
 ) ORDER BY `name` ASC");
-                        if(count($projects_array)==0) {
-                                $projects_str.="No more projects to attach<br>";
-                        } else {
-                                $attach_form=<<<_END
+                if(count($projects_array)==0) {
+                        $projects_str.="No more projects to attach<br>";
+                } else {
+                        $attach_form=<<<_END
 <form name=attach method=post>
 <input type=hidden name=action value='attach'>
 <input type=hidden name=host_uid value='$host_uid'>
 <input type=hidden name=token value='$username_token'>
 <select name=project_uid>
 _END;
-                                foreach($projects_array as $project_data) {
-                                        $project_uid=$project_data['uid'];
-                                        $project_name=$project_data['name'];
-                                        $attach_form.="<option value='$project_uid'>$project_name</option>";
-                                }
-                                $attach_form.=<<<_END
+                        foreach($projects_array as $project_data) {
+                                $project_uid=$project_data['uid'];
+                                $project_name=$project_data['name'];
+                                $attach_form.="<option value='$project_uid'>$project_name</option>";
+                        }
+                        $attach_form.=<<<_END
 <input type=submit value='attach'>
 </form>
 _END;
 
-                                $projects_str.="$attach_form<br>";
-                        }
-                        $result.="<tr><td>$domain_name_html</td><td>$p_mode_html</td><td>$projects_str</td></tr>\n";
+                        $projects_str.="$attach_form<br>";
                 }
+//                      $result.="<p>Host <b>$domain_name_html</b></p>\n";
+//                      $result.="$projects_str\n";
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                if(auth_is_admin($username))
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
+                else
+                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -364,94 +377,119 @@ function html_boinc_results() {
 
         $result.="<h3>Results by host</h3>\n";
         $result.="<table>\n";
-        $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th></tr>\n";
+        //$result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
 
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
         if(auth_is_admin($username)) {
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-GROUP BY bphl.`domain_name`,bphl.`p_model` ORDER BY bphl.`domain_name`,bphl.`p_model` ASC");
-        } else {
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`domain_name`,bphl.`p_model` ORDER BY bphl.`domain_name`,bphl.`p_model` ASC");
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
+        } else {
+                $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
         }
         foreach($boinc_host_data_array as $boinc_host_data) {
-                $domain_name=$boinc_host_data['domain_name'];
+                $host_username=$boinc_host_data['username'];
+                $host_uid=$boinc_host_data['host_uid'];
+                $domain_name=boincmgr_domain_decode($boinc_host_data['domain_name']);
                 $p_model=$boinc_host_data['p_model'];
                 $expavg_credit=round($boinc_host_data['rac']);
 
+                $host_username_html=html_escape($host_username);
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
                 $expavg_credit_html=html_escape($expavg_credit);
 
-                $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$expavg_credit_html</td></tr>\n";
+                $expavg_credit_html=html_format_number($expavg_credit_html);
+
+                $graph=canvas_graph_host_all_projects($host_uid);
+
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                if(auth_is_admin($username))
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                else
+                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table>\n";
 
-        $result.="<h3>Results by project</h3>\n";
-        $result.="<table>\n";
-        $result.="<tr><th>Project</th><th>&Sigma; RAC</th></tr>\n";
+        // Prjects stats for admin is the pool stats
+        if(auth_is_admin($username)==FALSE) {
+                $result.="<h3>Results by project</h3>\n";
+                $result.="<table>\n";
+                $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
 
-        $username_uid=boincmgr_get_username_uid($username);
-        $username_uid_escaped=db_escape($username_uid);
-
-        if(auth_is_admin($username)) {
-                $boinc_host_data_array=db_query_to_array("SELECT bp.`name`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-GROUP BY bp.`name` ORDER BY bp.`name` ASC");
-        } else {
-                $boinc_host_data_array=db_query_to_array("SELECT bp.`name`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+                $boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bp.`name` ORDER BY bp.`name` ASC");
+WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`name` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bp.`name` ASC");
+
+                foreach($boinc_host_data_array as $boinc_host_data) {
+                        $project_uid=$boinc_host_data['project_uid'];
+                        $expavg_credit=round($boinc_host_data['rac']);
+                        $project_name=$boinc_host_data['name'];
+
+                        $expavg_credit_html=html_escape($expavg_credit);
+                        $project_name_html=html_escape($project_name);
+
+                        $expavg_credit_html=html_format_number($expavg_credit_html);
+
+                        $graph=canvas_graph_username_project($username_uid,$project_uid);
+
+                        $result.="<tr><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                }
+                $result.="</table>\n";
         }
-
-        foreach($boinc_host_data_array as $boinc_host_data) {
-                $expavg_credit=round($boinc_host_data['rac']);
-                $project_name=$boinc_host_data['name'];
-
-                $expavg_credit_html=html_escape($expavg_credit);
-                $project_name_html=html_escape($project_name);
-
-                $result.="<tr><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
-        }
-        $result.="</table>\n";
-
         $result.="<h3>Results for each project and each host</h3>\n";
         $result.="<table>\n";
-        $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th></tr>\n";
-
-        $username_uid=boincmgr_get_username_uid($username);
-        $username_uid_escaped=db_escape($username_uid);
 
         if(auth_is_admin($username)) {
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-ORDER BY bphl.`domain_name`,bp.`name` ASC");
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+ORDER BY bu.`username`,bphl.`domain_name`,bp.`name` ASC");
         } else {
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`name` ASC");
         }
         foreach($boinc_host_data_array as $boinc_host_data) {
+                $host_username=$boinc_host_data['username'];
+                $host_uid=$boinc_host_data['host_uid'];
+                $project_uid=$boinc_host_data['project_uid'];
                 $host_cpid=$boinc_host_data['host_cpid'];
-                $domain_name=$boinc_host_data['domain_name'];
+                $domain_name=boincmgr_domain_decode($boinc_host_data['domain_name']);
                 $p_model=$boinc_host_data['p_model'];
                 $expavg_credit=$boinc_host_data['expavg_credit'];
                 $project_name=$boinc_host_data['name'];
 
+                $host_username_html=html_escape($host_username);
                 $host_cpid_html=html_escape($host_cpid);
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
                 $expavg_credit_html=html_escape($expavg_credit);
                 $project_name_html=html_escape($project_name);
 
-                $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td>$expavg_credit_html</td></tr>\n";
+//              $expavg_credit_html=html_format_number($expavg_credit_html);
+                $graph=canvas_graph_host_project($host_uid,$project_uid);
+
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                if(auth_is_admin($username))
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                else
+                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -634,7 +672,7 @@ function html_pool_stats() {
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th></tr>\n";
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th><th>Pool RAC 10d graph</th></tr>\n";
         $proportions=bill_calculate_projects_proportion($start_date,$stop_date);
 //      var_dump($proportions);
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
@@ -660,19 +698,15 @@ function html_pool_stats() {
                 $proportion_html=html_escape($proportion);
                 $status_html=html_escape($status);
 
-                $result.="<tr><td>$name_link</td><td>$team_expavg_credit_html</td><td>$expavg_credit_html</td><td>$team_proportion_html %</td><td>$proportion_html %</td><td>$status_html</td></tr>\n";
+                $team_expavg_credit_html=html_format_number($team_expavg_credit_html);
+                $expavg_credit_html=html_format_number($expavg_credit_html);
+                $graph=canvas_graph_project_total($uid);
+
+                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$team_proportion_html %</td><td align=right>$proportion_html %</td><td>$status_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
         return $result;
 }
 
-// Show user stats
-function html_user_stats() {
-        $result="";
-        $result.="<div id=your_stats_block class=selectable_block>\n";
-        $result.="<h2>Your stats</h2>\n";
-        $result.="</div>\n";
-        return $result;
-}
 ?>
