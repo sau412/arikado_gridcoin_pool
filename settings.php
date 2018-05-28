@@ -29,6 +29,9 @@ $grc_rpc_wallet_passphrase="wallet passphrase";
 // Salt for token
 $token_salt="your_salt";
 
+// Debug mode
+$debug_mode=FALSE;
+
 // Language file
 require_once("language.php");
 
