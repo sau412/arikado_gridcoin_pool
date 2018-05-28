@@ -1,4 +1,4 @@
-[B<?php
+<?php
 // XML parser for BOINC
 function xml_parse_user_request($xml) {
         $result=array();
@@ -34,7 +34,7 @@ function xml_parse_user_request($xml) {
                                         }
                                 }
                         } else {
-                                $result[$tag_flag]=$str;
+                                if(!isset($result[$tag_flag])) $result[$tag_flag]=$str;
                                 $tag_flag=FALSE;
                         }
                 }
