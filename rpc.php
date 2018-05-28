@@ -53,6 +53,7 @@ if(auth_validate_domain($domain_name)==FALSE) { xml_error_message("Host domain n
 if(auth_validate_ascii($p_model)==FALSE) xml_error_message("CPU model validation error",-96);
 
 if(auth_check_hash($username,$password_hash)==FALSE) {
+//var_dump($xml_data);
         echo xml_error_message($message_login_error,-100);
         auth_log("Sync username '$username' auth error");
         die();
@@ -110,7 +111,7 @@ foreach($xml_data["projects"] as $project_data) {
         // If project exists
         if($project_uid) {
                 $weak_key_correct=boincmgr_check_weak_key($project_uid,$weak_key);
-                if($weak_key_correct==TRUE) {
+                if($weak_key_correct==TRUE && $host_id!=0) {
                         $project_name_escaped=db_escape($project_name);
                         $project_host_id_escaped=db_escape($project_host_id);
                         $project_uid_escaped=db_escape($project_uid);
