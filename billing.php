@@ -90,9 +90,14 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         $project_total_rac=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
         if($check_rewards) echo "Project RAC $project_total_rac<br>\n";
         if($project_total_rac!=0) {
-                $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
+/*              $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
 LEFT JOIN `boincmgr_host_projects` AS bhp ON bhp.`host_uid`=bphs.`host_uid` AND bhp.`host_id`=bphs.`host_id` AND bhp.`project_uid`=bphs.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bhp.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`project_uid`='$project_uid' AND `status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
+GROUP BY bu.`grc_address`");*/
+                $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid' AND `status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
 GROUP BY bu.`grc_address`");
@@ -105,7 +110,8 @@ GROUP BY bu.`grc_address`");
                         $user_reward=($project_reward/$project_total_rac)*$host_rac;
                         if($user_reward==0) continue;
 
-                        if($check_rewards) echo "Host $host_cpid RAC $host_rac reward $user_reward<br>\n";
+                        $grc_address_html=html_escape($grc_address);
+                        if($check_rewards) echo "GRC address '$grc_address' RAC $host_rac reward $user_reward<br>\n";
 
                         if($grc_address!='') $reward_array[$grc_address]=$user_reward;
                 }
