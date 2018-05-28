@@ -44,7 +44,12 @@ ul li a:hover {
         padding: 0.1em 1em;
 }
 
-.not_synced {
+.host_status_synced {
+        color: green;
+        font-weight: bold;
+}
+
+.host_status_not_synced {
         color: #F00;
         font-weight: bold;
 }
