@@ -33,21 +33,21 @@ function auth_check() {
 
 // Check auth
 function auth_is_admin($username) {
-        $username=strtolower($username);
+//      $username=strtolower($username);
         $username_escaped=db_escape($username);
-        $admin_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `status`='admin'");
+        $admin_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='admin'");
         if($admin_exists==1) return TRUE;
         else return FALSE;
 }
 
 // Auth hash check
 function auth_check_hash($username,$passwd_hash) {
-        $username=strtolower($username);
+//      $username=strtolower($username);
         $username_escaped=db_escape($username);
         //$passwd_hash_escaped=db_escape($passwd_hash);
         $passwd_hash_salted=auth_hash_salt($username,$passwd_hash);
 
-        $count=db_query_to_variable("SELECT count(*) FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `passwd_hash`='$passwd_hash_salted' AND `status`<>'banned'");
+        $count=db_query_to_variable("SELECT count(*) FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `passwd_hash`='$passwd_hash_salted' AND `status`<>'banned'");
         if($count==1) return TRUE;
         else return FALSE;
 }
@@ -131,15 +131,15 @@ function auth_add_user($username,$email,$password_1,$password_2,$grc_address) {
         if(auth_validate_password($password_1)==FALSE) return AUTH_REGISTER_FAIL_PASSWORD;
         if(auth_validate_grc_address($grc_address)==FALSE) return AUTH_REGISTER_FAIL_GRC_ADDRESS;
 
-        // Escaping and lowercasing
-        $username=strtolower($username);
+        // Escaping
+        //$username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
         $grc_address_escaped=db_escape($grc_address);
         $password_hash=auth_hash($username,$password_1);
 
         // Check is username exists
-        $username_exists_flag=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $username_exists_flag=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped')");
         if($username_exists_flag) return AUTH_REGISTER_FAIL_USERNAME_EXISTS;
 
         // Add new user
@@ -164,7 +164,7 @@ function auth_change_settings($username,$email,$current_password,$new_password_1
 
         auth_log("Change settings username '$username' mail '$email' grc_address '$grc_address'");
 
-        $username=strtolower($username);
+        //$username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
         $grc_address_escaped=db_escape($grc_address);
@@ -223,6 +223,7 @@ function auth_hash_salt($username,$password_hash) {
         $username_escaped=db_escape($username);
         $password_hash_escaped=db_escape($password_hash);
         $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+//auth_log("Debug: username '$username' hash '$hash' salt '$salt' salted hash '".hash("sha256",$password_hash.$salt)."'");
         return hash("sha256",$password_hash.$salt);
 }
 
@@ -231,8 +232,8 @@ function auth_logout() {
         global $username;
         auth_log("Logout '$username'");
         setcookie("auth_cookie","");
-//        setcookie("username","");
-//        setcookie("passwd_hash","");
+//      setcookie("username","");
+//      setcookie("passwd_hash","");
 }
 
 // Generate new token and save to db
@@ -270,7 +271,7 @@ function auth_log($message) {
 
 // Write debug log
 //function auth_log_debug($type,$message) {
-//        $message_escaped=db_escape($message);
-//        db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
+//      $message_escaped=db_escape($message);
+//      db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
 //}
 ?>
