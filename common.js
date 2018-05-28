@@ -1,21 +1,25 @@
-// Later I'll redo it with arrays
-function show_block(block_name) {
-        // Hide all
-        if(document.getElementById("register_form") != null) document.getElementById("register_form").style.display='none';
-        if(document.getElementById("login_form") != null) document.getElementById("login_form").style.display='none';
-        if(document.getElementById("pool_info") != null) document.getElementById("pool_info").style.display='none';
-        if(document.getElementById("settings") != null) document.getElementById("settings").style.display='none';
-        if(document.getElementById("your_hosts") != null) document.getElementById("your_hosts").style.display='none';
-        if(document.getElementById("boinc_results") != null) document.getElementById("boinc_results").style.display='none';
-        if(document.getElementById("user_control") != null) document.getElementById("user_control").style.display='none';
-        if(document.getElementById("project_control") != null) document.getElementById("project_control").style.display='none';
-        if(document.getElementById("billing") != null) document.getElementById("billing").style.display='none';
-        if(document.getElementById("payouts") != null) document.getElementById("payouts").style.display='none';
-        if(document.getElementById("your_stats") != null) document.getElementById("your_stats").style.display='none';
-        if(document.getElementById("pool_stats") != null) document.getElementById("pool_stats").style.display='none';
-        if(document.getElementById("log") != null) document.getElementById("log").style.display='none';
+var current_block_name;
 
-        if(document.getElementById(block_name) != null) document.getElementById(block_name).style.display='block';
-        else document.getElementById("pool_info").style.display='block';
+function show_block(block_name) {
+        var blocks_array = ["register_form","login_form","pool_info","settings","your_hosts","boinc_results",
+                "user_control","project_control","billing","payouts","your_stats","pool_stats","log"];
+
+        // If user clicks same block - reload page
+        if(block_name==current_block_name) {
+                document.location.reload(true);
+                return true;
+        }
+
+        // Hide all
+        blocks_array.forEach(function(element) {
+                if(document.getElementById(element+'_block') != null) document.getElementById(element+'_block').style.display='none';
+        });
+
+        // Show block if exists
+        if(document.getElementById(block_name+'_block') != null) document.getElementById(block_name+'_block').style.display='block';
+        else document.getElementById("pool_info_block").style.display='block';
+
+        current_block_name=block_name;
+
         return true;
 }
