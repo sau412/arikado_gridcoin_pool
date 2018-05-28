@@ -154,6 +154,21 @@ if($username!="") {
                 echo html_page_header("user");
         }
 
+        // Admin menu
+        if(auth_is_admin($username)) {
+                // Grant user privelegies
+                echo html_user_control_form();
+
+                // Control projects
+                echo html_project_control_form();
+
+                // Calculate rewards
+                echo html_billing_form();
+
+                // View log
+                echo html_view_log();
+        }
+
         // Pool info
         echo html_pool_info();
 
@@ -171,21 +186,6 @@ if($username!="") {
 
         // Pool stats
         echo html_pool_stats();
-
-        // Admin menu
-        if(auth_is_admin($username)) {
-                // Grant user privelegies
-                echo html_user_control_form();
-
-                // Control projects
-                echo html_project_control_form();
-
-                // Calculate rewards
-                echo html_billing_form();
-
-                // View log
-                echo html_view_log();
-        }
 
         // Standard page end
         echo html_page_end();
