@@ -18,14 +18,14 @@ Simple gridcoin pool
 4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
 4.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
 5) Change settings in your settings.php
-6) Set cron 1h to update_projects_data.php and send_rewards.php
+6) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
-8) Setup gridcoinresearch wallets, send beacon, wait for rewards
+8) Setup gridcoinresearch wallet in CLI mode, send beacon, wait for rewards
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
 2) Run setup via setup.php (not ready yet)
-3) Set cron 1h to update_projects_data.php
+3) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 
 # Mining guide
 1) Register in pool
@@ -34,7 +34,27 @@ Simple gridcoin pool
 4) After 1 day check that your host appears in BOINC hosts
 5) Wait for pool stake, then do billing and receive rewards
 
-# Admin guide
+# Common interface guide
+## Pool info
+You can read about pool here
+## Payouts
+You can see reward payouts here.
+## Pool stats
+You can see project BOINC stats here.
+## Login
+You can login here.
+## Register
+You can register here.
+
+# User interface guide
+## Settings
+You can change payout address, password and email here. Password is requred to change something.
+## Your hosts
+You can see hosts, attached to your account, attach and detach projects, delete hosts, see syncronization status..
+## BOINC results
+You can see your BOINC stats here.
+
+# Admin interface guide
 ## Project statuses
 You can set statuses for projects:
 1) Enabled - get data from project, rewards enabled, available to attach for users
@@ -48,7 +68,7 @@ You can set statuses for projects:
 ## Billing
 If you want to distribute some coins (or other coins, e.g. SPARC) between users according to their contribution you can do it with that instrument.
 ## Log
-In log section you can view what happening with users and syncs:
+In log section you can view what happening with pool, users, projects, syncs, actions:
 1) User actions - registering, attaching, detaching, deleting, syncing
 2) Project syncing
 3) Errors - login errors, SQL errors and other
@@ -59,13 +79,15 @@ Samples:
 4) Query error: SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled') AND `uid` NOT IN ( SELECT bap.`project_uid` FROM `boincmgr_hosts` h LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid` WHERE `host_uid`='116' AND bap.detach=0 ) ORDER BY `name` ASC
 5) Admin check rewards from '2018-05-27 07:16:21' to '2018-05-30 15:48:12' reward '10.0000'
 
+# Debug interfaces
+You can set $debug_mode=TRUE in settings.php, and XML between users and XML between projects will be written to table boincmgr_xml.
+
 # How rewarding works
 In gridcoin you receive rewards for BOINC projects when your coins stake. You need about 2000 gridcoins to stake at least once a 6 months (payout horizont). So, if you haven't much coins, you can use one of pools to receive rewards. Each whitelisted project rewarded equally, as I know. Rewards distributed between members of Gridcoin team in BOINC in accordance with contribution. When reward received (and admin clicks 'send rewards' button), rewards distributed between all projects using pool proportion (see Pool stats page). Each project reward distributed between contributors in accordance with contribution.
 
 # Billing
-Billing works in manual mode. After billing rewards send automatically.
-1) First billing: when pools wallet stakes, write pool start date, current stake date and rewards, click "send rewards"
-2) Other billings: when pools wallet stakes, write current stake date (previous stake date is autom-filled) and rewards, click "send rewards"
+1) Billing works in automatic mode. After billing rewards send automatically.
+2) If you want, you can distribute coins with "billing" interface. Fill start and stop dates to calculate contribution, reward amount and click "send rewards".
 
 # To do
 * Pool info editor
