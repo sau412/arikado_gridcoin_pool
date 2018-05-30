@@ -98,7 +98,8 @@ foreach($xml_data["projects"] as $project_data) {
         // Get user data
         $project_name=$project_data["project_name"];
         $project_host_id=$project_data["hostid"];
-        $weak_key=$project_data["account_key"];
+        if(isset($project_data["account_key"])) $weak_key=$project_data["account_key"];
+        else $weak_key="";
 
         // Validate data
         if(auth_validate_ascii($project_name)==FALSE) continue;
@@ -110,28 +111,49 @@ foreach($xml_data["projects"] as $project_data) {
 
         // If project exists
         if($project_uid) {
-                $weak_key_correct=boincmgr_check_weak_key($project_uid,$weak_key);
-                if($weak_key_correct==TRUE && $host_id!=0) {
-                        $project_name_escaped=db_escape($project_name);
+                // No weak key for foreighn accounts, or after reattaching pool
+                // Just check that it was attached correctly earlier
+                if($weak_key=="") {
                         $project_host_id_escaped=db_escape($project_host_id);
-                        $project_uid_escaped=db_escape($project_uid);
-                        $client_still_attached_project_uids[]=$project_uid_escaped;
+                        $host_id_exists=db_query_to_variable("SELECT `host_id` FROM `boincmgr_host_projects` WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `host_id`='$project_host_id_escaped'");
+                        if($host_id_exists==TRUE) {
+                                // If pool has host_id, then state unknown (may be attached correcly)
+                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='unknown',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                        } else {
+                                // If pool has no host_id, then state incorrect (not attached correctly)
+                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='incorrect',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                        }
+                } else {
+                        $weak_key_correct=boincmgr_check_weak_key($project_uid,$weak_key);
+                        if($weak_key_correct==TRUE && $project_host_id!=0) {
+                                $project_name_escaped=db_escape($project_name);
+                                $project_host_id_escaped=db_escape($project_host_id);
+                                $project_uid_escaped=db_escape($project_uid);
+                                $client_still_attached_project_uids[]=$project_uid_escaped;
 
-                        db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
+                                // Store host_id in DB
+                                db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
 VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
 ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
+
+                                // Mark attachment as correct
+                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                        }
                 }
         }
 }
 
 // Delete detached projects from db
 $client_still_attached_project_uids_string=implode("','",$client_still_attached_project_uids);
-db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `detach`=1 AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
+db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `status`='detach' AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
 
 // Get project data for this host
-$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`detach` FROM `boincmgr_attach_projects` AS bap
+$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`status` FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.`host_uid`='$host_uid_escaped'");
+
+// Update attaching status
+db_query("UPDATE `boincmgr_attach_projects` SET `status`='sent' WHERE `host_uid`='$host_uid_escaped' AND (`status`='new' || `status`='')");
 
 $reply_xml.=<<<_END
 <name>$pool_name</name>
@@ -146,7 +168,9 @@ foreach($project_data_array as $project_data) {
         $project_url=$project_data['project_url'];
         $weak_auth=$project_data['weak_auth'];
         $url_signature=$project_data['url_signature'];
-        $detach=$project_data['detach'];
+        $status=$project_data['status'];
+        if($status=="detach") $detach=1;
+        else $detach=0;
 
         $reply_xml.=<<<_END
 <account>
