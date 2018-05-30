@@ -72,6 +72,7 @@ In log section you can view what happening with pool, users, projects, syncs, ac
 1) User actions - registering, attaching, detaching, deleting, syncing
 2) Project syncing
 3) Errors - login errors, SQL errors and other
+
 Samples:
 1) Projects to sync 21, synced 18, errors: Cosmology@Home (no data from project), latinsquares (get project config error), SETI@home (get project config error)
 2) Sync username 'sau412' host 'DESKTOP-A8D9DJF' p_model 'Intel(R) Xeon(R) CPU E5420 @ 2.50GHz [Family 6 Model 23 Stepping 10]'
