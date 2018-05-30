@@ -77,6 +77,14 @@ if($username!="") {
                         setcookie("action_message",$message_project_detached);
                         header("Location: ./");
                         die();
+                // Delete host
+                } else if($_POST['action']=='delete_host') {
+                        $host_uid=html_strip($_POST['host_uid']);
+                        boincmgr_delete_host($username,$host_uid);
+
+                        setcookie("action_message",$message_host_deleted);
+                        header("Location: ./");
+                        die();
                 // Next actions for admins
                 } else if(auth_is_admin($username)) {
                         // Change user status (for admin)
