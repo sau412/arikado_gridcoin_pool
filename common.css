@@ -44,12 +44,45 @@ ul li a:hover {
         padding: 0.1em 1em;
 }
 
-.host_status_synced {
+.host_status_attached {
         color: green;
         font-weight: bold;
 }
 
-.host_status_not_synced {
-        color: #F00;
+.host_status_sent {
+        color: orange;
+        font-weight: bold;
+}
+
+.host_status_new {
+        color: orange;
+        font-weight: bold;
+}
+
+.host_status_incorrect {
+        color: red;
+        font-weight: bold;
+}
+
+.host_status_unknown {
+        color: orange;
+        font-weight: bold;
+}
+
+.host_status_detach {
+        color: orange;
+        font-weight: bold;
+}
+
+.project_status_enabled {
+        color: green;
+        font-weight: bold;
+}
+.project_status_stats_only {
+        color: orange;
+        font-weight: bold;
+}
+.project_status_disabled {
+        color: red;
         font-weight: bold;
 }
