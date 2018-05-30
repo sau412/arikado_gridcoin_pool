@@ -56,7 +56,12 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
                 $project_uid=$project['uid'];
                 $project_name=$project['name'];
                 $project_uid_escaped=db_escape($project_uid);
-                $pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+                // Some users are donators, their reward distributed between others
+                $pool_expavg_sum=db_query_to_variable("SELECT AVG(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
+                //$pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
                 $team_expavg_sum=db_query_to_variable("SELECT AVG(`team_expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
                 if($team_expavg_sum==0 || $pool_expavg_sum==0) continue;
                 $contrib_pool_to_team=$pool_expavg_sum/$team_expavg_sum;
@@ -86,8 +91,12 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         $reward_array=array();
         $start_date_escaped=db_escape($start_date);
         $stop_date_escaped=db_escape($stop_date);
+        $project_uid_escaped=db_escape($project_uid);
 
-        $project_total_rac=db_query_to_variable("SELECT SUM(`expavg_credit`) FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+        $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
         if($check_rewards) echo "Project RAC $project_total_rac<br>\n";
         if($project_total_rac!=0) {
 /*              $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
@@ -96,10 +105,10 @@ LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bhp.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid' AND `status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
 GROUP BY bu.`grc_address`");*/
-                $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
+                $user_stats_array=db_query_to_array("SELECT bu.`grc_address`,SUM(bphs.`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bphs.`project_uid`='$project_uid' AND `status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
+WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
 GROUP BY bu.`grc_address`");
 
                 foreach($user_stats_array as $user_data) {
