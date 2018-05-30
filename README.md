@@ -12,9 +12,9 @@ Simple gridcoin pool with automated payments
 # Manual installation
 ## BOINC part
 1) Register at every whitelisted BOINC project with one login and password.
-1.1) You name in World Community Grid should be same as your email
-1.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
-1.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
+2) You name in World Community Grid should be same as your email
+3) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
+4) Yoyo@home has no weak auth key. You can use full access key for private pool
 
 ## Apache, PHP, MySQL part
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
@@ -25,12 +25,13 @@ Simple gridcoin pool with automated payments
 6) Regiter new user via web, then change his status to "admin" in boincmgs_users
 
 ## Gridcoin research wallet, beacon
-8) Run gridcoinresearchd in CLI mode with RPC:
+7) Run gridcoinresearchd in CLI mode with RPC:
     rpcuser=username
     rpcpassword=password1
     rpcallowip=127.0.0.1/255.255.255.255
     rpcport=port
-9) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
+8) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
+9) Check that your cpid are synced (you coud see that in project control page)
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
