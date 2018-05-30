@@ -1,5 +1,5 @@
 # General
-Simple gridcoin pool
+Simple gridcoin pool with automated payments
 
 # Requirements
 1) PHP 5/PHP 7
@@ -10,17 +10,27 @@ Simple gridcoin pool
 6) If you want more security: second computer for storing staking wallet outside of web server
 
 # Manual installation
+## BOINC part
+1) Register at every whitelisted BOINC project with one login and password.
+1.1) You name in World Community Grid should be same as your email
+1.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
+1.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
+
+## Apache, PHP, MySQL part
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
 2) Create DB and user for pool
 3) Run manual.sql in pool's DB
-4) Register at every whitelisted BOINC project with one login and password.
-4.1) You name in World Community Grid should be same as your email
-4.2) Copy every weak auth key to DB table boincmgr_projects (besause world community grid sends incorrect weak key via XML RPC)
-4.3) Yoyo@home has no weak auth key. You can use full access key for private pool 4.4) Check that your cpid are synced
+4) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 5) Change settings in your settings.php
-6) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
-7) Regiter new user via web, then change his status to "admin" in boincmgs_users
-8) Setup gridcoinresearch wallet in CLI mode, send beacon, wait for rewards
+6) Regiter new user via web, then change his status to "admin" in boincmgs_users
+
+## Gridcoin research wallet, beacon
+8) Run gridcoinresearchd in CLI mode with RPC:
+    rpcuser=username
+    rpcpassword=password1
+    rpcallowip=127.0.0.1/255.255.255.255
+    rpcport=port
+9) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
