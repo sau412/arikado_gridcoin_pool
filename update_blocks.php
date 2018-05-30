@@ -53,8 +53,8 @@ db_connect();
 $current_block=db_query_to_variable("SELECT MAX(`number`)+1 FROM `boincmgr_blocks`");
 
 // 1110 = 1000 + 110 confirmations to stake blocks
-if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
-
+//if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
+if($current_block=="") $current_block=1257860;
 do{
         $block_hash=grc_rpc_get_block_hash($current_block);
 
@@ -64,6 +64,7 @@ do{
         $mint=$block_info->mint;
         $cpid=$block_info->CPID;
         $interest=$block_info->Interest;
+        $time=$block_info->time;
 
         if($cpid=="") break;
 
@@ -74,10 +75,11 @@ do{
         $mint_escaped=db_escape($mint);
         $cpid_escaped=db_escape($cpid);
         $interest_escaped=db_escape($interest);
+        $time_escaped=db_escape($time);
 
         if($confirmations <= 110) break;
 
-        db_query("INSERT INTO `boincmgr_blocks` (`number`,`hash`,`mint`,`cpid`,`interest`,`rewards_sent`) VALUES ('$current_block_escaped','$block_hash_escaped','$mint_escaped','$cpid_escaped','$interest_escaped',0)");
+        db_query("INSERT INTO `boincmgr_blocks` (`number`,`hash`,`mint`,`cpid`,`interest`,`rewards_sent`,`timestamp`) VALUES ('$current_block_escaped','$block_hash_escaped','$mint_escaped','$cpid_escaped','$interest_escaped',0,FROM_UNIXTIME('$time_escaped'))");
 
         $current_block++;
 
