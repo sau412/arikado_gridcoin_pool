@@ -190,8 +190,8 @@ function html_register_form() {
 <p>Username: <input type=text name=username> required, only letters A-Z, a-z, </p>
 <p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
 <p>Re-type password: <input type=password name=password_2></p>
-<p>E-mail: <input type=text name=email> for password recovery (you can write me from that mail, and I send you new password for account)</p>
-<p>GRC address: <input type=text name=grc_address> required</p>
+<p>E-mail: <input type=text name=email size=40> for password recovery (you can write me from that mail, and I send you new password for account)</p>
+<p>GRC address: <input type=text name=grc_address size=40> required</p>
 <p><input type=hidden name="action" value="register"></p>
 <p><input type=submit value="Register"></p>
 </form>
@@ -234,11 +234,12 @@ function html_change_settings_form() {
 <form name=change_settings_form method=POST>
 <p><input type=hidden name="action" value="change_settings"></p>
 <p><input type=hidden name="token" value="$username_token"></p>
-<p>E-mail: <input type=text name=email value='$email_html'></p>
-<p>GRC address: <input type=text name=grc_address value='$grc_address_html'></p>
+<p>E-mail: <input type=text name=email value='$email_html' size=40></p>
+<p>GRC address: <input type=text name=grc_address value='$grc_address_html' size=40></p>
 <p>Password: <input type=password name=password> the password is required to change settings</p>
 <p>New password: <input type=password name=new_password1> only if you wish to change password</p>
 <p>Re-type new password: <input type=password name=new_password2></p>
+<!--<p><label><input type=checkbox onClick='check_deletion();' name=delete_account> delete my account</label></p>-->
 <p><input type=submit value="Update"></p>
 </form>
 </div>
@@ -275,9 +276,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bh.`domain_name` ASC");
                 $host_cpid=$host['external_host_cpid'];
                 $internal_host_cpid=$host['internal_host_cpid'];
                 $domain_name=$host['domain_name'];
-//              $domain_name=boincmgr_domain_decode($host['domain_name']);
                 $domain_name_decoded=boincmgr_domain_decode($host['domain_name']);
-                $fict_name=boincmgr_generate_fict_name($host_uid,3);
                 if(auth_validate_ascii($domain_name_decoded)==TRUE) {
                         $domain_name=$domain_name_decoded;
                 }
@@ -288,26 +287,55 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bh.`domain_name` ASC");
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
 
+                // Delete host button
+                $host_delete_form=<<<_END
+<form name=delete_host method=post>
+<input type=hidden name=action value='delete_host'>
+<input type=hidden name=host_uid value='$host_uid'>
+<input type=hidden name=token value='$username_token'>
+<input type=submit value='delete host' onClick='return check_delete_host();'>
+</form>
+_END;
+
+                // Project list for this host
                 $host_uid_escaped=db_escape($host_uid);
 
-                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`detach`,bhp.`host_id` FROM `boincmgr_attach_projects` AS bap
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status` FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
-LEFT JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
-WHERE bap.host_uid='$host_uid_escaped' AND bap.`detach`=0 ORDER BY bp.`name` ASC");
+WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`name` ASC");
 
                 $projects_str="";
                 foreach($attached_projects_array as $project_data) {
                         $attached_project_uid=$project_data['uid'];
                         $host_uid=$project_data['host_uid'];
-                        $host_id=$project_data['host_id'];
                         $project_name=$project_data['name'];
                         $project_uid=$project_data['project_uid'];
+                        $status=$project_data['status'];
 
                         $project_uid_escaped=db_escape($project_uid);
                         $project_name_html=html_escape($project_name);
 
-                        if($host_id=="" || $host_id==0) $attached_project_msg="<span class=host_status_not_synced>not synced properly</span>";
-                        else $attached_project_msg="<span class=host_status_synced>ok</span>";
+                        switch($status) {
+                                default:
+                                case "new":
+                                        $attached_project_msg="<span class=host_status_new>just added, sync required</span>";
+                                        break;
+                                case "sent":
+                                        $attached_project_msg="<span class=host_status_sent>synced, not checked, sync required</span>";
+                                        break;
+                                case "attached":
+                                        $attached_project_msg="<span class=host_status_attached>synced, checked</span>";
+                                        break;
+                                case "incorrect":
+                                        $attached_project_msg="<span class=host_status_incorrect>remove this project from BOINC manager and resync</span>";
+                                        break;
+                                case "unknown":
+                                        $attached_project_msg="<span class=host_status_unknown>remove this project from BOINC manager and resync</span>";
+                                        break;
+                                case "detach":
+                                        $attached_project_msg="<span class=host_status_detach>detached, sync required</span>";
+                                        break;
+                        }
 
                         $detach_form=<<<_END
 <form name=detach method=post>
@@ -327,7 +355,7 @@ _END;
 WHERE `status` IN ('enabled') AND `uid` NOT IN (
         SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
-        WHERE `host_uid`='$host_uid_escaped' AND bap.detach=0
+        WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
 ) ORDER BY `name` ASC");
                 if(count($projects_array)==0) {
                         $projects_str.="No more projects to attach<br>";
@@ -355,9 +383,9 @@ _END;
 //                      $result.="$projects_str\n";
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
                 if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html $host_delete_form</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
                 else
-                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
+                        $result.="<tr><td>$domain_name_html $host_delete_form</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -535,7 +563,7 @@ function html_user_control_form() {
 
         $form_hidden_action="<input type=hidden name=action value='change_user_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
-        $user_options="<select name=status><option>banned</option><option selected>user</option><option>admin</option></select>";
+        $user_options="<select name=status><option>banned</option><option selected>user</option><option>admin</option><option>donator</option></select>";
         $submit_button="<input type=submit value='change'>";
 
         foreach($users_array as $user_record) {
@@ -587,9 +615,21 @@ function html_project_control_form() {
                 $name_html=html_escape($name);
                 $project_url_html=html_escape($project_url);
                 $url_signature_html=html_escape($url_signature);
-                $status_html=html_escape($status);
                 $cpid_html=html_escape($cpid);
                 $form_hidden_project_uid="<input type=hidden name=project_uid value='$uid'>";
+
+                switch($status) {
+                        case "enabled":
+                                $status_html="<span class='project_status_enabled'>".html_escape($status)."</span>";
+                                break;
+                        default:
+                        case "stats only":
+                                $status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
+                                break;
+                        case "disabled":
+                                $status_html="<span class='project_status_disabled'>".html_escape($status)."</span>";
+                                break;
+                }
 
                 $actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
                 $result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$status_html</td><td>$actions</td></tr>\n";
@@ -672,7 +712,7 @@ function html_pool_stats() {
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th><th>Pool RAC 10d graph</th></tr>\n";
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
         $proportions=bill_calculate_projects_proportion($start_date,$stop_date);
 //      var_dump($proportions);
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
