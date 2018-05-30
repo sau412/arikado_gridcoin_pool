@@ -28,9 +28,13 @@ $message_project_attached="Project attached";
 $message_project_detached="Project detached";
 $message_project_status_changed="Project status changed";
 
+$message_host_deleted="Host deleted";
+
 $message_user_status_changed="User status changed";
 
 $message_billing_ok="Billing ok";
 
 $message_bad_token="Bad token";
+
+$message_host_error="Host already belongs to another user";
 ?>
