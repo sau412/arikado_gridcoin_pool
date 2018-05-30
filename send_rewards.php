@@ -6,6 +6,8 @@ if(!isset($argc)) die();
 require_once("settings.php");
 require_once("db.php");
 require_once("auth.php");
+require_once("billing.php");
+require_once("boincmgr.php");
 
 // Send query to gridcoin client
 function grc_rpc_send_query($query) {
@@ -67,9 +69,9 @@ function grc_rpc_validate_address($grc_address) {
 // Send coins
 function grc_rpc_send($grc_address,$amount) {
         $query='{"id":1,"method":"sendtoaddress","params":["'.$grc_address.'",'.$amount.']}';
-var_dump($query);
+//var_dump($query);
         $result=grc_rpc_send_query($query);
-var_dump($result);
+//var_dump($result);
         $data=json_decode($result);
         if($data->error == NULL) return $data->result;
         else return FALSE;
@@ -77,13 +79,37 @@ var_dump($result);
 
 // Check if unsent rewards exists
 db_connect();
+
+// Check if exists blocks, mined with pool cpid
+$rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0");
+
+if(count($rewarding_array)==0) {
+        echo "No reward blocks for now\n";
+} else {
+        foreach($rewarding_array as $reward_row) {
+                $block_number=$reward_row['number'];
+                $mint=$reward_row['mint'];
+                $interest=$reward_row['interest'];
+                $timestamp=$reward_row['timestamp'];
+                //echo "Block $block_number mint $mint interest $interest timestamp $timestamp\n";
+                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
+                echo "Billing from $prev_billing_timestamp to $timestamp reward $mint\n";
+                $start_date=$prev_billing_timestamp;
+                $stop_date=$timestamp;
+                $check_rewards=FALSE;
+                $reward=$mint;
+                auth_log("Auto billing from '$start_date' to '$stop_date' reward '$reward'");
+                bill_close_period($start_date,$stop_date,$reward,$check_rewards);
+                db_query("UPDATE `boincmgr_blocks` SET `rewards_sent`=1 WHERE `number`='$block_number'");
+        }
+}
+
 $unsent_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_payouts` WHERE `txid` IS NULL");
 
 if($unsent_count==0) {
         echo "No unsent rewards for now\n";
         die();
 }
-
 // Unlock wallet
 if(grc_rpc_unlock_wallet() == FALSE) {
         echo "Unlock wallet error\n";
