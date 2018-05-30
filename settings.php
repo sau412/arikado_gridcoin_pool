@@ -26,6 +26,9 @@ $grc_rpc_login="login";
 $grc_rpc_password="password";
 $grc_rpc_wallet_passphrase="wallet passphrase";
 
+// Gridcoin CPID to automated billings
+$pool_cpid="YOUR CPID HERE";
+
 // Salt for token
 $token_salt="your_salt";
 
