@@ -83,6 +83,8 @@ In log section you can view what happening with pool, users, projects, syncs, ac
 1) User actions - registering, attaching, detaching, deleting, syncing
 2) Project syncing
 3) Errors - login errors, SQL errors and other
+## Pool info editor
+You chan change pool info here. Any HTML or scripting allowed.
 
 Samples:
 1) Projects to sync 21, synced 18, errors: Cosmology@Home (no data from project), latinsquares (get project config error), SETI@home (get project config error)
@@ -102,8 +104,9 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 2) If you want, you can distribute coins with "billing" interface. Fill start and stop dates to calculate contribution, reward amount and click "send rewards".
 
 # To do
-* Pool info editor
 * Feedback page for questions, requests and answers from pool administration (it's me for that pool implementation).
 * More detail stats, graphs, estimations and gridcoin exchange rate.
+* crypt_prog integration (for adding projects via interface)
+* Option for distribute coins equally between users (for rains or faucets)
 * If someone wants install their own pool with my sources, I'll do installer (web page for automated pool setup - create settings.php, create and fill tables with data).
 * If someone wants it, I could check how it works on raspberry and do raspberry image (or instrunctions) with that pool, if possible.
