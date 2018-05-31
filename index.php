@@ -137,6 +137,16 @@ if($username!="") {
                                 setcookie("action_message",$message_billing_ok);
                                 header("Location: ./");
                                 die();
+                        // Calculate payouts
+                        } else if($_POST['action']=='edit_pool_info') {
+                                $pool_info=html_strip($_POST['pool_info']);
+
+                                auth_log("Pool info changed by $username");
+                                boincmgr_set_pool_info($pool_info);
+                                setcookie("action_message",$message_pool_info_changed);
+
+                                header("Location: ./");
+                                die();
                         }
                 }
         }
@@ -175,6 +185,9 @@ if($username!="") {
 
                 // View log
                 echo html_view_log();
+
+                // Pool info editor
+                echo html_pool_info_editor();
         }
 
         // Pool info
