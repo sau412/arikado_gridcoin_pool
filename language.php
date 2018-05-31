@@ -17,9 +17,6 @@ $message_register_fail_username_exists="Register fail. Username exists.";
 
 $message_register_success="Registration complete. Enter your login and password to login.";
 
-$message_pool_info="<p>Guide for new users: 1) register, 2) use this pool as account manager, 3) attach projects, 4) sync with pool, 5) sync one more time after 10 minutes, 6) crunch workunits and wait for rewards</p>
-<p>Write your own pool info here</p>";
-
 $message_change_settings_ok="Settings changed";
 $message_change_settings_password_fail="Change settings fail. Password incorrect";
 $message_change_settings_validation_fail="Change settings fail. Data is not valid";
@@ -37,4 +34,7 @@ $message_billing_ok="Billing ok";
 $message_bad_token="Bad token";
 
 $message_host_error="Host already belongs to another user";
+
+$message_pool_info_changed="Pool info changed";
+
 ?>
