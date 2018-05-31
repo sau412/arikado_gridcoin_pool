@@ -1,10 +1,10 @@
-// Currenct block name for page
+// Current block name for page
 var current_block_name;
 
 // Show only one block from the page
 function show_block(block_name) {
         var blocks_array = ["register_form","login_form","pool_info","settings","your_hosts","boinc_results",
-                "user_control","project_control","billing","payouts","your_stats","pool_stats","log"];
+                "user_control","project_control","billing","payouts","your_stats","pool_stats","log","pool_info_editor"];
 
         // If user clicks same block - reload page
         if(block_name==current_block_name) {
