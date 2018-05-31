@@ -12,7 +12,7 @@ function bill_close_period($start_date,$stop_date,$total_reward,$check_rewards) 
         }
 
         $reward_array=array();
-        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='enabled' ORDER BY `name` ASC");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled') ORDER BY `name` ASC");
 
         $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
 
@@ -50,7 +50,7 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
         $stop_date_escaped=db_escape($stop_date);
         $pre_result=array();
         $result=array();
-        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status`='enabled'");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
         $contrib_sum=0;
         foreach($enabled_projects_array as $project) {
                 $project_uid=$project['uid'];
