@@ -146,4 +146,16 @@ function boincmgr_delete_host($username,$host_uid) {
                 db_query("DELETE FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
         }
 }
+
+// Set pool info
+function boincmgr_set_pool_info($pool_info) {
+        $pool_info_escaped=db_escape($pool_info);
+        db_query("UPDATE `boincmgr_variables` SET `value`='$pool_info_escaped' WHERE `name`='pool_info'");
+}
+
+// Get pool info
+function boincmgr_get_pool_info() {
+        return db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='pool_info'");
+}
+
 ?>
