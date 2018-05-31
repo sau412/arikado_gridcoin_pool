@@ -77,8 +77,84 @@ function grc_rpc_send($grc_address,$amount) {
         else return FALSE;
 }
 
+// Get whitelisted project list
+function grc_rpc_get_projects() {
+        $query='{"id":1,"method":"projects","params":[]}';
+        $result=grc_rpc_send_query($query);
+        $data=json_decode($result);
+        if($data->error == NULL) return $data->result;
+        else return FALSE;
+}
+
 // Check if unsent rewards exists
 db_connect();
+
+// Get whitelisted projects
+$whitelisted_projects_array=grc_rpc_get_projects();
+
+// Setup cURL
+$ch=curl_init();
+curl_setopt($ch,CURLOPT_RETURNTRANSFER,TRUE);
+curl_setopt($ch,CURLOPT_FOLLOWLOCATION,TRUE);
+$whitelisted_names=array();
+
+if(count($whitelisted_projects_array)==0) $no_errors_flag=FALSE;
+else $no_errors_flag=TRUE;
+
+foreach($whitelisted_projects_array as $whitelisted_project) {
+        $project_name=$whitelisted_project->Project;
+        $project_url=$whitelisted_project->URL;
+
+        $project_url_http=str_replace("https:","http:",$project_url);
+        $project_url_https=str_replace("http:","https:",$project_url_http);
+
+        $exists_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_projects` WHERE `project_url` IN ('$project_url_http','$project_url_https')");
+
+        if($exists_uid==FALSE) {
+                curl_setopt($ch,CURLOPT_POST,FALSE);
+                curl_setopt($ch,CURLOPT_URL,$project_url."get_project_config.php");
+                $data = curl_exec ($ch);
+                if($data=="") {
+                        $no_errors_flag=FALSE;
+                        continue;
+                }
+                $xml=simplexml_load_string($data);
+                if($xml==FALSE) {
+                        $no_errors_flag=FALSE;
+                        continue;
+                }
+                $name=(string)$xml->name;
+                $whitelisted_names[]=$name;
+                $name_escaped=db_escape($name);
+                $exists_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_projects` WHERE `name`='$name_escaped'");
+                if($exists_uid!=FALSE) {
+                        $whitelisted_uids[]=$exists_uid;
+                } else {
+                        echo "Unknown whitelisted project: name '$project_name' URL '$project_url'\n";
+                        auth_log("Unknown whitelisted project: name '$project_name' URL '$project_url'");
+                }
+        } else {
+                $whitelisted_uids[]=$exists_uid;
+        }
+
+        if($exists_uid) echo "Project $project_name URL $project_url is whitelisted\n";
+        else echo "Project $project_name URL $project_url is not in whitelist\n\n";
+}
+
+// Update projects only if no errors when checking whitelisted projects
+if($no_errors_flag==TRUE) {
+        $whitelisted_uids_str=implode("','",$whitelisted_uids);
+        $to_be_enabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `boincmgr_projects` WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto disabled')");
+        $to_be_disabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `boincmgr_projects` WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled')");
+        if($to_be_enabled!='') auth_log("Auto change project status: enable projects: $to_be_enabled");
+        if($to_be_disabled!='') auth_log("Auto change project status: disable projects: $to_be_disabled");
+
+        db_query("UPDATE `boincmgr_projects` SET `status`='auto enabled' WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
+        db_query("UPDATE `boincmgr_projects` SET `status`='auto disabled' WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
+        echo "Auto project statuses updated\n";
+} else {
+        echo "Errors while updating project statuses, skipping automatic change\n";
+}
 
 // Check if exists blocks, mined with pool cpid
 $rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0");
@@ -92,7 +168,9 @@ if(count($rewarding_array)==0) {
                 $interest=$reward_row['interest'];
                 $timestamp=$reward_row['timestamp'];
                 //echo "Block $block_number mint $mint interest $interest timestamp $timestamp\n";
-                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
+                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_billing_periods` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
+                if($prev_billing_timestamp=="") $prev_billing_timestamp="SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats`";
+
                 echo "Billing from $prev_billing_timestamp to $timestamp reward $mint\n";
                 $start_date=$prev_billing_timestamp;
                 $stop_date=$timestamp;
