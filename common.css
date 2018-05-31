@@ -78,11 +78,53 @@ ul li a:hover {
         color: green;
         font-weight: bold;
 }
+
 .project_status_stats_only {
         color: orange;
         font-weight: bold;
 }
+
 .project_status_disabled {
         color: red;
+        font-weight: bold;
+}
+
+.project_status_auto {
+        color: blue;
+        font-weight: bold;
+}
+
+.user_status_user {
+        color: green;
+        font-weight: bold;
+}
+
+.user_status_admin {
+        color: blue;
+        font-weight: bold;
+}
+
+.user_status_banned {
+        color: red;
+        font-weight: bold;
+}
+
+.user_status_donator {
+        color: orange;
+        font-weight: bold;
+}
+
+.status_good {
+        color: green;
+        font-weight: bold;
+}
+
+.status_bad {
+        color: red;
+        font-weight: bold;
+}
+
+.status_unknown {
+        color: grey;
         font-weight: bold;
 }
