@@ -144,6 +144,7 @@ function html_get_menu($flag) {
                         $result.=html_menu_element("project_control","Project control");
                         $result.=html_menu_element("billing","Billing");
                         $result.=html_menu_element("log","View log");
+                        $result.=html_menu_element("pool_info_editor","Pool info editor");
                 }
         }
         $result.="</ul>\n";
@@ -169,12 +170,13 @@ function html_greeting_user() {
 
 // Pool info
 function html_pool_info() {
-        global $pool_name,$message_pool_info;
+        global $pool_name;
 
+        $pool_info=boincmgr_get_pool_info();
         return <<<_END
 <div id=pool_info_block class=selectable_block>
 <h2>Pool info</h2>
-$message_pool_info
+$pool_info
 </div>
 
 _END;
@@ -352,7 +354,7 @@ _END;
                 }
 
                 $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
-WHERE `status` IN ('enabled') AND `uid` NOT IN (
+WHERE `status` IN ('enabled','auto enabled') AND `uid` NOT IN (
         SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
         WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
@@ -576,8 +578,23 @@ function html_user_control_form() {
                 $username_html=html_escape($username);
                 $email_html=html_escape($email);
                 $grc_address_html=html_escape($grc_address);
-                $status_html=html_escape($status);
                 $form_hidden_user_uid="<input type=hidden name=user_uid value='$uid'>";
+
+                switch($status) {
+                        case "user":
+                                $status_html="<span class='user_status_user'>".html_escape($status)."</span>";
+                                break;
+                        case "admin":
+                                $status_html="<span class='user_status_admin'>".html_escape($status)."</span>";
+                                break;
+                        case "banned":
+                                $status_html="<span class='user_status_banned'>".html_escape($status)."</span>";
+                                break;
+                        default:
+                        case "donator":
+                                $status_html="<span class='user_status_donator'>".html_escape($status)."</span>";
+                                break;
+                }
 
                 $actions="<form name=change_user method=post>".$form_hidden_action.$form_hidden_user_uid.$form_hidden_token.$user_options.$submit_button."</form>";
                 $result.="<tr><td>$username_html</td><td>$email_html</td><td>$grc_address_html</td><td>$status_html</td><td>$actions</td></tr>\n";
@@ -589,19 +606,19 @@ function html_user_control_form() {
 
 // Show project control form
 function html_project_control_form() {
-        global $username_token;
+        global $username_token,$pool_cpid;
         $result="";
-        $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
+        $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`status`,`timestamp` FROM `boincmgr_projects` ORDER BY `name` ASC");
         $result.="<div id=project_control_block class=selectable_block>\n";
         $result.="<h2>Project control</h2>\n";
         $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
         $result.="<p>Whitelisted projects should be enabled, others ore stats only or disabled.</p>";
         $result.="<p><table>\n";
-        $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Status</th><th>Action</th></tr>\n";
+        $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_project_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
-        $project_options="<select name=status><option>enabled</option><option>stats only</option><option>disabled</option></select>";
+        $project_options="<select name=status><option>auto</option><option>enabled</option><option>stats only</option><option>disabled</option></select>";
         $submit_button="<input type=submit value='change'>";
 
         foreach($projects_array as $project_record) {
@@ -611,14 +628,23 @@ function html_project_control_form() {
                 $url_signature=$project_record['url_signature'];
                 $status=$project_record['status'];
                 $cpid=$project_record['cpid'];
-
+                $weak_auth=$project_record['weak_auth'];
+                $timestamp=$project_record['timestamp'];
                 $name_html=html_escape($name);
                 $project_url_html=html_escape($project_url);
                 $url_signature_html=html_escape($url_signature);
-                $cpid_html=html_escape($cpid);
+
+                if($pool_cpid==$cpid) $cpid_html="<span class='status_good'>match</span>";
+                else if ($cpid=="") $cpid_html="<span class='status_unknown'>no cpid</span>";
+                else $cpid_html="<span class='status_bad'>mismatch</span>";
+
                 $form_hidden_project_uid="<input type=hidden name=project_uid value='$uid'>";
 
                 switch($status) {
+                        case "auto":
+                                $status_html="<span class='project_status_auto'>".html_escape($status)."</span>";
+                                break;
+                        case "auto enabled":
                         case "enabled":
                                 $status_html="<span class='project_status_enabled'>".html_escape($status)."</span>";
                                 break;
@@ -626,13 +652,19 @@ function html_project_control_form() {
                         case "stats only":
                                 $status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
                                 break;
+                        case "auto disabled":
                         case "disabled":
                                 $status_html="<span class='project_status_disabled'>".html_escape($status)."</span>";
                                 break;
                 }
 
+                if($weak_auth=="") $weak_auth_html="<span class='status_unknown'>no key</span>";
+                else $weak_auth_html="<span class='status_good'>present</span>";
+
+                $timestamp_html=html_escape($timestamp);
+
                 $actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
-                $result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+                $result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$weak_auth_html</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
@@ -706,16 +738,18 @@ function html_pool_stats() {
         $result="";
         $result.="<div id=pool_stats_block class=selectable_block>\n";
         $result.="<h2>Pool stats</h2>\n";
-        $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
+        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled or (auto disabled) - do not check anything about this project (no rewards too).</p>";
         $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
         if($start_date=="") $start_date="2018-01-01 20:20:16";
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Team proportion</th><th>Pool proportion</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
-        $proportions=bill_calculate_projects_proportion($start_date,$stop_date);
-//      var_dump($proportions);
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
+
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
+        // Contstant?
+        $total_grc_per_day=48000;
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
         foreach($project_array as $project_data) {
                 $name=$project_data['name'];
                 $project_url=$project_data['project_url'];
@@ -723,30 +757,69 @@ function html_pool_stats() {
                 $expavg_credit=$project_data['expavg_credit'];
                 $team_expavg_credit=$project_data['team_expavg_credit'];
                 $status=$project_data['status'];
-                if($team_expavg_credit!=0) $team_proportion=round(($expavg_credit/$team_expavg_credit)*100,4);
-                else $team_proportion=0;
 
-                if(isset($proportions[$uid])) $proportion=round($proportions[$uid]*100,2);
-                else $proportion=0;
+                $project_grc_per_day=$total_grc_per_day/$whiltelisted_count;
+                if($team_expavg_credit==0) $pool_grc_per_day=0;
+                else $pool_grc_per_day=round(($project_grc_per_day/$team_expavg_credit)*$expavg_credit,4);
 
                 $expavg_credit=round($expavg_credit);
 
                 $name_link=html_project_name_link($name,$project_url);
                 $team_expavg_credit_html=html_escape($team_expavg_credit);
                 $expavg_credit_html=html_escape($expavg_credit);
-                $team_proportion_html=html_escape($team_proportion);
-                $proportion_html=html_escape($proportion);
-                $status_html=html_escape($status);
+
+                switch($status) {
+                        case "auto enabled":
+                                $status_html="<span class='project_status_auto'>".html_escape($status)."</span>";
+                        case "enabled":
+                                $status_html="<span class='project_status_enabled'>".html_escape($status)."</span>";
+                                break;
+                        default:
+                        case "auto":
+                        case "stats only":
+                                $status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
+                                $pool_grc_per_day=0;
+                                break;
+                        case "auto disabled":
+                        case "disabled":
+                                $status_html="<span class='project_status_disabled'>".html_escape($status)."</span>";
+                                $pool_grc_per_day=0;
+                                break;
+                }
+
+                $pool_grc_per_day_html=html_escape($pool_grc_per_day);
 
                 $team_expavg_credit_html=html_format_number($team_expavg_credit_html);
                 $expavg_credit_html=html_format_number($expavg_credit_html);
                 $graph=canvas_graph_project_total($uid);
 
-                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$team_proportion_html %</td><td align=right>$proportion_html %</td><td>$status_html</td><td>$graph</td></tr>\n";
+                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$pool_grc_per_day_html</td><td>$status_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
         return $result;
 }
 
+function html_pool_info_editor() {
+        global $username_token;
+
+        $pool_info=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='pool_info'");
+        $pool_info_html=html_escape($pool_info);
+
+        $result=<<<_END
+<div id=pool_info_editor_block class=selectable_block>
+<h2>Pool info editor</h2>
+<form name=edit_pool_info method=post>
+<input type=hidden name=action value='edit_pool_info'>
+<input type=hidden name=token value='$username_token'>
+<p><textarea name=pool_info cols=120 rows=25>
+$pool_info_html
+</textarea></p>
+<p><input type=submit value='Save'></p>
+</form>
+</div>
+_END;
+
+        return $result;
+}
 ?>
