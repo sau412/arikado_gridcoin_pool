@@ -25,13 +25,15 @@ Simple gridcoin pool with automated payments
 6) Regiter new user via web, then change his status to "admin" in boincmgs_users
 
 ## Gridcoin research wallet, beacon
-7) Run gridcoinresearchd in CLI mode with RPC:
-    rpcuser=username
-    rpcpassword=password1
-    rpcallowip=127.0.0.1/255.255.255.255
-    rpcport=port
-8) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
-9) Check that your cpid are synced (you coud see that in project control page)
+1) Run gridcoinresearchd in CLI mode with RPC:
+```
+rpcuser=username
+rpcpassword=password1
+rpcallowip=127.0.0.1/255.255.255.255
+rpcport=port
+```
+2) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
+3) Check that your cpid are synced (you coud see that in project control page)
 
 # Installation via setup.php (not ready yet)
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
@@ -87,11 +89,13 @@ In log section you can view what happening with pool, users, projects, syncs, ac
 You chan change pool info here. Any HTML or scripting allowed.
 
 Samples:
+```
 1) Projects to sync 21, synced 18, errors: Cosmology@Home (no data from project), latinsquares (get project config error), SETI@home (get project config error)
 2) Sync username 'sau412' host 'DESKTOP-A8D9DJF' p_model 'Intel(R) Xeon(R) CPU E5420 @ 2.50GHz [Family 6 Model 23 Stepping 10]'
 3) Login username 'Arikado'
 4) Query error: SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled') AND `uid` NOT IN ( SELECT bap.`project_uid` FROM `boincmgr_hosts` h LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid` WHERE `host_uid`='116' AND bap.detach=0 ) ORDER BY `name` ASC
 5) Admin check rewards from '2018-05-27 07:16:21' to '2018-05-30 15:48:12' reward '10.0000'
+```
 
 # Debug interfaces
 You can set $debug_mode=TRUE in settings.php, and XML between users and XML between projects will be written to table boincmgr_xml.
