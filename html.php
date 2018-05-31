@@ -744,7 +744,7 @@ function html_pool_stats() {
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day</th><th>Hosts</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
 
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
         // Contstant?
@@ -758,6 +758,11 @@ function html_pool_stats() {
                 $team_expavg_credit=$project_data['team_expavg_credit'];
                 $status=$project_data['status'];
 
+                $project_uid_escaped=db_escape($uid);
+                $pool_project_hosts=db_query_to_variable("SELECT count(*) FROM `boincmgr_attach_projects` AS bap
+LEFT OUTER JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
+WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
+
                 $project_grc_per_day=$total_grc_per_day/$whiltelisted_count;
                 if($team_expavg_credit==0) $pool_grc_per_day=0;
                 else $pool_grc_per_day=round(($project_grc_per_day/$team_expavg_credit)*$expavg_credit,4);
@@ -767,6 +772,7 @@ function html_pool_stats() {
                 $name_link=html_project_name_link($name,$project_url);
                 $team_expavg_credit_html=html_escape($team_expavg_credit);
                 $expavg_credit_html=html_escape($expavg_credit);
+                $pool_project_hosts_html=html_escape($pool_project_hosts);
 
                 switch($status) {
                         case "auto enabled":
@@ -793,7 +799,7 @@ function html_pool_stats() {
                 $expavg_credit_html=html_format_number($expavg_credit_html);
                 $graph=canvas_graph_project_total($uid);
 
-                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$pool_grc_per_day_html</td><td>$status_html</td><td>$graph</td></tr>\n";
+                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$pool_grc_per_day_html</td><td>$pool_project_hosts_html</td><td>$status_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
