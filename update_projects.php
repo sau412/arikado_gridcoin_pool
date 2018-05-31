@@ -14,7 +14,7 @@ require_once("boincmgr.php");
 db_connect();
 
 // Get enabled and stats only projects
-$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`update_weak_auth` FROM `boincmgr_projects` WHERE `status` IN ('enabled','stats only')");
+$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`update_weak_auth` FROM `boincmgr_projects` WHERE `status` IN ('enabled','stats only','auto','auto enabled','auto disabled')");
 
 // Setup cURL
 $ch=curl_init();
