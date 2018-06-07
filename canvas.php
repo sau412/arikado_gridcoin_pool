@@ -87,6 +87,13 @@ function canvas_graph_username_project($username_uid,$project_uid) {
         return canvas_graph($data,100,30);
 }
 
+// Graph by username and all projects
+function canvas_graph_username($username_uid) {
+        $username_uid_escaped=db_escape($username_uid);
+        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid` IN (SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid') AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
+        return canvas_graph($data,100,30);
+}
+
 // Graph by project
 function canvas_graph_project_total($project_uid) {
         $project_uid_escaped=db_escape($project_uid);
