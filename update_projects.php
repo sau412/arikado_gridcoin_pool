@@ -32,6 +32,7 @@ foreach($project_data_array as $project_data)
         $project_name=$project_data['name'];
         $project_url=$project_data['project_url'];
         $update_weak_auth=$project_data['update_weak_auth'];
+        boincmgr_project_last_query_clear($project_uid);
 
         $project_uid_escaped=db_escape($project_uid);
         echo "Updating data for $project_name\n";
@@ -42,6 +43,7 @@ foreach($project_data_array as $project_data)
         curl_setopt($ch,CURLOPT_POST,FALSE);
         curl_setopt($ch,CURLOPT_URL,$project_url."get_project_config.php");
         $data = curl_exec ($ch);
+        boincmgr_project_last_query_append($project_uid,"Query: GET ${project_url}get_project_config.php\n\nReply:\n$data\n\n");
 
         if($debug_mode==TRUE) {
                 $data_escaped=db_escape($data);
@@ -92,6 +94,7 @@ foreach($project_data_array as $project_data)
         // ================================================
         curl_setopt($ch,CURLOPT_URL,$rpc_url."lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash");
         $data=curl_exec($ch);
+        boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n\nReply:\n$data\n\n");
 
         if($debug_mode==TRUE) {
                 $data_escaped=db_escape($data);
@@ -113,6 +116,7 @@ foreach($project_data_array as $project_data)
         // ================================================
         curl_setopt($ch,CURLOPT_URL,$rpc_url."am_get_info.php?account_key=$auth");
         $data=curl_exec($ch);
+        boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}am_get_info.php?account_key=$auth\n\nReply:\n$data\n\n");
 
         if($debug_mode==TRUE) {
                 $data_escaped=db_escape($data);
@@ -129,7 +133,7 @@ foreach($project_data_array as $project_data)
 
         $weak_auth=$xml->weak_auth;
         $weak_auth_escaped=db_escape($weak_auth);
-
+        $team_id_from_account=(int)$xml->teamid;
         // World Community Grid returns wrong weak key, so do not update keys for now (update_weak_auth is false only for that project)
         if($update_weak_auth==TRUE && $weak_auth!='') {
                 db_query("UPDATE `boincmgr_projects` SET `name`='$name_escaped',`weak_auth`='$weak_auth_escaped' WHERE `uid`='$project_uid'");
@@ -142,6 +146,7 @@ foreach($project_data_array as $project_data)
         // ================================================
         curl_setopt($ch,CURLOPT_URL,$rpc_url."team_lookup.php?team_name=Gridcoin&format=xml");
         $data=curl_exec($ch);
+        boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}team_lookup.php?team_name=Gridcoin&format=xml\n\nReply:\n$data\n\n");
 
         if($debug_mode==TRUE) {
                 $data_escaped=db_escape($data);
@@ -158,6 +163,7 @@ foreach($project_data_array as $project_data)
         $gridcoin_team_stats_found=FALSE;
         foreach($xml->team as $team_info) {
                 if($team_info->name=="Gridcoin") {
+                        $team_id_from_team=(int)$team_info->id;
                         $team_expavg_credit=(string)$team_info->expavg_credit;
                         if(auth_validate_float($team_expavg_credit)==FALSE) {
                                 $faults_str_array[]="$project_name (validate gridcoin team expavg error)";
@@ -175,6 +181,7 @@ foreach($project_data_array as $project_data)
         // ================================================
         curl_setopt($ch,CURLOPT_URL,$rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml");
         $data=curl_exec($ch);
+        boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}show_user.php?userid=$boinc_account&auth=$auth&format=xml\n\nReply:\n$data\n\n");
 
         if($debug_mode==TRUE) {
                 $data_escaped=db_escape($data);
@@ -217,7 +224,11 @@ foreach($project_data_array as $project_data)
                 db_query("INSERT INTO `boincmgr_project_stats` (`project_uid`,`expavg_credit`,`team_expavg_credit`)
 VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')");
 
-                db_query("UPDATE `boincmgr_projects` SET `expavg_credit`='$expavg_credit_escaped',`team_expavg_credit`='$team_expavg_credit_escaped',`timestamp`=CURRENT_TIMESTAMP WHERE `uid`='$project_uid_escaped'");
+                if($team_id_from_account==$team_id_from_team) $team_name="Gridcoin";
+                else $team_name=$team_id_from_account;
+
+                $team_name_escaped=db_escape($team_name);
+                db_query("UPDATE `boincmgr_projects` SET `team`='$team_name',`expavg_credit`='$expavg_credit_escaped',`team_expavg_credit`='$team_expavg_credit_escaped',`timestamp`=CURRENT_TIMESTAMP WHERE `uid`='$project_uid_escaped'");
         }
 
         // Update project CPID
