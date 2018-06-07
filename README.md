@@ -107,9 +107,12 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 1) Billing works in automatic mode. After billing rewards send automatically.
 2) If you want, you can distribute coins with "billing" interface. Fill start and stop dates to calculate contribution, reward amount and click "send rewards".
 
+# What's new
+2018-06-07 Estimated GRC/day, view last sync log (for admin), 'project not whitelisted, no rewards' status for project
+
 # To do
 * Feedback page for questions, requests and answers from pool administration (it's me for that pool implementation).
-* More detail stats, graphs, estimations and gridcoin exchange rate.
+* More detail stats, graphs and gridcoin exchange rate.
 * crypt_prog integration (for adding projects via interface)
 * Option for distribute coins equally between users (for rains or faucets)
 * If someone wants install their own pool with my sources, I'll do installer (web page for automated pool setup - create settings.php, create and fill tables with data).
