@@ -260,15 +260,15 @@ function html_user_hosts() {
         $result.="<table>\n";
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
-                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model` FROM `boincmgr_hosts` AS bh
+                $result.="<tr><th>Username</th><th>Host info</th><th>Debug info</th><th>Projects</th></tr>\n";
+                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model`,bh.`timestamp` FROM `boincmgr_hosts` AS bh
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 ORDER BY bu.`username`,bh.`domain_name` ASC");
         } else {
                 $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
                 $username_uid=boincmgr_get_username_uid($username);
                 $username_uid_escaped=db_escape($username_uid);
-                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model` FROM `boincmgr_hosts` AS bh
+                $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model`,bh.`timestamp` FROM `boincmgr_hosts` AS bh
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bh.`domain_name` ASC");
         }
@@ -283,11 +283,13 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bh.`domain_name` ASC");
                         $domain_name=$domain_name_decoded;
                 }
                 $p_model=$host['p_model'];
+                $timestamp=$host['timestamp'];
 
                 $host_username_html=html_escape($host_username);
                 $host_cpid_html=html_escape($host_cpid);
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
+                $timestamp_html=html_escape($timestamp);
 
                 // Delete host button
                 $host_delete_form=<<<_END
@@ -302,7 +304,7 @@ _END;
                 // Project list for this host
                 $host_uid_escaped=db_escape($host_uid);
 
-                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status` FROM `boincmgr_attach_projects` AS bap
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bp.`status` AS project_status FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`name` ASC");
 
@@ -313,6 +315,7 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`n
                         $project_name=$project_data['name'];
                         $project_uid=$project_data['project_uid'];
                         $status=$project_data['status'];
+                        $project_status=$project_data['project_status'];
 
                         $project_uid_escaped=db_escape($project_uid);
                         $project_name_html=html_escape($project_name);
@@ -337,6 +340,9 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`n
                                 case "detach":
                                         $attached_project_msg="<span class=host_status_detach>detached, sync required</span>";
                                         break;
+                        }
+                        if($project_status=="disabled" || $project_status=="auto disabled" || $project_status=="stats only") {
+                                $attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
                         }
 
                         $detach_form=<<<_END
@@ -384,10 +390,11 @@ _END;
 //                      $result.="<p>Host <b>$domain_name_html</b></p>\n";
 //                      $result.="$projects_str\n";
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
-                if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html $host_delete_form</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
-                else
+                if(auth_is_admin($username)) {
+                        $result.="<tr><td>$host_username_html</td><td><p>Domain name: $domain_name_html</p><p>$p_model_html</p><p>$host_delete_form</p></td><td><p>Last sync: $timestamp_html</p><p><a href='?action=view_host_last_query&host_uid=$host_uid&token=$username_token'>View last query</a></p></td><td>$projects_str</td></tr>\n";
+                } else {
                         $result.="<tr><td>$domain_name_html $host_delete_form</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
+                }
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -400,6 +407,11 @@ function html_boinc_results() {
 
         $result="";
 
+        // GRC per last day
+        $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
+        // Whitelisted projects count
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
+
         $result.="<div id=boinc_results_block class=selectable_block>\n";
         $result.="<h2>BOINC results:</h2>\n";
 
@@ -407,21 +419,20 @@ function html_boinc_results() {
 
         $result.="<h3>Results by host</h3>\n";
         $result.="<table>\n";
-        //$result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
 
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
         } else {
-                $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
@@ -433,6 +444,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`ho
                 $domain_name=boincmgr_domain_decode($boinc_host_data['domain_name']);
                 $p_model=$boinc_host_data['p_model'];
                 $expavg_credit=round($boinc_host_data['rac']);
+                $relative_credit=$boinc_host_data['relative_credit'];
 
                 $host_username_html=html_escape($host_username);
                 $domain_name_html=html_escape($domain_name);
@@ -441,13 +453,15 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`ho
 
                 $expavg_credit_html=html_format_number($expavg_credit_html);
 
+                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                $grc_per_day_est=round($grc_per_day_est,4);
                 $graph=canvas_graph_host_all_projects($host_uid);
 
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
                 if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
                 else
-                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
         }
         $result.="</table>\n";
 
@@ -455,9 +469,9 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`ho
         if(auth_is_admin($username)==FALSE) {
                 $result.="<h3>Results by project</h3>\n";
                 $result.="<table>\n";
-                $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th></tr>\n";
+                $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
 
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac FROM `boincmgr_project_hosts_last` AS bphl
+                $boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`name` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bp.`name` ASC");
@@ -466,15 +480,47 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`
                         $project_uid=$boinc_host_data['project_uid'];
                         $expavg_credit=round($boinc_host_data['rac']);
                         $project_name=$boinc_host_data['name'];
+                        $relative_credit=$boinc_host_data['relative_credit'];
 
                         $expavg_credit_html=html_escape($expavg_credit);
                         $project_name_html=html_escape($project_name);
 
                         $expavg_credit_html=html_format_number($expavg_credit_html);
 
+                        $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                        $grc_per_day_est=round($grc_per_day_est,4);
                         $graph=canvas_graph_username_project($username_uid,$project_uid);
 
-                        $result.="<tr><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                        $result.="<tr><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
+                }
+                $result.="</table>\n";
+        } else {
+                $result.="<h3>Results by user</h3>\n";
+                $result.="<table>\n";
+                $result.="<tr><th>Username</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+
+                $boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bu.`username` ASC");
+
+                foreach($boinc_host_data_array as $boinc_host_data) {
+                        $username_uid=$boinc_host_data['username_uid'];
+                        $expavg_credit=round($boinc_host_data['rac']);
+                        $user_name=$boinc_host_data['username'];
+                        $relative_credit=$boinc_host_data['relative_credit'];
+
+                        $expavg_credit_html=html_escape($expavg_credit);
+                        $user_name_html=html_escape($user_name);
+
+                        $expavg_credit_html=html_format_number($expavg_credit_html);
+
+                        $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                        $grc_per_day_est=round($grc_per_day_est,4);
+                        $graph=canvas_graph_username($username_uid);
+
+                        $result.="<tr><td>$user_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
                 }
                 $result.="</table>\n";
         }
@@ -482,21 +528,26 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`
         $result.="<table>\n";
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("
+SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
+FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 ORDER BY bu.`username`,bphl.`domain_name`,bp.`name` ASC");
         } else {
-                $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit` FROM `boincmgr_project_hosts_last` AS bphl
+                $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+                $boinc_host_data_array=db_query_to_array("
+SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
+FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`name` ASC");
         }
         foreach($boinc_host_data_array as $boinc_host_data) {
-                $host_username=$boinc_host_data['username'];
+                if(isset($boinc_host_data['username'])) $host_username=$boinc_host_data['username'];
+                else $host_username="";
                 $host_uid=$boinc_host_data['host_uid'];
                 $project_uid=$boinc_host_data['project_uid'];
                 $host_cpid=$boinc_host_data['host_cpid'];
@@ -504,6 +555,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
                 $p_model=$boinc_host_data['p_model'];
                 $expavg_credit=$boinc_host_data['expavg_credit'];
                 $project_name=$boinc_host_data['name'];
+                $relative_credit=$boinc_host_data['relative_credit'];
 
                 $host_username_html=html_escape($host_username);
                 $host_cpid_html=html_escape($host_cpid);
@@ -513,13 +565,15 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
                 $project_name_html=html_escape($project_name);
 
 //              $expavg_credit_html=html_format_number($expavg_credit_html);
+                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                $grc_per_day_est=round($grc_per_day_est,4);
                 $graph=canvas_graph_host_project($host_uid,$project_uid);
 
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
                 if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
                 else
-                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td></tr>\n";
+                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -561,7 +615,7 @@ function html_user_control_form() {
         $result.="<div id=user_control_block class=selectable_block>\n";
         $result.="<h2>User control</h2>\n";
         $result.="<p><table>\n";
-        $result.="<tr><th>Username</th><th>email</th><th>grc_address</th><th>Status</th><th>Action</th></tr>\n";
+        $result.="<tr><th>Username</th><th>e-mail</th><th>GRC address</th><th>Last sync</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_user_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
@@ -575,9 +629,13 @@ function html_user_control_form() {
                 $grc_address=$user_record['grc_address'];
                 $status=$user_record['status'];
 
+                $user_uid_escaped=db_escape($uid);
+                $last_sync=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_hosts` WHERE `username_uid`='$user_uid_escaped'");
+
                 $username_html=html_escape($username);
                 $email_html=html_escape($email);
                 $grc_address_html=html_escape($grc_address);
+                $last_sync_html=html_escape($last_sync);
                 $form_hidden_user_uid="<input type=hidden name=user_uid value='$uid'>";
 
                 switch($status) {
@@ -597,7 +655,7 @@ function html_user_control_form() {
                 }
 
                 $actions="<form name=change_user method=post>".$form_hidden_action.$form_hidden_user_uid.$form_hidden_token.$user_options.$submit_button."</form>";
-                $result.="<tr><td>$username_html</td><td>$email_html</td><td>$grc_address_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+                $result.="<tr><td>$username_html</td><td>$email_html</td><td>$grc_address_html</td><td>$last_sync_html</td><td>$status_html</td><td>$actions</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
@@ -608,13 +666,13 @@ function html_user_control_form() {
 function html_project_control_form() {
         global $username_token,$pool_cpid;
         $result="";
-        $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`status`,`timestamp` FROM `boincmgr_projects` ORDER BY `name` ASC");
+        $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`timestamp` FROM `boincmgr_projects` ORDER BY `name` ASC");
         $result.="<div id=project_control_block class=selectable_block>\n";
         $result.="<h2>Project control</h2>\n";
         $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
         $result.="<p>Whitelisted projects should be enabled, others ore stats only or disabled.</p>";
         $result.="<p><table>\n";
-        $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
+        $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Team</th><th>Last query</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_project_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
@@ -629,6 +687,7 @@ function html_project_control_form() {
                 $status=$project_record['status'];
                 $cpid=$project_record['cpid'];
                 $weak_auth=$project_record['weak_auth'];
+                $team=$project_record['team'];
                 $timestamp=$project_record['timestamp'];
                 $name_html=html_escape($name);
                 $project_url_html=html_escape($project_url);
@@ -661,10 +720,15 @@ function html_project_control_form() {
                 if($weak_auth=="") $weak_auth_html="<span class='status_unknown'>no key</span>";
                 else $weak_auth_html="<span class='status_good'>present</span>";
 
+                if($team=="Gridcoin") $team_html="<span class='status_good'>$team</span>";
+                else $team_html="<span class='status_unknown'>unknown</span>";
+
                 $timestamp_html=html_escape($timestamp);
 
+                $view_query="<a href='?action=view_project_last_query&project_uid=$uid&token=$username_token'>view</a>";
+
                 $actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
-                $result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$weak_auth_html</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+                $result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$weak_auth_html</td><td>$team_html</td><td>$view_query</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
@@ -744,12 +808,15 @@ function html_pool_stats() {
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day</th><th>Hosts</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day est</th><th>Hosts</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
 
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
-        // Contstant?
-        $total_grc_per_day=48000;
+
+        // GRC per last day
+        $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
+        // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
+
         foreach($project_array as $project_data) {
                 $name=$project_data['name'];
                 $project_url=$project_data['project_url'];
