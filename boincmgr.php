@@ -158,4 +158,27 @@ function boincmgr_get_pool_info() {
         return db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='pool_info'");
 }
 
+// Clear project log
+function boincmgr_project_last_query_clear($project_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        db_query("UPDATE `boincmgr_projects` SET `last_query`='' WHERE `uid`='$project_uid_escaped'");
+}
+
+// Get project log
+function boincmgr_project_last_query_get($project_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $result=db_query_to_variable("SELECT `last_query` FROM `boincmgr_projects` WHERE `uid`='$project_uid_escaped'");
+        return base64_decode($result);
+}
+
+// Append text to project log
+function boincmgr_project_last_query_append($project_uid,$text) {
+        $project_uid_escaped=db_escape($project_uid);
+        $current_text=boincmgr_project_last_query_get($project_uid);
+        $new_text=$current_text.$text;
+        $new_text_encoded=base64_encode($new_text);
+        $new_text_encoded_escaped=db_escape($new_text_encoded);
+        db_query("UPDATE `boincmgr_projects` SET `last_query`='$new_text_encoded_escaped' WHERE `uid`='$project_uid_escaped'");
+}
+
 ?>
