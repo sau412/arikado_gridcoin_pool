@@ -8,6 +8,7 @@ require_once("db.php");
 require_once("auth.php");
 require_once("billing.php");
 require_once("boincmgr.php");
+require_once("html.php");
 
 // Send query to gridcoin client
 function grc_rpc_send_query($query) {
@@ -157,7 +158,7 @@ if($no_errors_flag==TRUE) {
 }
 
 // Check if exists blocks, mined with pool cpid
-$rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0");
+$rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0 ORDER BY `number` ASC");
 
 if(count($rewarding_array)==0) {
         echo "No reward blocks for now\n";
@@ -168,7 +169,7 @@ if(count($rewarding_array)==0) {
                 $interest=$reward_row['interest'];
                 $timestamp=$reward_row['timestamp'];
                 //echo "Block $block_number mint $mint interest $interest timestamp $timestamp\n";
-                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_billing_periods` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
+                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
                 if($prev_billing_timestamp=="") $prev_billing_timestamp="SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats`";
 
                 echo "Billing from $prev_billing_timestamp to $timestamp reward $mint\n";
