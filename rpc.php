@@ -27,7 +27,7 @@ db_connect();
 $data=file_get_contents("php://input");
 
 $data_escaped=db_escape($data);
-db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client request','$data_escaped')");
+if($debug_mode==TRUE) db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client request','$data_escaped')");
 
 // Parse user data
 $xml_data=xml_parse_user_request($data);
@@ -87,9 +87,12 @@ if($host_owner_uid!="" && $username_uid!=$host_owner_uid) {
         die();
 }
 
-db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`)
-VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped')
-ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`timestamp`=CURRENT_TIMESTAMP");
+$base64_query=base64_encode($data);
+$base64_query_escaped=db_escape($base64_query);
+
+db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`last_query`)
+VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$base64_query_escaped')
+ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`last_query`=VALUES(`last_query`),`timestamp`=CURRENT_TIMESTAMP");
 
 // Attached projects list (for deleting detached projects)
 $client_still_attached_project_uids=array();
@@ -108,6 +111,7 @@ foreach($xml_data["projects"] as $project_data) {
 
         // Get project uid
         $project_uid=boincmgr_get_project_uid($project_name);
+        $project_uid_escaped=db_escape($project_uid);
 
         // If project exists
         if($project_uid) {
@@ -194,7 +198,7 @@ $reply_xml_escaped=db_escape($reply_xml);
 
 auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
 
-db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client reply','$reply_xml_escaped')");
+if($debug_mode==TRUE) db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client reply','$reply_xml_escaped')");
 
 echo $reply_xml;
 ?>
