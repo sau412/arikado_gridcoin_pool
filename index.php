@@ -137,7 +137,7 @@ if($username!="") {
                                 setcookie("action_message",$message_billing_ok);
                                 header("Location: ./");
                                 die();
-                        // Calculate payouts
+                        // Edit pool info
                         } else if($_POST['action']=='edit_pool_info') {
                                 $pool_info=html_strip($_POST['pool_info']);
 
@@ -158,6 +158,21 @@ if($username!="") {
                         auth_logout();
                         setcookie("action_message",$message_logout_success);
                         header("Location: ./");
+                        die();
+                } else if($_GET['action']=='view_host_last_query') {
+                        $host_uid=$_GET['host_uid'];
+                        $host_uid_escaped=db_escape($host_uid);
+                        $result_encoded=db_query_to_variable("SELECT `last_query` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
+                        echo "<pre><tt>";
+                        echo html_escape(base64_decode($result_encoded));
+                        echo "</tt></pre>";
+                        die();
+                } else if($_GET['action']=='view_project_last_query') {
+                        $project_uid=$_GET['project_uid'];
+                        $result=boincmgr_project_last_query_get($project_uid);
+                        echo "<pre><tt>";
+                        echo html_escape($result);
+                        echo "</tt></pre>";
                         die();
                 }
         }
