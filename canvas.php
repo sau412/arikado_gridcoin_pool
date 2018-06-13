@@ -1,6 +1,7 @@
 <?php
-// Drawing canvas
+// Graphs functions
 
+// Drawing canvas
 function canvas_graph($data,$width,$height) {
         $result="";
         $canvas_id=uniqid();
@@ -64,7 +65,6 @@ _END;
         return $result;
 }
 
-// Graph by host and project
 function canvas_graph_host_project($host_uid,$project_uid) {
         $host_uid_escaped=db_escape($host_uid);
         $project_uid_escaped=db_escape($project_uid);
