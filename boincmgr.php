@@ -10,16 +10,21 @@ function boincmgr_attach($username,$host_uid,$project_uid) {
         $username_uid_escaped=db_escape($username_uid);
 
         // Check if host_uid belongs to this user
-        if(auth_is_admin($username)==FALSE) $host_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
-        if($host_uid || auth_is_admin($username)) {
-                $project_name=boincmgr_get_project_name($project_uid);
-                $host_name=boincmgr_get_host_name($host_uid);
-
+        $host_correct=FALSE;
+        $project_correct=FALSE;
+        $project_name=boincmgr_get_project_name($project_uid);
+        $host_name=boincmgr_get_host_name($host_uid);
+        if(auth_is_admin($username)==FALSE) {
+                $host_correct=db_query_to_variable("SELECT 1 FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
+                $project_correct=db_query_to_variable("SELECT 1 FROM `boincmgr_projects` WHERE `uid`='$project_uid_escaped' AND `status` IN ('enabled','auto enabled')");
+        }
+        if(auth_is_admin($username) || ($host_correct && $project_correct)) {
                 auth_log("Attach username '$username' project '$project_name' to host '$host_name'");
                 $host_uid_escaped=db_escape($host_uid);
                 db_query("INSERT INTO `boincmgr_attach_projects` (`project_uid`,`host_uid`,`status`) VALUES ('$project_uid_escaped','$host_uid_escaped','new') ON DUPLICATE KEY UPDATE `status`='new'");
                 return TRUE;
         } else {
+                auth_log("Attach fail username '$username' project '$project_name' to host '$host_name'");
                 return FALSE;
         }
 }
@@ -139,8 +144,8 @@ function boincmgr_delete_host($username,$host_uid) {
                 db_query("DELETE FROM `boincmgr_host_projects` WHERE `host_uid`='$host_uid_escaped'");
 
                 // Delete host stats
-                db_query("DELETE FROM `boincmgr_hosts_last` WHERE `host_uid`='$host_uid_escaped'");
-                db_query("DELETE FROM `boincmgr_host_stats` WHERE `host_uid`='$host_uid_escaped'");
+                db_query("DELETE FROM `boincmgr_project_hosts_last` WHERE `host_uid`='$host_uid_escaped'");
+                db_query("DELETE FROM `boincmgr_project_host_stats` WHERE `host_uid`='$host_uid_escaped'");
 
                 // Delete host
                 db_query("DELETE FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
@@ -179,6 +184,20 @@ function boincmgr_project_last_query_append($project_uid,$text) {
         $new_text_encoded=base64_encode($new_text);
         $new_text_encoded_escaped=db_escape($new_text_encoded);
         db_query("UPDATE `boincmgr_projects` SET `last_query`='$new_text_encoded_escaped' WHERE `uid`='$project_uid_escaped'");
+}
+
+// Cache function
+function boincmgr_cache_function($function_name,$parameters) {
+        $call_str="$function_name(".implode(",",$parameters).")";
+        $hash=hash("sha256",$call_str);
+        $result=db_query_to_variable("SELECT `content` FROM `boincmgr_cache` WHERE `hash`='$hash' AND NOW()<`valid_until`");
+        if($result=="") {
+                $result=call_user_func_array($function_name,$parameters);
+                $result_escaped=db_escape($result);
+                db_query("INSERT INTO `boincmgr_cache` (`hash`,`content`,`valid_until`) VALUES ('$hash','$result_escaped',DATE_ADD(NOW(),INTERVAL 1 HOUR))
+ON DUPLICATE KEY UPDATE `content`=VALUES(`content`),`valid_until`=DATE_ADD(NOW(),INTERVAL 1 HOUR)");
+        }
+        return $result;
 }
 
 ?>
