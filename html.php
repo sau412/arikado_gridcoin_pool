@@ -12,11 +12,12 @@ function html_strip($variable) {
 // Escape for html facade
 function html_escape($variable) {
         $result=htmlspecialchars($variable);
-        if($variable!="" && $result=="") {
-                $variable=iconv("WINDOWS-1252","UTF-8",$variable);
-                $result=htmlspecialchars($variable);
+        if($variable!='' && $result=='') {
+                $result=iconv('WINDOWS-1251','UTF-8',$variable);
+                $result=htmlspecialchars($result);
         }
-        return htmlspecialchars($variable);
+        $result=str_replace("'","&apos;",$result);
+        return $result;
 }
 
 // Begin HTML page
@@ -359,12 +360,21 @@ _END;
                         $projects_str.="$detach_form<br>";
                 }
 
-                $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
+                if(auth_is_admin($username)) {
+                        $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
+WHERE `uid` NOT IN (
+        SELECT bap.`project_uid` FROM `boincmgr_hosts` h
+        LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
+        WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
+) ORDER BY `name` ASC");
+                } else {
+                        $projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects`
 WHERE `status` IN ('enabled','auto enabled') AND `uid` NOT IN (
         SELECT bap.`project_uid` FROM `boincmgr_hosts` h
         LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid`
         WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
 ) ORDER BY `name` ASC");
+                }
                 if(count($projects_array)==0) {
                         $projects_str.="No more projects to attach<br>";
                 } else {
@@ -455,7 +465,8 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`ho
 
                 $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
                 $grc_per_day_est=round($grc_per_day_est,4);
-                $graph=canvas_graph_host_all_projects($host_uid);
+
+                $graph=boincmgr_cache_function("canvas_graph_host_all_projects",array($host_uid));
 
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
                 if(auth_is_admin($username))
@@ -489,7 +500,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`
 
                         $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
                         $grc_per_day_est=round($grc_per_day_est,4);
-                        $graph=canvas_graph_username_project($username_uid,$project_uid);
+                        $graph=boincmgr_cache_function("canvas_graph_username_project",array($username_uid,$project_uid));
 
                         $result.="<tr><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
                 }
@@ -518,7 +529,7 @@ GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORD
 
                         $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
                         $grc_per_day_est=round($grc_per_day_est,4);
-                        $graph=canvas_graph_username($username_uid);
+                        $graph=boincmgr_cache_function("canvas_graph_username",array($username_uid));
 
                         $result.="<tr><td>$user_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
                 }
@@ -567,7 +578,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
 //              $expavg_credit_html=html_format_number($expavg_credit_html);
                 $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
                 $grc_per_day_est=round($grc_per_day_est,4);
-                $graph=canvas_graph_host_project($host_uid,$project_uid);
+                $graph=boincmgr_cache_function("canvas_graph_host_project",array($host_uid,$project_uid));
 
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
                 if(auth_is_admin($username))
@@ -748,9 +759,11 @@ function html_payouts() {
                 $stop_date=$billing['stop_date'];
                 $reward=$billing['reward'];
 
+                $reward=round($reward,4);
+
                 $billing_uid_escaped=db_escape($billing_uid);
 
-                $result.="<h3>At $stop_date pool rewarded with $reward gridcoins</h3>\n";
+                $result.="<h3>For period from $start_date to $stop_date pool rewarded with $reward gridcoins</h3>\n";
 //              $result.="<p>Rewards distribution</p>\n";
                 $payout_data_array=db_query_to_array("SELECT `grc_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` WHERE `billing_uid`='$billing_uid_escaped' ORDER BY `grc_address` ASC");
                 $result.="<p><table>\n";
@@ -760,6 +773,8 @@ function html_payouts() {
                         $amount=$payout_data['amount'];
                         $txid=$payout_data['txid'];
                         $timestamp=$payout_data['timestamp'];
+
+                        $amount=round($amount,4);
 
                         $grc_address_link=html_grc_address_link($grc_address);
                         $amount_html=html_escape($amount);
