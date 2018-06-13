@@ -80,9 +80,9 @@ $username_uid_escaped=db_escape($username_uid);
 $host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
 $host_uid_escaped=db_escape($host_uid);
 
-$host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
-if($host_owner_uid!="" && $username_uid!=$host_owner_uid) {
-        auth_log("Sync username '$username' error, username is not owner host_uid '$host_uid'");
+$host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_hosts` WHERE `internal_host_cpid`='$host_cpid_escaped'");
+if(FALSE && $host_owner_uid!="" && $username_uid!=$host_owner_uid) {
+        auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid'");
         echo xml_error_message($message_host_error,-102);
         die();
 }
@@ -135,13 +135,26 @@ foreach($xml_data["projects"] as $project_data) {
                                 $project_uid_escaped=db_escape($project_uid);
                                 $client_still_attached_project_uids[]=$project_uid_escaped;
 
-                                // Store host_id in DB
-                                db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
+                                // Search for duplicating host of another user
+                                $exists_host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_host_projects` AS bhp
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.uid=bhp.host_uid
+WHERE bhp.`project_uid`='$project_uid_escaped' AND bhp.`host_id`='$project_host_id_escaped' AND bh.`internal_host_cpid`='$host_cpid_escaped'");
+
+                                // If new host_id or user match, then store data
+                                if($exists_host_owner_uid==FALSE || $exists_host_owner_uid==$username_uid_escaped) {
+                                        // Store host_id in DB
+                                        db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
 VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
 ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
 
-                                // Mark attachment as correct
-                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                                        // Mark attachment as correct
+                                        db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                                } else {
+                                        // Stop sync, may be host stealing attempt
+                                        auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid' project '$project_name' host_id '$project_host_id'");
+                                        echo xml_error_message($message_host_error,-102);
+                                        die();
+                                }
                         }
                 }
         }
@@ -195,6 +208,10 @@ $reply_xml.=<<<_END
 _END;
 
 $reply_xml_escaped=db_escape($reply_xml);
+
+if(auth_validate_ascii($domain_name)==FALSE) {
+        $domain_name=base64_encode($domain_name);
+}
 
 auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
 
