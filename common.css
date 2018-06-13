@@ -128,3 +128,8 @@ ul li a:hover {
         color: grey;
         font-weight: bold;
 }
+
+.status_orange {
+        color: orange;
+        font-weight: bold;
+}
