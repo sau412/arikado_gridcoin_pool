@@ -11,9 +11,12 @@ $message_register_fail_login="Register fail. Username validation failed.";
 $message_register_fail_password="Register fail. Password validation failed.";
 $message_register_fail_password_mismatch="Register fail. Password mismatch.";
 $message_register_fail_email="Register fail. E-mail format validation failed.";
-$message_register_fail_grc_address="Register fail. GRC address validation failed.";
+$message_register_fail_payout_currency="Register fail. Payout currency validation failed.";
+$message_register_fail_payout_address="Register fail. Payout address validation failed.";
 $message_register_fail_db="Register fail. DB error, contact admin.";
 $message_register_fail_username_exists="Register fail. Username exists.";
+
+$message_register_recaptcha_error="Register fail. Invalid reCAPTCHA.";
 
 $message_register_success="Registration complete. Enter your login and password to login.";
 
@@ -24,6 +27,7 @@ $message_change_settings_validation_fail="Change settings fail. Data is not vali
 $message_project_attached="Project attached";
 $message_project_detached="Project detached";
 $message_project_status_changed="Project status changed";
+$message_project_settings_changed="Project settings changed";
 
 $message_host_deleted="Host deleted";
 
