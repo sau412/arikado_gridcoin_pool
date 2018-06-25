@@ -56,7 +56,7 @@ function grc_rpc_lock_wallet() {
 
 // Validate address
 function grc_rpc_validate_address($grc_address) {
-        if(auth_validate_grc_address($grc_address) == FALSE) return FALSE;
+        if(auth_validate_payout_address($grc_address) == FALSE) return FALSE;
         $query='{"id":1,"method":"validateaddress","params":["'.$grc_address.'"]}';
         $result=grc_rpc_send_query($query);
         $data=json_decode($result);
@@ -87,8 +87,29 @@ function grc_rpc_get_projects() {
         else return FALSE;
 }
 
+// Get magnitude unit
+function grc_rpc_get_magnitude_unit() {
+        $query='{"id":1,"method":"getmininginfo","params":[]}';
+        $result=grc_rpc_send_query($query);
+        $data=json_decode($result);
+//      foreach($data->result as $key => $val) if($key=="") echo "$key => $val\n";
+        if($data->error == NULL) return $data->result->{"Magnitude Unit"};
+        else return FALSE;
+}
+
 // Check if unsent rewards exists
 db_connect();
+
+// Get balance
+$current_balance=grc_rpc_get_balance();
+echo "Current balance: $current_balance\n";
+boincmgr_set_variable("hot_wallet_balance",$current_balance);
+
+// Get magnitude unit
+$magnitude_unit=grc_rpc_get_magnitude_unit();
+boincmgr_set_variable("magnitude_unit",$magnitude_unit);
+//$magnitude_unit_escaped=db_escape($magnitude_unit);
+//db_query_to_variable("INSERT INTO `boincmgr_variables` (`name`,`value`) VALUES ('magnitude_unit','$magnitude_unit_escaped')");
 
 // Get whitelisted projects
 $whitelisted_projects_array=grc_rpc_get_projects();
@@ -196,17 +217,18 @@ if(grc_rpc_unlock_wallet() == FALSE) {
         die();
 }
 
-// Get balance
-$current_balance=grc_rpc_get_balance();
-echo "Current balance: $current_balance\n";
-
-// Get payout information
-$payout_data_array=db_query_to_array("SELECT `uid`,`grc_address`,`amount` FROM `boincmgr_payouts` WHERE `txid` IS NULL");
+// Get payout information for GRC
+$payout_data_array=db_query_to_array("SELECT `uid`,`payout_address`,`currency`,`amount` FROM `boincmgr_payouts` WHERE `currency`='GRC' AND `txid` IS NULL");
 
 foreach($payout_data_array as $payout_data) {
         $uid=$payout_data['uid'];
-        $grc_address=$payout_data['grc_address'];
+        $grc_address=$payout_data['payout_address'];
         $amount=$payout_data['amount'];
+        $currency=$payout_data['currency'];
+
+        // Only GRC payouts here
+        if($currency!="GRC") continue;
+
         // If we have funds for this
         if($amount<$current_balance) {
                 echo "Sending $amount to $grc_address\n";
