@@ -7,16 +7,18 @@ define("AUTH_REGISTER_FAIL_LOGIN",2);
 define("AUTH_REGISTER_FAIL_PASSWORD",3);
 define("AUTH_REGISTER_FAIL_PASSWORD_MISMATCH",4);
 define("AUTH_REGISTER_FAIL_EMAIL",5);
-define("AUTH_REGISTER_FAIL_GRC_ADDRESS",6);
-define("AUTH_REGISTER_FAIL_DB",7);
-define("AUTH_REGISTER_FAIL_USERNAME_EXISTS",8);
+define("AUTH_REGISTER_FAIL_PAYOUT_ADDRESS",6);
+define("AUTH_REGISTER_FAIL_PAYOUT_CURRENCY",7);
+define("AUTH_REGISTER_FAIL_DB",8);
+define("AUTH_REGISTER_FAIL_USERNAME_EXISTS",9);
 
 $auth_register_result_to_message=array(
         AUTH_REGISTER_OK=>$message_register_success,
         AUTH_REGISTER_FAIL_LOGIN=>$message_register_fail_login,
         AUTH_REGISTER_FAIL_PASSWORD=>$message_register_fail_password,
         AUTH_REGISTER_FAIL_EMAIL=>$message_register_fail_email,
-        AUTH_REGISTER_FAIL_GRC_ADDRESS=>$message_register_fail_grc_address,
+        AUTH_REGISTER_FAIL_PAYOUT_ADDRESS=>$message_register_fail_payout_address,
+        AUTH_REGISTER_FAIL_PAYOUT_CURRENCY=>$message_register_fail_payout_currency,
         AUTH_REGISTER_FAIL_DB=>$message_register_fail_db,
         AUTH_REGISTER_FAIL_USERNAME_EXISTS=>$message_register_fail_username_exists,
 );
@@ -72,9 +74,10 @@ function auth_validate_password($password) {
 }
 
 // Check GRC address format
-function auth_validate_grc_address($grc_address) {
-        if(preg_match('/^[A-Za-z0-9]{34,34}$/',$grc_address)) return TRUE;
-        else return FALSE;
+function auth_validate_payout_address($payout_address) {
+        return auth_validate_ascii($payout_address);
+        //if(preg_match('/^[A-Za-z0-9]{34,34}$/',$grc_address)) return TRUE;
+        //else return FALSE;
 }
 
 // Check string has only ASCII characters
@@ -122,20 +125,32 @@ function auth_validate_auth_cookie($auth_cookie) {
         else return FALSE;
 }
 
+// Check payout currency
+function auth_validate_payout_currency($currency) {
+        $currency_escaped=db_escape($currency);
+        $exists=db_query_to_variable("SELECT 1 FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
+        if($exists) return TRUE;
+        else return FALSE;
+        $valid_currency_array=array("GRC","DOGE","ETH","BTC","LTC");
+        if(in_array($currency,$valid_currency_array)) return TRUE;
+        else return FALSE;
+}
+
 // Register new user
-function auth_add_user($username,$email,$password_1,$password_2,$grc_address) {
+function auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address) {
         // Various checks
         if($password_1 != $password_2) return AUTH_REGISTER_FAIL_PASSWORD_MISMATCH;
         if(auth_validate_username($username)==FALSE) return AUTH_REGISTER_FAIL_LOGIN;
         if(auth_validate_email($email)==FALSE) return AUTH_REGISTER_FAIL_EMAIL;
         if(auth_validate_password($password_1)==FALSE) return AUTH_REGISTER_FAIL_PASSWORD;
-        if(auth_validate_grc_address($grc_address)==FALSE) return AUTH_REGISTER_FAIL_GRC_ADDRESS;
+        if(auth_validate_payout_currency($payout_currency)==FALSE) return AUTH_REGISTER_FAIL_PAYOUT_CURRENCY;
+        if(auth_validate_payout_address($payout_address)==FALSE) return AUTH_REGISTER_FAIL_PAYOUT_ADDRESS;
 
         // Escaping
-        //$username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
-        $grc_address_escaped=db_escape($grc_address);
+        $payout_address_escaped=db_escape($payout_address);
+        $payout_currency_escaped=db_escape($payout_currency);
         $password_hash=auth_hash($username,$password_1);
 
         // Check is username exists
@@ -143,31 +158,33 @@ function auth_add_user($username,$email,$password_1,$password_2,$grc_address) {
         if($username_exists_flag) return AUTH_REGISTER_FAIL_USERNAME_EXISTS;
 
         // Add new user
-        auth_log("Register username '$username' mail '$email' grc_address '$grc_address'");
+        auth_log("Register username '$username' mail '$email' payout_currency '$payout_currency' payout_address '$payout_address'");
         $salt=bin2hex(random_bytes(16));
         $salt_escaped=db_escape($salt);
         $password_hash_salted=hash("sha256",$password_hash.$salt);
 
-        $result=db_query("INSERT INTO `boincmgr_users` (`username`,`email`,`salt`,`passwd_hash`,`grc_address`,`status`)
-VALUES ('$username_escaped','$email_escaped','$salt_escaped','$password_hash_salted','$grc_address_escaped','user')");
+        $result=db_query("INSERT INTO `boincmgr_users` (`username`,`email`,`salt`,`passwd_hash`,`currency`,`payout_address`,`status`)
+VALUES ('$username_escaped','$email_escaped','$salt_escaped','$password_hash_salted','$payout_currency_escaped','$payout_address_escaped','user')");
         if($result) return AUTH_REGISTER_OK;
         else return AUTH_REGISTER_FAIL_DB;
 }
 
 // Change password and other settings
-function auth_change_settings($username,$email,$current_password,$new_password_1,$new_password_2,$grc_address) {
+function auth_change_settings($username,$email,$current_password,$new_password_1,$new_password_2,$payout_currency,$payout_address) {
         if(auth_validate_password($current_password)==FALSE) return FALSE;
 
         if($new_password_1 != $new_password_2) return FALSE;
-        if(auth_validate_grc_address($grc_address)==FALSE) return FALSE;
+        if(auth_validate_payout_address($payout_address)==FALSE) return FALSE;
+        if(auth_validate_payout_currency($payout_currency)==FALSE) return FALSE;
         if($new_password_1 != '' && auth_validate_password($new_password_1)==FALSE) return FALSE;
 
-        auth_log("Change settings username '$username' mail '$email' grc_address '$grc_address'");
+        auth_log("Change settings username '$username' mail '$email' payout_currency '$payout_currency' payout_address '$payout_address'");
 
         //$username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
-        $grc_address_escaped=db_escape($grc_address);
+        $payout_address_escaped=db_escape($payout_address);
+        $payout_currency_escaped=db_escape($payout_currency);
 
         $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
         $password_hash=auth_hash($username,$current_password);
@@ -181,9 +198,9 @@ function auth_change_settings($username,$email,$current_password,$new_password_1
                 $salt=bin2hex(random_bytes(16));
                 $salt_escaped=db_escape($salt);
                 $password_hash_salted=hash("sha256",$password_hash.$salt);
-                $result=db_query("UPDATE `boincmgr_users` SET `salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`grc_address`='$grc_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `boincmgr_users` SET `salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         } else {
-                $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`grc_address`='$grc_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         }
         if($result) return TRUE;
         else return FALSE;
@@ -204,7 +221,7 @@ function auth_login($username,$password) {
                 $auth_cookie_escaped=db_escape($auth_cookie);
 
                 db_query("INSERT INTO `boincmgr_user_auth_cookies` (`username_uid`,`cookie_token`,`expire_date`) VALUES ('$username_uid_escaped','$auth_cookie_escaped',DATE_ADD(NOW(),INTERVAL 2 DAY))");
-                setcookie("auth_cookie",$auth_cookie);
+                setcookie("auth_cookie",$auth_cookie,time()+30*24*60*60); // 30 days
                 return TRUE;
         } else {
                 auth_log("Login failed username '$username'");
@@ -274,4 +291,20 @@ function auth_log($message) {
 //      $message_escaped=db_escape($message);
 //      db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
 //}
+
+function auth_recaptcha_check($response) {
+        global $recaptcha_private_key;
+        $recaptcha_url="https://www.google.com/recaptcha/api/siteverify";
+        $query="secret=$recaptcha_private_key&response=$response&remoteip=".$_SERVER['REMOTE_ADDR'];
+        $ch=curl_init();
+        curl_setopt($ch,CURLOPT_RETURNTRANSFER,TRUE);
+        curl_setopt($ch,CURLOPT_FOLLOWLOCATION,TRUE);
+        curl_setopt($ch,CURLOPT_POST,TRUE);
+        curl_setopt($ch, CURLOPT_POSTFIELDS,$query);
+        curl_setopt($ch,CURLOPT_URL,$recaptcha_url);
+        $result = curl_exec ($ch);
+        $data = json_decode($result);
+        if($data->success) return TRUE;
+        else return FALSE;
+}
 ?>
