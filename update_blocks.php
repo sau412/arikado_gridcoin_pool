@@ -53,8 +53,9 @@ db_connect();
 $current_block=db_query_to_variable("SELECT MAX(`number`)+1 FROM `boincmgr_blocks`");
 
 // 1110 = 1000 + 110 confirmations to stake blocks
-//if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
-if($current_block=="") $current_block=1257860;
+if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
+//if($current_block=="") $current_block=1257860;
+
 do{
         $block_hash=grc_rpc_get_block_hash($current_block);
 
