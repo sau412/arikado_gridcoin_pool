@@ -148,7 +148,7 @@ VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
 ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
 
                                         // Mark attachment as correct
-                                        db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                                        db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status` NOT IN ('detach')");
                                 } else {
                                         // Stop sync, may be host stealing attempt
                                         auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid' project '$project_name' host_id '$project_host_id'");
@@ -162,15 +162,15 @@ ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
 
 // Delete detached projects from db
 $client_still_attached_project_uids_string=implode("','",$client_still_attached_project_uids);
-db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `status`='detach' AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
+db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `status` IN ('detach') AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
 
 // Get project data for this host
-$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`status` FROM `boincmgr_attach_projects` AS bap
+$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`status`,bap.`resource_share`,bap.`options` FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.`host_uid`='$host_uid_escaped'");
 
 // Update attaching status
-db_query("UPDATE `boincmgr_attach_projects` SET `status`='sent' WHERE `host_uid`='$host_uid_escaped' AND (`status`='new' || `status`='')");
+db_query("UPDATE `boincmgr_attach_projects` SET `status`='sent' WHERE `host_uid`='$host_uid_escaped' AND (`status`='new' OR `status`='')");
 
 $reply_xml.=<<<_END
 <name>$pool_name</name>
@@ -181,13 +181,27 @@ $signing_key
 
 _END;
 
+$valid_options_array=array("detach","detach_when_done","suspend","dont_request_more_work","abort_not_started","no_cpu","no_cuda","no_ati","no_intel");
+
 foreach($project_data_array as $project_data) {
         $project_url=$project_data['project_url'];
         $weak_auth=$project_data['weak_auth'];
         $url_signature=$project_data['url_signature'];
         $status=$project_data['status'];
-        if($status=="detach") $detach=1;
-        else $detach=0;
+        $resource_share=$project_data['resource_share'];
+        $options=$project_data['options'];
+
+        $option_tags="<resource_share>$resource_share</resource_share>\n";
+        $options_array=explode(",",$options);
+        foreach($valid_options_array as $valid_option) {
+                if(in_array($valid_option,$options_array)) $option_value=1;
+                else $option_value=0;
+                $option_tags.="<$valid_option>$option_value</$valid_option>\n";
+                if($valid_option=="no_cpu" && $option_value==1) $option_tags.="<no_rsc>CPU</no_rsc>\n";
+                if($valid_option=="no_cuda" && $option_value==1) $option_tags.="<no_rsc>CUDA</no_rsc>\n";
+                if($valid_option=="no_ati" && $option_value==1) $option_tags.="<no_rsc>ATI</no_rsc>\n";
+                if($valid_option=="no_intel" && $option_value==1) $option_tags.="<no_rsc>intel_gpu</no_rsc>\n";
+        }
 
         $reply_xml.=<<<_END
 <account>
@@ -196,7 +210,7 @@ foreach($project_data_array as $project_data) {
 $url_signature
 </url_signature>
 <authenticator>$weak_auth</authenticator>
-<detach>$detach</detach>
+$option_tags
 </account>
 
 _END;
