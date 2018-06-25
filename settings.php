@@ -29,6 +29,10 @@ $grc_rpc_wallet_passphrase="wallet passphrase";
 // Gridcoin CPID to automated billings
 $pool_cpid="YOUR CPID HERE";
 
+// ReCAPTCHA
+$recaptcha_public_key="public key here";
+$recaptcha_private_key="private key here";
+
 // Salt for token
 $token_salt="your_salt";
 
