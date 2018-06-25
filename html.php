@@ -33,6 +33,7 @@ function html_page_begin() {
 <link rel="stylesheet" type="text/css" href="common.css">
 <script src="common.js"></script>
 <link rel="icon" href="favicon.png" type="image/png">
+<script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 <body>
 
@@ -72,20 +73,35 @@ function html_project_name_link($project_name,$project_url) {
         return "<a href='$project_url'>$project_name</a>";
 }
 
-// Return grc address as URL
-function html_grc_address_link($grc_address) {
-        $grc_address_html=html_escape($grc_address);
-        return "<a href='https://www.gridcoinstats.eu/address/$grc_address'>$grc_address</a>";
+// Return payout address as URL
+function html_payout_address_link($currency,$payout_address) {
+        $payout_address_html=html_escape($payout_address);
+        $currency_escaped=db_escape($currency);
+        $wallet_url=db_query_to_variable("SELECT `url_wallet` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
+        if($wallet_url!="") {
+                return "<a href='${wallet_url}${payout_address_html}'>$payout_address_html</a>";
+        } else {
+                return $payout_address_html;
+        }
 }
 
 // Return txid as URL
-function html_txid_link($txid) {
+function html_txid_link($currency,$txid) {
         if($txid=="") {
-                return "no txid";
+                if($currency=="GRC") return "no txid";
+                else return "limit not reached";
         } else {
                 $txid_short=substr($txid,0,10);
                 $txid_short_html=html_escape($txid_short);
-                return "<a href='https://www.gridcoinstats.eu/tx/$txid'>$txid_short_html...</a>";
+                $txid_html=html_escape($txid);
+
+                $currency_escaped=db_escape($currency);
+                $tx_url=db_query_to_variable("SELECT `url_tx` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
+                if($tx_url!="") {
+                        return "<a href='${tx_url}${txid_html}'>${txid_short_html}&hellip;</a>";
+                } else {
+                        return $tx_short_html;
+                }
         }
 }
 
@@ -143,7 +159,6 @@ function html_get_menu($flag) {
                 if($flag=="admin") {
                         $result.=html_menu_element("user_control","User control");
                         $result.=html_menu_element("project_control","Project control");
-                        $result.=html_menu_element("billing","Billing");
                         $result.=html_menu_element("log","View log");
                         $result.=html_menu_element("pool_info_editor","Pool info editor");
                 }
@@ -169,6 +184,21 @@ function html_greeting_user() {
         }
 }
 
+// Currency selector
+function html_currency_selector($selected_currency="") {
+        $currency_data_array=db_query_to_array("SELECT `name`,`full_name` FROM `boincmgr_currency` ORDER BY `uid`");
+        $result="";
+        $result.="<select name=payout_currency>";
+        foreach($currency_data_array as $currency_data) {
+                $currency_name=$currency_data["name"];
+                $currency_full_name=$currency_data["full_name"];
+                if($currency_name==$selected_currency) $result.="<option value='$currency_name' selected>$currency_full_name</option>";
+                else $result.="<option value='$currency_name'>$currency_full_name</option>";
+        }
+        $result.="</select>";
+        return $result;
+}
+
 // Pool info
 function html_pool_info() {
         global $pool_name;
@@ -186,6 +216,10 @@ _END;
 // Register form
 function html_register_form() {
         global $pool_min_password_length;
+        global $recaptcha_public_key;
+
+        $currency_selector=html_currency_selector();
+
         return <<<_END
 <div id=register_form_block class=selectable_block>
 <form name=register_form method=POST>
@@ -194,8 +228,9 @@ function html_register_form() {
 <p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
 <p>Re-type password: <input type=password name=password_2></p>
 <p>E-mail: <input type=text name=email size=40> for password recovery (you can write me from that mail, and I send you new password for account)</p>
-<p>GRC address: <input type=text name=grc_address size=40> required</p>
+<p>Payout address: <input type=text name=payout_address size=40> payout currency $currency_selector both required</p>
 <p><input type=hidden name="action" value="register"></p>
+<div class="g-recaptcha" data-sitekey="$recaptcha_public_key"></div>
 <p><input type=submit value="Register"></p>
 </form>
 </div>
@@ -226,19 +261,25 @@ function html_change_settings_form() {
         $username_escaped=db_escape($username);
 
         $email=db_query_to_variable("SELECT `email` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
-        $grc_address=db_query_to_variable("SELECT `grc_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $payout_currency=db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $payout_address=db_query_to_variable("SELECT `payout_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
 
         $email_html=html_escape($email);
-        $grc_address_html=html_escape($grc_address);
+        $payout_address_html=html_escape($payout_address);
+        $payout_currency_html=html_escape($payout_currency);
+
+        $currency_selector=html_currency_selector($payout_currency);
 
         return <<<_END
 <div id=settings_block class=selectable_block>
 <h2>Settings</h2>
+<p>GRC payouts are instant, alternative currencies payouts are cumulative and manual. It takes 1-2 days when payout limit reached to send payout (because manual mode now).</p>
+<p>Changing alternative (non-GRC) currency or address notice: please note, owed amount linked to address, not to user. If you change address your previous address owed amount will not lost, but won't payed out until payout limit for previous address reached. You can contact admin for manual payout or change address back and receive payout when payout limit reached.</p>
 <form name=change_settings_form method=POST>
 <p><input type=hidden name="action" value="change_settings"></p>
 <p><input type=hidden name="token" value="$username_token"></p>
 <p>E-mail: <input type=text name=email value='$email_html' size=40></p>
-<p>GRC address: <input type=text name=grc_address value='$grc_address_html' size=40></p>
+<p>Payout address: <input type=text name=payout_address value='$payout_address_html' size=40> currency $currency_selector (look notice above)</p>
 <p>Password: <input type=password name=password> the password is required to change settings</p>
 <p>New password: <input type=password name=new_password1> only if you wish to change password</p>
 <p>Re-type new password: <input type=password name=new_password2></p>
@@ -305,9 +346,9 @@ _END;
                 // Project list for this host
                 $host_uid_escaped=db_escape($host_uid);
 
-                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bp.`status` AS project_status FROM `boincmgr_attach_projects` AS bap
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
-WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`name` ASC");
+WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
 
                 $projects_str="";
                 foreach($attached_projects_array as $project_data) {
@@ -317,9 +358,23 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`n
                         $project_uid=$project_data['project_uid'];
                         $status=$project_data['status'];
                         $project_status=$project_data['project_status'];
+                        $resource_share=$project_data['resource_share'];
+                        $options=$project_data['options'];
 
                         $project_uid_escaped=db_escape($project_uid);
                         $project_name_html=html_escape($project_name);
+                        $options_html=html_escape($options);
+                        $options_array=explode(",",$options);
+                        $resource_share_html=html_escape($resource_share);
+
+                        if($options=="") $options_show_html="";
+                        else $options_show_html=str_replace(",",", ","($options_html)");
+
+                        if($resource_share!=100) {
+                                if($options_show_html!='') $options_show_html=str_replace(")",", resource_share=$resource_share)",$options_show_html);
+                                else $options_show_html="(resource_share=$resource_share)";
+                        }
+
 
                         switch($status) {
                                 default:
@@ -342,19 +397,19 @@ WHERE bap.host_uid='$host_uid_escaped' AND bap.`status`<>'detach' ORDER BY bp.`n
                                         $attached_project_msg="<span class=host_status_detach>detached, sync required</span>";
                                         break;
                         }
-                        if($project_status=="disabled" || $project_status=="auto disabled" || $project_status=="stats only") {
+                        if(in_array("detach_when_done",$options_array)) {
+                                $attached_project_msg="<span class=host_status_detach>detach when done</span>";
+                        }
+                        if($project_status=="disabled" || $project_status=="auto disabled") {
                                 $attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
                         }
 
                         $detach_form=<<<_END
-<form name=detach method=post>
-$project_name_html
-<input type=hidden name=action value='detach'>
-<input type=hidden name=attached_uid value='$attached_project_uid'>
-<input type=hidden name=token value='$username_token'>
-<input type=submit value='detach'>
+$project_name_html $options_show_html
+<input type=button value='options' onClick="show_project_options_window('$attached_project_uid','$domain_name_html','$project_name_html','$resource_share_html','$options_html');">
 $attached_project_msg
-</form>
+<br>
+
 _END;
 
                         $projects_str.="$detach_form<br>";
@@ -420,7 +475,7 @@ function html_boinc_results() {
         // GRC per last day
         $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
         // Whitelisted projects count
-        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
 
         $result.="<div id=boinc_results_block class=selectable_block>\n";
         $result.="<h2>BOINC results:</h2>\n";
@@ -476,7 +531,7 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY  bu.`username`,bphl.`ho
         }
         $result.="</table>\n";
 
-        // Prjects stats for admin is the pool stats
+        // Projects stats for admin is the pool stats
         if(auth_is_admin($username)==FALSE) {
                 $result.="<h3>Results by project</h3>\n";
                 $result.="<table>\n";
@@ -592,41 +647,16 @@ WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`
         return $result;
 }
 
-// Show billing form
-function html_billing_form() {
-        global $username_token;
-
-        $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
-        if($start_date=="") $start_date="2018-01-01 20:20:16";
-        $stop_date=db_query_to_variable("SELECT NOW()");
-
-        return <<<_END
-<div id=billing_block class=selectable_block>
-<h2>Billing</h2>
-<form name=billing method=post>
-<p>Fill data carefully, that cannot be undone!</p>
-<input type=hidden name=action value='billing'>
-<input type=hidden name=token value='$username_token'>
-<p>Begin of period <input type=text name=start_date value='$start_date'></p>
-<p>End of period <input type=text name=stop_date value='$stop_date'></p>
-<p>Total reward <input type=text name=reward value='0.0000'></p>
-<p><label><input type=checkbox name=check_rewards checked> check only, do not send</label></p>
-<p><input type=submit value='Send rewards'></p>
-</form>
-</div>
-_END;
-}
-
 // Show user control form
 function html_user_control_form() {
         global $username_token;
 
         $result="";
-        $users_array=db_query_to_array("SELECT `uid`,`username`,`email`,`grc_address`,`status` FROM `boincmgr_users`");
+        $users_array=db_query_to_array("SELECT `uid`,`username`,`email`,`currency`,`payout_address`,`status` FROM `boincmgr_users`");
         $result.="<div id=user_control_block class=selectable_block>\n";
         $result.="<h2>User control</h2>\n";
         $result.="<p><table>\n";
-        $result.="<tr><th>Username</th><th>e-mail</th><th>GRC address</th><th>Last sync</th><th>Status</th><th>Action</th></tr>\n";
+        $result.="<tr><th>Username</th><th>e-mail</th><th>Currency</th><th>Address</th><th>Last sync</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_user_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
@@ -637,7 +667,8 @@ function html_user_control_form() {
                 $uid=$user_record['uid'];
                 $username=$user_record['username'];
                 $email=$user_record['email'];
-                $grc_address=$user_record['grc_address'];
+                $currency=$user_record['currency'];
+                $payout_address=$user_record['payout_address'];
                 $status=$user_record['status'];
 
                 $user_uid_escaped=db_escape($uid);
@@ -645,7 +676,8 @@ function html_user_control_form() {
 
                 $username_html=html_escape($username);
                 $email_html=html_escape($email);
-                $grc_address_html=html_escape($grc_address);
+                $currency_html=html_escape($currency);
+                $payout_address_html=html_escape($payout_address);
                 $last_sync_html=html_escape($last_sync);
                 $form_hidden_user_uid="<input type=hidden name=user_uid value='$uid'>";
 
@@ -666,7 +698,7 @@ function html_user_control_form() {
                 }
 
                 $actions="<form name=change_user method=post>".$form_hidden_action.$form_hidden_user_uid.$form_hidden_token.$user_options.$submit_button."</form>";
-                $result.="<tr><td>$username_html</td><td>$email_html</td><td>$grc_address_html</td><td>$last_sync_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+                $result.="<tr><td>$username_html</td><td>$email_html</td><td>$currency</td><td>$payout_address_html</td><td>$last_sync_html</td><td>$status_html</td><td>$actions</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
@@ -680,8 +712,7 @@ function html_project_control_form() {
         $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`timestamp` FROM `boincmgr_projects` ORDER BY `name` ASC");
         $result.="<div id=project_control_block class=selectable_block>\n";
         $result.="<h2>Project control</h2>\n";
-        $result.="<p>Enabled means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled - do not check anything about this project (no rewards too).</p>";
-        $result.="<p>Whitelisted projects should be enabled, others ore stats only or disabled.</p>";
+        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
         $result.="<p><table>\n";
         $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Team</th><th>Last query</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
 
@@ -748,11 +779,43 @@ function html_project_control_form() {
 
 // Show payouts
 function html_payouts() {
+        global $username;
+        global $username_token;
+
         $result="";
         $result.="<div id=payouts_block class=selectable_block>\n";
+
         $result.="<h2>Payouts</h2>\n";
+        $owes_data_array=db_query_to_array("SELECT bp.`payout_address`,bp.`currency`,SUM(bp.`amount`) AS amount,MIN(bbp.`start_date`) AS start_date,MAX(bbp.`stop_date`) AS stop_date
+FROM `boincmgr_payouts` AS bp
+LEFT OUTER JOIN `boincmgr_billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
+WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`payout_address` ASC");
+        if(count($owes_data_array)) {
+                $result.="<h3>Pool owes:</h3>\n";
+                $result.="<p>These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</p>";
+                $result.="<table>\n";
+                $result.="<tr></th><th>Address</th><th>Amount</th><th>Currency</th><th>Payout threshold</th><th>Fee<th>Interval from</th><th>Interval to</th></tr>\n";
+                foreach($owes_data_array as $owe_data) {
+                        $payout_address=$owe_data['payout_address'];
+                        $amount=$owe_data['amount'];
+                        $currency=$owe_data['currency'];
+                        $start_date=$owe_data['start_date'];
+                        $stop_date=$owe_data['stop_date'];
+
+                        $payout_address_link=html_payout_address_link($currency,$payout_address);
+
+                        $payout_threshold=boincmgr_get_payout_limit($currency);
+                        $payout_fee=boincmgr_get_tx_fee_estimation($currency);
+                        $payout_service_fee=boincmgr_get_service_fee($currency);
+                        $total_fee=$payout_fee+$payout_service_fee;
+
+                        $result.="<tr><td>$payout_address_link</td><td>$amount</td><td>$currency</td><td>$payout_threshold</td><td>$total_fee</td><td>$start_date</td><td>$stop_date</td></tr>\n";
+                }
+                $result.="</table>\n";
+        }
         $result.="<p>Last 10 billings from pool:</p>\n";
-        $billings_array=db_query_to_array("SELECT `uid`,`start_date`,`stop_date`,`reward` FROM `boincmgr_billing_periods` ORDER BY `stop_date` DESC");
+
+        $billings_array=db_query_to_array("SELECT `uid`,`start_date`,`stop_date`,`reward` FROM `boincmgr_billing_periods` ORDER BY `stop_date` DESC LIMIT 10");
         foreach($billings_array as $billing) {
                 $billing_uid=$billing['uid'];
                 $start_date=$billing['start_date'];
@@ -764,27 +827,89 @@ function html_payouts() {
                 $billing_uid_escaped=db_escape($billing_uid);
 
                 $result.="<h3>For period from $start_date to $stop_date pool rewarded with $reward gridcoins</h3>\n";
-//              $result.="<p>Rewards distribution</p>\n";
-                $payout_data_array=db_query_to_array("SELECT `grc_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` WHERE `billing_uid`='$billing_uid_escaped' ORDER BY `grc_address` ASC");
+                $payout_data_array=db_query_to_array("SELECT `currency`,`grc_amount`,`rate`,`payout_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` WHERE `billing_uid`='$billing_uid_escaped' AND `currency`='GRC' ORDER BY `payout_address` ASC");
+
+                $result.="<p>Gridcoin payouts</p>\n";
                 $result.="<p><table>\n";
-                $result.="<tr><th>GRC address</th><th>TX ID</th><th>Amount</th><th>Timestamp</th></tr>\n";
+                $result.="<tr></th><th>Address</th><th>GRC amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
                 foreach($payout_data_array as $payout_data) {
-                        $grc_address=$payout_data['grc_address'];
+                        $payout_address=$payout_data['payout_address'];
+                        $grc_amount=$payout_data['grc_amount'];
+                        $rate=$payout_data['rate'];
+                        $currency=$payout_data['currency'];
                         $amount=$payout_data['amount'];
                         $txid=$payout_data['txid'];
                         $timestamp=$payout_data['timestamp'];
 
-                        $amount=round($amount,4);
+                        $grc_amount=round($grc_amount,8);
+                        $amount=round($amount,8);
 
-                        $grc_address_link=html_grc_address_link($grc_address);
+                        $payout_address_link=html_payout_address_link($currency,$payout_address);
+                        $grc_amount_html=html_escape($grc_amount);
+                        $currency_html=html_escape($currency);
+                        $rate_html=html_escape($rate);
                         $amount_html=html_escape($amount);
-                        $txid_link=html_txid_link($txid);
+                        $txid_link=html_txid_link($currency,$txid);
                         $timestamp_html=html_escape($timestamp);
 
-                        $result.="<tr><td>$grc_address_link</td><td>$txid_link</td><td>$amount_html</td><td>$timestamp_html</td></tr>\n";
+                        $result.="<tr><td>$payout_address_link</td><td>$grc_amount_html</td><td>$txid_link</td><td>$timestamp_html</td></tr>\n";
+                        }
+                $result.="</table></p>\n";
+
+                $payout_data_array=db_query_to_array("SELECT `currency`,`grc_amount`,`rate`,`payout_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts` WHERE `billing_uid`='$billing_uid_escaped' AND `currency`<>'GRC' ORDER BY `payout_address` ASC");
+                if(count($payout_data_array)==0) continue;
+
+                $result.="<p>Alternative currencies</p>\n";
+                $result.="<p><table>\n";
+                $result.="<tr></th><th>Address</th><th>GRC amount</th><th>Payout <br>currency</th><th>Rate per<br>1 GRC</th><th>Currency<br>amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
+                foreach($payout_data_array as $payout_data) {
+                        $payout_address=$payout_data['payout_address'];
+                        $grc_amount=$payout_data['grc_amount'];
+                        $rate=$payout_data['rate'];
+                        $currency=$payout_data['currency'];
+                        $amount=$payout_data['amount'];
+                        $txid=$payout_data['txid'];
+                        $timestamp=$payout_data['timestamp'];
+
+                        $grc_amount=round($grc_amount,8);
+                        $amount=round($amount,8);
+
+                        $payout_address_link=html_payout_address_link($currency,$payout_address);
+                        $grc_amount_html=html_escape($grc_amount);
+                        $currency_html=html_escape($currency);
+                        $rate_html=html_escape($rate);
+                        $amount_html=html_escape($amount);
+                        $txid_link=html_txid_link($currency,$txid);
+                        $timestamp_html=html_escape($timestamp);
+
+                        $result.="<tr><td>$payout_address_link</td><td>$grc_amount_html</td><td>$currency_html</td><td>$rate_html</td><td>$amount_html</td><td>$txid_link</td><td>$timestamp_html</td></tr>\n";
                 }
-        $result.="</table></p>\n";
+                $result.="</table></p>\n";
         }
+
+        if(auth_is_admin($username)) {
+                $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
+                if($start_date=="") $start_date="2018-01-01 20:20:16";
+                $stop_date=db_query_to_variable("SELECT NOW()");
+                $balance=boincmgr_get_variable("hot_wallet_balance");
+
+                $result.=<<<_END
+<h2>Billing</h2>
+<form name=billing method=post>
+<p>Fill data carefully, that cannot be undone!</p>
+<p>Hot wallet balance: $balance GRC</p>
+<input type=hidden name=action value='billing'>
+<input type=hidden name=token value='$username_token'>
+<p>Begin of period <input type=text name=start_date value='$start_date'></p>
+<p>End of period <input type=text name=stop_date value='$stop_date'></p>
+<p>Total reward <input type=text name=reward value='0.0000'></p>
+<p><label><input type=checkbox name=check_rewards checked> check only, do not send</label></p>
+<p><input type=submit value='Send rewards'></p>
+</form>
+_END;
+        }
+
+
         $result.="</div>\n";
         return $result;
 }
@@ -817,20 +942,24 @@ function html_pool_stats() {
         $result="";
         $result.="<div id=pool_stats_block class=selectable_block>\n";
         $result.="<h2>Pool stats</h2>\n";
-        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - only update project data (no rewards), disabled or (auto disabled) - do not check anything about this project (no rewards too).</p>";
+        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
+
         $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
         if($start_date=="") $start_date="2018-01-01 20:20:16";
         $stop_date=db_query_to_variable("SELECT NOW()");
 
         $result.="<p><table>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool GRC/day est</th><th>Hosts</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
+        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool mag</th><th>Pool GRC/day est</th><th>Hosts</th><th>Status</th><th>Pool RAC 30d graph</th></tr>\n";
 
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
 
         // GRC per last day
         $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
         // Whitelisted projects count
-        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled')");
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        // Magnitude unit
+        $total_magnitude=115000;
+        $magnitude_unit=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='magnitude_unit'");
 
         foreach($project_array as $project_data) {
                 $name=$project_data['name'];
@@ -844,6 +973,9 @@ function html_pool_stats() {
                 $pool_project_hosts=db_query_to_variable("SELECT count(*) FROM `boincmgr_attach_projects` AS bap
 LEFT OUTER JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
 WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
+
+                $project_magnitude=$total_magnitude*($expavg_credit/$team_expavg_credit)/$whiltelisted_count;
+                $project_magnitude=round($project_magnitude,4);
 
                 $project_grc_per_day=$total_grc_per_day/$whiltelisted_count;
                 if($team_expavg_credit==0) $pool_grc_per_day=0;
@@ -864,9 +996,10 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
                                 break;
                         default:
                         case "auto":
+                                $pool_grc_per_day=0;
+                                $project_magnitude=0;
                         case "stats only":
                                 $status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
-                                $pool_grc_per_day=0;
                                 break;
                         case "auto disabled":
                         case "disabled":
@@ -879,9 +1012,10 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
                 $team_expavg_credit_html=html_format_number($team_expavg_credit_html);
                 $expavg_credit_html=html_format_number($expavg_credit_html);
+                $project_magnitude_html=html_format_number($project_magnitude);
                 $graph=canvas_graph_project_total($uid);
 
-                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$pool_grc_per_day_html</td><td>$pool_project_hosts_html</td><td>$status_html</td><td>$graph</td></tr>\n";
+                $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$project_magnitude_html</td><td align=right>$pool_grc_per_day_html</td><td>$pool_project_hosts_html</td><td>$status_html</td><td>$graph</td></tr>\n";
         }
         $result.="</table></p>\n";
         $result.="</div>\n";
@@ -908,6 +1042,36 @@ $pool_info_html
 </div>
 _END;
 
+        return $result;
+}
+
+function html_host_options_form() {
+        global $username_token;
+        $result="";
+        $result.=<<<_END
+<div class='pre_window' id='popup_form'>
+<div class='window'>
+<form name=host_options method=post>
+<input type=hidden name=action value='update_project_settings'>
+<input type=hidden name=token value='$username_token'>
+<input type=hidden id='host_options_form_attach_uid' name=attached_uid value=''>
+<p>Host name: <span id='host_options_form_host_name'></span></p>
+<p>Project name: <span id='host_options_form_project_name'></span></p>
+<p>Resource share: <input id='host_options_form_resource_share' type=text name='resource_share' value='100'></p>
+<p><label><input type=checkbox id='host_options_form_detach' name='detach'> detach and drop all tasks</label></p>
+<p><label><input type=checkbox id='host_options_form_detach_when_done' name='detach_when_done'> detach when done</label></p>
+<p><label><input type=checkbox id='host_options_form_suspend' name='suspend'> suspend</label></p>
+<p><label><input type=checkbox id='host_options_form_no_more_work' name='dont_request_more_work'> don't request more work</label></p>
+<p><label><input type=checkbox id='host_options_form_abort' name='abort_not_started'> abort not started</label></p>
+<p><label><input type=checkbox id='host_options_form_no_cpu' name='no_cpu'> no CPU tasks</label></p>
+<p><label><input type=checkbox id='host_options_form_no_cuda' name='no_cuda'> no CUDA tasks</label></p>
+<p><label><input type=checkbox id='host_options_form_no_ati' name='no_ati'> no ATI tasks</label></p>
+<p><label><input type=checkbox id='host_options_form_no_intel' name='no_intel'> no intel GPU tasks</label></p>
+<p><input type=submit value='Save'> <input type=button value='Cancel' onClick='document.getElementById("popup_form").style.display="none";'></p>
+</form>
+</div>
+</div>
+_END;
         return $result;
 }
 ?>
