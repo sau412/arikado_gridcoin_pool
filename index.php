@@ -46,12 +46,13 @@ if($username!="") {
                 // Change settings
                 if($_POST['action']=='change_settings') {
                         $email=html_strip($_POST['email']);
-                        $grc_address=html_strip($_POST['grc_address']);
+                        $payout_currency=html_strip($_POST['payout_currency']);
+                        $payout_address=html_strip($_POST['payout_address']);
                         $password=html_strip($_POST['password']);
                         $new_password1=html_strip($_POST['new_password1']);
                         $new_password2=html_strip($_POST['new_password2']);
 
-                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$grc_address);
+                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$payout_currency,$payout_address);
                         if($result==TRUE) {
                                 setcookie("action_message",$message_change_settings_ok);
                         } else {
@@ -75,6 +76,27 @@ if($username!="") {
                         $detach_result=boincmgr_detach($username,$attached_uid);
 
                         setcookie("action_message",$message_project_detached);
+                        header("Location: ./");
+                        die();
+                // Update project_settings
+                } else if($_POST['action']=='update_project_settings') {
+                        $attached_uid=html_strip($_POST['attached_uid']);
+                        $resource_share=html_strip($_POST['resource_share']);
+//var_dump($_POST);
+                        $options_array=array();
+                        if(isset($_POST['detach'])) $options_array[]="detach";
+                        if(isset($_POST['detach_when_done'])) $options_array[]="detach_when_done";
+                        if(isset($_POST['suspend'])) $options_array[]="suspend";
+                        if(isset($_POST['dont_request_more_work'])) $options_array[]="dont_request_more_work";
+                        if(isset($_POST['abort_not_started'])) $options_array[]="abort_not_started";
+                        if(isset($_POST['no_cpu'])) $options_array[]="no_cpu";
+                        if(isset($_POST['no_cuda'])) $options_array[]="no_cuda";
+                        if(isset($_POST['no_ati'])) $options_array[]="no_ati";
+                        if(isset($_POST['no_intel'])) $options_array[]="no_intel";
+
+                        boincmgr_set_project_settings($username,$attached_uid,$resource_share,$options_array);
+
+                        setcookie("action_message",$message_project_settings_changed);
                         header("Location: ./");
                         die();
                 // Delete host
@@ -195,9 +217,6 @@ if($username!="") {
                 // Control projects
                 echo html_project_control_form();
 
-                // Calculate rewards
-                echo html_billing_form();
-
                 // View log
                 echo html_view_log();
 
@@ -212,6 +231,7 @@ if($username!="") {
         echo html_change_settings_form();
 
         // Current user hosts
+        echo html_host_options_form();
         echo html_user_hosts();
 
         // Current user BOINC results (for his hosts)
@@ -229,13 +249,20 @@ if($username!="") {
         if(isset($_POST['action'])) {
                 // Register new user
                 if($_POST['action']=="register") {
-                        $username=html_strip($_POST['username']);
-                        $password_1=html_strip($_POST['password_1']);
-                        $password_2=html_strip($_POST['password_2']);
-                        $email=html_strip($_POST['email']);
-                        $grc_address=html_strip($_POST['grc_address']);
-                        $register_result=auth_add_user($username,$email,$password_1,$password_2,$grc_address);
-                        setcookie("action_message",$auth_register_result_to_message[$register_result]);
+//var_dump($_POST);
+                        $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
+                        if(auth_recaptcha_check($recaptcha_response)) {
+                                $username=html_strip($_POST['username']);
+                                $password_1=html_strip($_POST['password_1']);
+                                $password_2=html_strip($_POST['password_2']);
+                                $email=html_strip($_POST['email']);
+                                $payout_address=html_strip($_POST['payout_address']);
+                                $payout_currency=html_strip($_POST['payout_currency']);
+                                $register_result=auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address);
+                                setcookie("action_message",$auth_register_result_to_message[$register_result]);
+                        } else {
+                                setcookie("action_message",$message_register_recaptcha_error);
+                        }
                         header("Location: ./");
                         die();
                 }
