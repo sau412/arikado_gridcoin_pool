@@ -5,11 +5,14 @@ if(!isset($argc)) die();
 if(isset($argv[1]) && $argv[1]=="test") $test_mode=TRUE;
 else $test_mode=FALSE;
 
+//$test_mode=TRUE;
+
 require_once("settings.php");
 require_once("db.php");
 require_once("auth.php");
 require_once("billing.php");
 require_once("boincmgr.php");
+require_once("results_parser.php");
 
 db_connect();
 
@@ -131,6 +134,7 @@ foreach($project_data_array as $project_data)
                 continue;
         }
 
+        $account_id=$xml->id;
         $weak_auth=$xml->weak_auth;
         $weak_auth_escaped=db_escape($weak_auth);
         $team_id_from_account=(int)$xml->teamid;
@@ -286,6 +290,19 @@ ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpi
 VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
                 }
         }
+
+        // =============================================================
+        // Update project tasks data
+        // =============================================================
+        $skip=0;
+        do {
+                echo $rpc_url."results.php?userid=$account_id&show_names=1&offset=$skip\n";
+                curl_setopt($ch,CURLOPT_URL,$rpc_url."results.php?userid=$account_id&show_names=1&offset=$skip");
+                curl_setopt($ch,CURLOPT_COOKIE,"auth=$auth");
+                $data=curl_exec($ch);
+                $skip+=20;
+                //var_dump($data);
+        } while(results_parse_page($project_uid,$data));
         echo "----\n";
         $full_sync_count++;
 }
