@@ -257,6 +257,7 @@ ON DUPLICATE KEY UPDATE `content`=VALUES(`content`),`valid_until`=DATE_ADD(NOW()
 // Get payout rate
 function boincmgr_get_payout_rate($currency) {
         switch($currency) {
+                case "GRC2":
                 case "GRC":
                         return 1;
                 case "DOGE":
@@ -298,18 +299,21 @@ function boincmgr_get_payout_rate($currency) {
 
 // Get payout limit
 function boincmgr_get_payout_limit($currency) {
+        if($currency=="GRC2") $currency="GRC";
         $currency_escaped=db_escape($currency);
         return db_query_to_variable("SELECT `payout_limit` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
 }
 
 // Get payout limit
 function boincmgr_get_tx_fee_estimation($currency) {
+        if($currency=="GRC2") $currency="GRC";
         $currency_escaped=db_escape($currency);
         return db_query_to_variable("SELECT `tx_fee` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
 }
 
 // Get payout fee
 function boincmgr_get_service_fee($currency) {
+        if($currency=="GRC2") $currency="GRC";
         $currency_escaped=db_escape($currency);
         return db_query_to_variable("SELECT `project_fee` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
 }
