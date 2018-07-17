@@ -1,4 +1,4 @@
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SSET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
 CREATE TABLE `boincmgr_attach_projects` (
@@ -6,6 +6,8 @@ CREATE TABLE `boincmgr_attach_projects` (
   `project_uid` int(11) NOT NULL,
   `host_uid` int(11) NOT NULL,
   `status` varchar(100) NOT NULL,
+  `resource_share` int(11) NOT NULL DEFAULT '100',
+  `options` text,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -32,19 +34,15 @@ CREATE TABLE `boincmgr_cache` (
   `valid_until` datetime DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
-CREATE TABLE `boincmgr_global_stats` (
+CREATE TABLE `boincmgr_currency` (
   `uid` int(11) NOT NULL,
-  `project_uid` int(11) NOT NULL,
-  `cpu` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `cores` int(11) NOT NULL,
-  `gpu_type` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `gpu` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `expavg_credit` double NOT NULL,
-  `p_fpops` bigint(20) NOT NULL,
-  `p_iops` bigint(20) NOT NULL,
-  `m_nbytes` bigint(20) NOT NULL,
-  `os_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
-  `os_version` varchar(100) COLLATE utf8_unicode_ci NOT NULL
+  `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `full_name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `payout_limit` double NOT NULL,
+  `tx_fee` double NOT NULL,
+  `project_fee` double NOT NULL,
+  `url_wallet` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `url_tx` varchar(100) COLLATE utf8_unicode_ci NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE `boincmgr_hosts` (
@@ -68,7 +66,7 @@ CREATE TABLE `boincmgr_host_projects` (
 
 CREATE TABLE `boincmgr_log` (
   `uid` int(11) NOT NULL,
-  `message` text NOT NULL,
+  `message` longtext NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
@@ -84,7 +82,10 @@ CREATE TABLE `boincmgr_messages` (
 CREATE TABLE `boincmgr_payouts` (
   `uid` int(11) NOT NULL,
   `billing_uid` int(11) NOT NULL,
-  `grc_address` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `grc_amount` double DEFAULT NULL,
+  `currency` varchar(100) COLLATE utf8_unicode_ci NOT NULL DEFAULT 'GRC',
+  `rate` double NOT NULL DEFAULT '1',
+  `payout_address` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `amount` double NOT NULL,
   `txid` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -102,7 +103,7 @@ CREATE TABLE `boincmgr_projects` (
   `team` varchar(100) NOT NULL,
   `expavg_credit` double DEFAULT NULL,
   `team_expavg_credit` double DEFAULT NULL,
-  `last_query` text NOT NULL,
+  `last_query` longtext NOT NULL,
   `comment` text NOT NULL,
   `gpu_present` int(11) NOT NULL,
   `file` varchar(100) NOT NULL,
@@ -138,13 +139,31 @@ CREATE TABLE `boincmgr_project_stats` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+CREATE TABLE `boincmgr_tasks` (
+  `uid` int(11) NOT NULL,
+  `project_uid` int(11) NOT NULL,
+  `result_name` varchar(200) COLLATE utf8_unicode_ci NOT NULL,
+  `result_id` bigint(20) NOT NULL,
+  `workunit_id` bigint(20) NOT NULL,
+  `host_id` int(11) NOT NULL,
+  `sent` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `deadline` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `status` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `elapsed_time` double NOT NULL,
+  `cpu_time` double NOT NULL,
+  `score` double NOT NULL,
+  `app` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 CREATE TABLE `boincmgr_users` (
   `uid` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
   `email` varchar(100) NOT NULL,
   `salt` varchar(100) DEFAULT NULL,
   `passwd_hash` varchar(100) NOT NULL,
-  `grc_address` varchar(100) NOT NULL,
+  `currency` varchar(100) NOT NULL DEFAULT 'GRC',
+  `payout_address` varchar(100) NOT NULL,
   `status` varchar(100) DEFAULT NULL,
   `token` varchar(100) NOT NULL DEFAULT '',
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -186,14 +205,9 @@ ALTER TABLE `boincmgr_blocks`
 ALTER TABLE `boincmgr_cache`
   ADD PRIMARY KEY (`hash`);
 
-ALTER TABLE `boincmgr_global_stats`
+ALTER TABLE `boincmgr_currency`
   ADD PRIMARY KEY (`uid`),
-  ADD KEY `cpu` (`cpu`),
-  ADD KEY `gpu` (`gpu`),
-  ADD KEY `project_uid` (`project_uid`),
-  ADD KEY `gpu_type` (`gpu_type`),
-  ADD KEY `cores` (`cores`),
-  ADD KEY `expavg_credit` (`expavg_credit`);
+  ADD UNIQUE KEY `name` (`name`);
 
 ALTER TABLE `boincmgr_hosts`
   ADD PRIMARY KEY (`uid`),
@@ -230,6 +244,13 @@ ALTER TABLE `boincmgr_project_stats`
   ADD KEY `project_uid` (`project_uid`),
   ADD KEY `timestamp` (`timestamp`);
 
+ALTER TABLE `boincmgr_tasks`
+  ADD PRIMARY KEY (`uid`),
+  ADD UNIQUE KEY `project_uid` (`project_uid`,`result_id`) USING BTREE,
+  ADD KEY `host_id` (`host_id`),
+  ADD KEY `status` (`status`),
+  ADD KEY `app` (`app`);
+
 ALTER TABLE `boincmgr_users`
   ADD PRIMARY KEY (`uid`),
   ADD UNIQUE KEY `username` (`username`),
@@ -241,7 +262,7 @@ ALTER TABLE `boincmgr_user_auth_cookies`
 
 ALTER TABLE `boincmgr_variables`
   ADD PRIMARY KEY (`uid`),
-  ADD KEY `name` (`name`);
+  ADD UNIQUE KEY `name` (`name`) USING BTREE;
 
 ALTER TABLE `boincmgr_xml`
   ADD PRIMARY KEY (`uid`);
@@ -251,7 +272,7 @@ ALTER TABLE `boincmgr_attach_projects`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_billing_periods`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
-ALTER TABLE `boincmgr_global_stats`
+ALTER TABLE `boincmgr_currency`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_hosts`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
@@ -271,6 +292,8 @@ ALTER TABLE `boincmgr_project_host_stats`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_project_stats`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
+ALTER TABLE `boincmgr_tasks`
+  MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_users`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_user_auth_cookies`
@@ -279,6 +302,8 @@ ALTER TABLE `boincmgr_variables`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_xml`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
+
+-- Projects data
 
 INSERT INTO `boincmgr_projects` (`uid`, `name`, `project_url`, `url_signature`, `status`, `weak_auth`, `update_weak_auth`, `cpid`, `expavg_credit`, `team_expavg_credit`, `timestamp`) VALUES
 (1, 'NumberFields@home', 'http://numberfields.asu.edu/NumberFields/', '6131de139c1169826d2edc0cd35ddae35c33b0817d2e60de70222621e10937f6\n7d8e874f8f9c6b2a5540d9e3ec103b7e0077a9592154e3a90e1dee8334d81170\n310cda10336067b8f9caf8a6e4905c1ccd15245f32baa9c90097782ab0b6b95e\n886759663a5fb6235ed96f993e0ed8f29236ed5b6366476cc452dd3cb242ff45\n.', 'auto', '', 1, '', 6783.69, 10919400, '2018-05-30 14:05:11'),
