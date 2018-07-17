@@ -1,19 +1,37 @@
+html {
+        margin:0;
+        padding:0;
+        padding:0;
+        color: white;
+        background-color:#000000; /* Browsers that don't have Gradients */
+        font-family: sans-serif;
+}
+
+h2, h3 {
+        margin-left:0em;
+        display: box;
+        text-align: center;
+        background: #5a4c5e;
+        border: solid 0.1em #935ea0;
+}
+a:link{
+        color:#cb30f2;
+}
+a:visited{
+        color:#e7c6ef;
+}
 table {
         border: 1px solid gray;
         border-collapse: collapse;
 }
-
 table tr, table td, table th {
         border: 1px solid gray;
         padding: 0.5px 1em;
 }
-
 .selectable_block {
         display: none;
 }
-
-/* Thanks for https://www.w3schools.com/html/tryit.asp?filename=tryhtml_lists_menu
-*/
+/* Thanks for https://www.w3schools.com/html/tryit.asp?filename=tryhtml_lists_menu */
 ul {
         list-style-type: none;
         margin: 0;
@@ -21,119 +39,97 @@ ul {
         overflow: hidden;
         background-color: #DDD;
 }
-
 ul li {
         float: left;
 }
-
-ul li a {
+.main_bar_text li a{
         display: block;
-        color: black;
+        color: white;
         text-align: center;
-        padding: 16px;
+        padding: 1em;
         text-decoration: none;
 }
-
 ul li a:hover {
         background-color: #AAF;
 }
-
 .top_message {
         display: block;
-        background-color: #FFA;
+        background-color: #F7DB04;
+        color: black;
         padding: 0.1em 1em;
 }
-
 .host_status_attached {
-        color: green;
+        color: lightgreen;
         font-weight: bold;
 }
-
 .host_status_sent {
         color: orange;
         font-weight: bold;
 }
-
 .host_status_new {
         color: orange;
         font-weight: bold;
 }
-
 .host_status_incorrect {
         color: red;
         font-weight: bold;
 }
-
 .host_status_unknown {
         color: orange;
         font-weight: bold;
 }
-
 .host_status_detach {
         color: orange;
         font-weight: bold;
 }
-
 .project_status_enabled {
-        color: green;
+        color: lightgreen;
         font-weight: bold;
 }
-
 .project_status_stats_only {
         color: orange;
         font-weight: bold;
 }
-
 .project_status_disabled {
         color: red;
         font-weight: bold;
 }
-
 .project_status_auto {
         color: blue;
         font-weight: bold;
 }
-
 .user_status_user {
-        color: green;
+        color: lightgreen;
         font-weight: bold;
 }
-
 .user_status_admin {
         color: blue;
         font-weight: bold;
 }
-
 .user_status_banned {
         color: red;
         font-weight: bold;
 }
-
 .user_status_donator {
         color: orange;
         font-weight: bold;
 }
-
 .status_good {
-        color: green;
+        color: lightgreen;
         font-weight: bold;
 }
-
 .status_bad {
         color: red;
         font-weight: bold;
 }
-
 .status_unknown {
         color: grey;
         font-weight: bold;
 }
-
 .status_orange {
         color: orange;
         font-weight: bold;
 }
-
 .pre_window {
         display:none;
         width: 100%;
@@ -145,16 +141,14 @@ ul li a:hover {
         white-space: nowrap;
         text-align: center;
 }
-
 .pre_window:before {
         height: 100%;
         display: inline-block;
         vertical-align: middle;
         content: '';
 }
-
 .window {
-        background: #DDD;
+        background: gray;
         border: solid 1px #AAA;
         padding: 0 1em;
         opacity: 1;
@@ -163,8 +157,10 @@ ul li a:hover {
         vertical-align: middle;
         text-align: left;
 }
-
-.borderless,.borderless tr,.borderless td {
-        border: 0 solid #FFF;
-        padding: 0.3em;
+.main_bar{
+        display:block;
+        background:#3c3d3c;
+        border: outset 0.1em #c2c6c4;
+        box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
+
