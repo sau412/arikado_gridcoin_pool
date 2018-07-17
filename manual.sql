@@ -330,3 +330,14 @@ INSERT INTO `boincmgr_projects` (`uid`, `name`, `project_url`, `url_signature`, 
 (23, 'Milkyway@Home', 'http://milkyway.cs.rpi.edu/milkyway/', 'c75686bb98fe42784ac978f0b4463c4d17f1e246e75d985046bed5a4af606908\n4e5b0df2192f5cea6086029ffd516e0cf41d41faedeb703dea0cb223201f251c\n379133c542a3d3a41e7e2161ab4af7c831e15bf6b5198fd8e47d5900c853a265\n5c361aa9b453195c28390f3fb68ea6f2d786cf352c1c51be04815aae54e6bcdb\n.', 'auto', '', 1, '', 13.2651, 60606100, '2018-05-30 14:06:22'),
 (24, 'PrimeGrid', 'http://www.primegrid.com/', '696f9a2e892692167af134ad044f09e4785e6125aab36c81a524be23be508b71\n1e0964c2f315366738c7e7bbbdcb05257b21a8daeb4d05d7ab628643c4405c9a\nd91f28f0d8ede7a3ec7ae6654358b96cb08702266ea6d08badd51fd5a63bb19d\n45d21908f00b3043129d9e5903f6fea2537d4f882b4d32dc636bdf0661f0f71e\n.', 'auto', '', 1, '', 0, 0, '2018-05-30 14:06:25'),
 (25, 'SETI@home', 'http://setiathome.berkeley.edu/', '5aec1657b7e56583d4c5171c78277f0e1be7bce1dea7a085b9dab5606544fd03\nd5c43ab421d6d3266f494cac80736bb0e70694dd57553be7a2f488e35ba7b5e6\n068ea93a3aecec3c6acb15578385186ab36aeafa76ec6d02484e146567c7eac9\nded7448024211cb17f65cc5ffde35413f61eeeb3a5607291d13f220abe0dd829\n.', 'auto', '', 1, '', 0, 0, '2018-05-30 14:06:34');
+
+-- Currency
+
+INSERT INTO `boincmgr_currency` (`uid`, `name`, `full_name`, `payout_limit`, `tx_fee`, `project_fee`, `url_wallet`, `url_tx`) VALUES
+(1, 'GRC', 'GRC (gridcoin slow RAC, instant payout, no fees)', 0, 0.0001, 0, 'https://www.gridcoinstats.eu/address/', 'https://www.gridcoinstats.eu/tx/'),
+(2, 'DOGE', 'DOGE (dogecoin, payout limit 101, fee 1)', 101, 1, 0, 'https://dogechain.info/address/', 'https://dogechain.info/tx/'),
+(3, 'BTC', 'BTC (bitcoin, payout limit 0.0055, fee 0.0005)', 0.0055, 0.0005, 0, 'https://bitinfocharts.com/bitcoin/address/', 'https://bitinfocharts.com/bitcoin/tx/'),
+(4, 'ETH', 'ETH (ethereum, payout limit 0.1, fee 0.01)', 0.1, 0.01, 0, 'https://etherscan.io/address/', 'https://etherscan.io/tx/'),
+(5, 'LTC', 'LTC (litecoin, payout limit 0.01, fee 0.001)', 0.01, 0.001, 0, 'https://live.blockcypher.com/ltc/address/', 'https://live.blockcypher.com/ltc/tx/'),
+(6, 'WMZ', 'WebMoney WMZ (payout limit 1.06, fee 0.06)', 1, 0.06, 0, '', ''),
+(7, 'GRC2', 'GRC (gridcoin quick RAC, instant payout, no fees)', 0, 0.0001, 0, 'https://www.gridcoinstats.eu/address/', 'https://www.gridcoinstats.eu/tx/');
