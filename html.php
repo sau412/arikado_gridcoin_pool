@@ -36,7 +36,9 @@ function html_page_begin() {
 <script src='https://www.google.com/recaptcha/api.js'></script>
 </head>
 <body data-gr-c-s-loaded="true">
-
+<div style="float:right;">
+        <input value="◐" onclick="toggle_night_mode();" type="button">
+</div>
 _END;
 }
 
@@ -50,6 +52,28 @@ if(hash != null && hash != '') {
 } else {
         show_block('pool_info');
 }
+function toggle_night_mode() {
+	if (sessionStorage.getItem("night_mode") == 1) {
+		set_night_mode(0);
+	} else {
+		set_night_mode(1);
+	}
+}
+
+// Set night mode if flag == 1
+// Else set day mode
+function set_night_mode(flag) {
+	if (flag == 1) {
+		document.getElementById("html").classList.remove("html_day");
+		sessionStorage.setItem("night_mode",1);
+	} else {
+		document.getElementById("html").classList.add("html_day");
+		sessionStorage.setItem("night_mode",0);
+	}
+}
+
+set_night_mode(sessionStorage.getItem("night_mode"));
+
 </script>
 </body>
 </html>
