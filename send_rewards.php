@@ -197,9 +197,11 @@ if(count($rewarding_array)==0) {
                 $start_date=$prev_billing_timestamp;
                 $stop_date=$timestamp;
                 $check_rewards=FALSE;
+                $antiexp_rac_flag=TRUE;
+                $project_uid=FALSE;
                 $reward=$mint;
                 auth_log("Auto billing from '$start_date' to '$stop_date' reward '$reward'");
-                bill_close_period($start_date,$stop_date,$reward,$check_rewards);
+                bill_close_period("Gridcoin miner rewards",$start_date,$stop_date,$reward,$check_rewards,$project_uid,$antiexp_rac_flag);
                 db_query("UPDATE `boincmgr_blocks` SET `rewards_sent`=1 WHERE `number`='$block_number'");
         }
 }
@@ -218,7 +220,7 @@ if(grc_rpc_unlock_wallet() == FALSE) {
 }
 
 // Get payout information for GRC
-$payout_data_array=db_query_to_array("SELECT `uid`,`payout_address`,`currency`,`amount` FROM `boincmgr_payouts` WHERE `currency`='GRC' AND `txid` IS NULL");
+$payout_data_array=db_query_to_array("SELECT `uid`,`payout_address`,`currency`,`amount` FROM `boincmgr_payouts` WHERE `currency` IN ('GRC','GRC2') AND `txid` IS NULL");
 
 foreach($payout_data_array as $payout_data) {
         $uid=$payout_data['uid'];
@@ -227,7 +229,7 @@ foreach($payout_data_array as $payout_data) {
         $currency=$payout_data['currency'];
 
         // Only GRC payouts here
-        if($currency!="GRC") continue;
+        if($currency!="GRC" && $currency!="GRC2") continue;
 
         // If we have funds for this
         if($amount<$current_balance) {
