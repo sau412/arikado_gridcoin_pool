@@ -82,7 +82,6 @@ if($username!="") {
                 } else if($_POST['action']=='update_project_settings') {
                         $attached_uid=html_strip($_POST['attached_uid']);
                         $resource_share=html_strip($_POST['resource_share']);
-//var_dump($_POST);
                         $options_array=array();
                         if(isset($_POST['detach'])) $options_array[]="detach";
                         if(isset($_POST['detach_when_done'])) $options_array[]="detach_when_done";
@@ -147,15 +146,23 @@ if($username!="") {
                                 $stop_date=html_strip($_POST['stop_date']);
                                 $reward=html_strip($_POST['reward']);
                                 $check_rewards=html_strip($_POST['check_rewards']);
+                                $project_uid=html_strip($_POST['project_uid']);
+                                $comment=html_strip($_POST['comment']);
+                                if(isset($_POST['antiexp_rewards_flag'])) $antiexp_rac_flag=TRUE;
+                                else $antiexp_rac_flag=FALSE;
+
+                                $antiexp_rac_flag_text=$antiexp_rac_flag==TRUE?"antiexp flag is set":"antiexp flag is not set";
 
                                 if(auth_validate_timestamp($start_date)==FALSE) die("Start date validation error");
                                 if(auth_validate_timestamp($stop_date)==FALSE) die("Stop date validation error");
                                 if(auth_validate_float($reward)==FALSE) die("Reward validation error");
+                                if(auth_validate_integer($project_uid)==FALSE) die("Project validation error");
+                                if(auth_validate_ascii($comment)==FALSE) die("Project validation error");
 
-                                if(!$check_rewards) auth_log("Admin billing from '$start_date' to '$stop_date' reward '$reward'");
-                                else auth_log("Admin check rewards from '$start_date' to '$stop_date' reward '$reward'");
+                                if(!$check_rewards) auth_log("Admin billing from '$start_date' to '$stop_date' reward '$reward' comment '$comment' $antiexp_rac_flag_text");
+                                else auth_log("Admin check rewards from '$start_date' to '$stop_date' reward '$reward' comment '$comment' $antiexp_rac_flag_text");
 
-                                bill_close_period($start_date,$stop_date,$reward,$check_rewards);
+                                bill_close_period($comment,$start_date,$stop_date,$reward,$check_rewards,$project_uid,$antiexp_rac_flag);
                                 setcookie("action_message",$message_billing_ok);
                                 header("Location: ./");
                                 die();
@@ -199,6 +206,60 @@ if($username!="") {
                 }
         }
 
+        if(isset($_GET['ajax']) && isset($_GET['block'])) {
+                $block=html_strip($_GET['block']);
+                switch($block) {
+                        case "billing":
+                                if(auth_is_admin($username)) echo html_billing_form();
+                                break;
+                        case "boinc_results_by_host":
+                                echo html_boinc_results_by_host();
+                                break;
+                        case "boinc_results_by_project":
+                                echo html_boinc_results_by_project();
+                                break;
+                        case "boinc_results_by_user":
+                                echo html_boinc_results_by_user();
+                                break;
+                        case "boinc_results_all_valuable":
+                                echo html_boinc_results_all(1);
+                                break;
+                        case "boinc_results_all":
+                                echo html_boinc_results_all(0);
+                                break;
+                        case "log":
+                                if(auth_is_admin($username)) echo html_view_log();
+                                break;
+                        case "payouts":
+                                echo html_payouts();
+                                break;
+                        case "project_control":
+                                if(auth_is_admin($username)) echo html_project_control_form();
+                                break;
+                        default:
+                        case "pool_info":
+                                echo html_pool_info();
+                                break;
+                        case "pool_info_editor":
+                                if(auth_is_admin($username)) echo html_pool_info_editor();
+                                break;
+                        case "pool_stats":
+                                echo html_pool_stats();
+                                break;
+                        case "settings":
+                                echo html_change_settings_form();
+                                break;
+                        case "user_control":
+                                if(auth_is_admin($username)) echo html_user_control_form();
+                                break;
+                        case "your_hosts":
+                                echo html_host_options_form();
+                                echo html_user_hosts();
+                                break;
+                }
+                die();
+        }
+
         // Standard page beginning
         echo html_page_begin();
 
@@ -209,47 +270,10 @@ if($username!="") {
                 echo html_page_header("user");
         }
 
-        // Admin menu
-        if(auth_is_admin($username)) {
-                // Grant user privelegies
-                echo html_user_control_form();
-
-                // Control projects
-                echo html_project_control_form();
-
-                // View log
-                echo html_view_log();
-
-                // Pool info editor
-                echo html_pool_info_editor();
-        }
-
-        // Pool info
-        echo html_pool_info();
-
-        // Change settings form
-        echo html_change_settings_form();
-
-        // Current user hosts
-        echo html_host_options_form();
-        echo html_user_hosts();
-
-        // Current user BOINC results (for his hosts)
-        echo html_boinc_results();
-
-        // Payouts
-        echo html_payouts();
-
-        // Pool stats
-        echo html_pool_stats();
-
-        // Standard page end
-        echo html_page_end();
 } else {
         if(isset($_POST['action'])) {
                 // Register new user
                 if($_POST['action']=="register") {
-//var_dump($_POST);
                         $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
                         if(auth_recaptcha_check($recaptcha_response)) {
                                 $username=html_strip($_POST['username']);
@@ -282,29 +306,41 @@ if($username!="") {
                 }
         }
 
+        if(isset($_GET['ajax']) && isset($_GET['block'])) {
+                $block=html_strip($_GET['block']);
+                switch($block) {
+                        default:
+                        case "login_form":
+                                echo html_login_form();
+                                break;
+                        case "payouts":
+                                echo html_payouts();
+                                break;
+                        case "pool_info":
+                                echo html_pool_info();
+                                break;
+                        case "pool_stats":
+                                echo html_pool_stats();
+                                break;
+                        case "register_form":
+                                echo html_register_form();
+                                break;
+                }
+                die();
+        }
+
         // Standard page begin
         echo html_page_begin();
 
         // For register form we have link to login, then register form
         echo html_page_header("unknown");
 
-        // Pool info
-        echo html_pool_info();
-
-        // Login form
-        echo html_login_form();
-
-        // Register form
-        echo html_register_form();
-
-        // Payouts
-        echo html_payouts();
-
-        // Pool stats
-        echo html_pool_stats();
-
-        // End page
-        echo html_page_end();
 }
+
+// Block for ajax contents
+echo html_loadable_block();
+
+// Standard page end
+echo html_page_end();
 
 ?>
