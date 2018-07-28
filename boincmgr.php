@@ -241,11 +241,11 @@ function boincmgr_project_last_query_append($project_uid,$text) {
 }
 
 // Cache function
-function boincmgr_cache_function($function_name,$parameters) {
+function boincmgr_cache_function($function_name,$parameters,$force_update=0) {
         $call_str="$function_name(".implode(",",$parameters).")";
         $hash=hash("sha256",$call_str);
         $result=db_query_to_variable("SELECT `content` FROM `boincmgr_cache` WHERE `hash`='$hash' AND NOW()<`valid_until`");
-        if($result=="") {
+        if($result=="" || $force_update) {
                 $result=call_user_func_array($function_name,$parameters);
                 $result_escaped=db_escape($result);
                 db_query("INSERT INTO `boincmgr_cache` (`hash`,`content`,`valid_until`) VALUES ('$hash','$result_escaped',DATE_ADD(NOW(),INTERVAL 1 HOUR))
@@ -266,6 +266,12 @@ function boincmgr_get_payout_rate($currency) {
                         if($btc_doge_rate!=0) $doge_grc_rate=$btc_grc_rate/$btc_doge_rate;
                         else $doge_grc_rate=0;
                         return $doge_grc_rate;
+                case "GBYTE":
+                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
+                        $btc_gbyte_rate=boincmgr_get_variable("BTC_GBYTE");
+                        if($btc_gbyte_rate!=0) $gbyte_grc_rate=$btc_grc_rate/$btc_gbyte_rate;
+                        else $gbyte_grc_rate=0;
+                        return $gbyte_grc_rate;
                 case "LTC":
                         $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
                         $btc_ltc_rate=boincmgr_get_variable("BTC_LTC");
