@@ -7,19 +7,32 @@ html {
         font-family: sans-serif;
 }
 
+.html_day {
+        margin:0;
+        padding:0;
+        padding:0;
+        color: black;
+        background-color:#FFFFFF; /* Browsers that don't have Gradients */
+        font-family: sans-serif;
+}
+
 h2, h3 {
         margin-left:0em;
         display: box;
         text-align: center;
-        background: #5a4c5e;
+        //background: #5a4c5e;
+        background: #d9cbdd80;
         border: solid 0.1em #935ea0;
 }
+
 a:link{
         color:#cb30f2;
 }
+
 a:visited{
         color:#e7c6ef;
 }
+
 table {
         border: 1px solid gray;
         border-collapse: collapse;
@@ -28,9 +41,11 @@ table tr, table td, table th {
         border: 1px solid gray;
         padding: 0.5px 1em;
 }
+
 .selectable_block {
-        display: none;
+        display: block;
 }
+
 /* Thanks for https://www.w3schools.com/html/tryit.asp?filename=tryhtml_lists_menu */
 ul {
         list-style-type: none;
@@ -39,9 +54,24 @@ ul {
         overflow: hidden;
         background-color: #DDD;
 }
+
 ul li {
         float: left;
 }
+
+ul li ul {
+        display:none;
+        border: solid 1px gray;
+        position:absolute;
+        overflow: hidden;
+        background-color: #333;
+}
+
+ul li>ul li {
+        border: solid 1px gray;
+        float: none;
+}
+
 .main_bar_text li a{
         display: block;
         color: white;
@@ -49,9 +79,11 @@ ul li {
         padding: 1em;
         text-decoration: none;
 }
+
 ul li a:hover {
         background-color: #AAF;
 }
+
 .top_message {
         display: block;
         background-color: #F7DB04;
@@ -163,4 +195,3 @@ ul li a:hover {
         border: outset 0.1em #c2c6c4;
         box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
-
