@@ -1,28 +1,6 @@
-// Current block name for page
-var current_block_name;
-
 // Show only one block from the page
 function show_block(block_name) {
-        var blocks_array = ["register_form","login_form","pool_info","settings","your_hosts","boinc_results",
-                "user_control","project_control","billing","payouts","your_stats","pool_stats","log","pool_info_editor"];
-
-        // If user clicks same block - reload page
-        if(block_name==current_block_name) {
-                document.location.reload(true);
-                return true;
-        }
-
-        // Hide all
-        blocks_array.forEach(function(element) {
-                if(document.getElementById(element+'_block') != null) document.getElementById(element+'_block').style.display='none';
-        });
-
-        // Show block if exists
-        if(document.getElementById(block_name+'_block') != null) document.getElementById(block_name+'_block').style.display='block';
-        else document.getElementById("pool_info_block").style.display='block';
-
-        current_block_name=block_name;
-
+        $("#main_block").load("./?ajax=1&block=" + encodeURI(block_name));
         return true;
 }
 
@@ -64,4 +42,21 @@ function show_project_options_window(attach_uid,host_name,project_name,resource_
         set_checkbox_value("host_options_form_no_intel",options_array.includes('no_intel'));
 
         document.getElementById("popup_form").style.display="block";
+}
+
+// toggle block visibility
+function toggle_block(id) {
+        if( document.getElementById(id).style.display == "block") {
+                document.getElementById(id).style.display = "none";
+        } else {
+                document.getElementById(id).style.display = "block";
+        }
+}
+
+// Hide all submenu
+function hide_all_submenu() {
+        var blocks_array = ["boinc","control"];
+        blocks_array.forEach(function(element) {
+                if(document.getElementById(element) != null) document.getElementById(element).style.display='none';
+        });
 }
