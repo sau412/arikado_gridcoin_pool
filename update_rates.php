@@ -1,5 +1,5 @@
 <?php
-// Get other cryptos rate from poloniex
+// Get other cryptos rate from exchanges
 // https://poloniex.com/public?command=returnTicker
 
 if(!isset($argc)) die();
@@ -23,7 +23,7 @@ curl_setopt($ch,CURLOPT_POST,FALSE);
 curl_setopt($ch,CURLOPT_URL,$poloniex_url);
 $result = curl_exec ($ch);
 
-if($result=="") die("No data");
+if($result=="") die("No data from poloniex");
 
 $data=json_decode($result);
 
@@ -35,4 +35,17 @@ foreach($data as $pair => $pair_data) {
         echo "$pair $rate\n";
 }
 
+// Get data from bittrex
+$bittrex_url="https://bittrex.com/api/v1.1/public/getticker?market=BTC-GBYTE";
+curl_setopt($ch,CURLOPT_URL,$bittrex_url);
+$result = curl_exec ($ch);
+if($result=="") die("No data from bittrex");
+
+$data=json_decode($result);
+if($data->success=="true") {
+        $pair="BTC_GBYTE";
+        $rate=($data->result->Bid+$data->result->Ask)/2;
+        boincmgr_set_variable($pair,$rate);
+        echo "$pair $rate\n";
+}
 ?>
