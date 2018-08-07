@@ -128,6 +128,12 @@ function boincmgr_get_user_name($uid) {
         return db_query_to_variable("SELECT `username` FROM `boincmgr_users` WHERE `uid` = '$uid_escaped'");
 }
 
+// Get user email by uid
+function boincmgr_get_user_email($uid) {
+        $uid_escaped=db_escape($uid);
+        return db_query_to_variable("SELECT `email` FROM `boincmgr_users` WHERE `uid` = '$uid_escaped'");
+}
+
 // Get user uid by username
 function boincmgr_get_username_uid($username) {
         $username_escaped=db_escape($username);
@@ -322,6 +328,15 @@ function boincmgr_get_service_fee($currency) {
         if($currency=="GRC2") $currency="GRC";
         $currency_escaped=db_escape($currency);
         return db_query_to_variable("SELECT `project_fee` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
+}
+
+// Add message
+function boincmgr_message_send($username_uid,$reply_to,$message) {
+        if($username_uid!='') $username_uid_escaped="'".db_escape($username_uid)."'";
+        else $username_uid_escaped="NULL";
+        $reply_to_escaped=db_escape($reply_to);
+        $message_escaped=db_escape($message);
+        db_query("INSERT INTO `boincmgr_messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
 }
 
 ?>
