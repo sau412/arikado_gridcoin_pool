@@ -55,10 +55,12 @@ if(hash != null && hash != '') {
 }
 
 function toggle_night_mode() {
-        if (sessionStorage.getItem("night_mode") == 1) {
-                set_night_mode(0);
-        } else {
+        if (sessionStorage.getItem("night_mode") == 0) {
                 set_night_mode(1);
+                sessionStorage.setItem("night_mode",1);
+        } else {
+                set_night_mode(0);
+                sessionStorage.setItem("night_mode",0);
         }
 }
 
@@ -66,11 +68,9 @@ function toggle_night_mode() {
 // Else set day mode
 function set_night_mode(flag) {
         if (flag == 1) {
-                document.getElementById("html").classList.remove("html_day");
-                sessionStorage.setItem("night_mode",1);
-        } else {
                 document.getElementById("html").classList.add("html_day");
-                sessionStorage.setItem("night_mode",0);
+        } else {
+                document.getElementById("html").classList.remove("html_day");
         }
 }
 
@@ -79,8 +79,7 @@ set_night_mode(sessionStorage.getItem("night_mode"));
 </script>
 <hr>
 <center>
-<p>Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>githib link</a>) by Vladimir Tsarev, my nickname is sau412 in telegram, twitter, facebook, gmail, github, vk.</p>
-<p>If you wish to donate, you can send some coins to pool wallets.</p>
+<p>Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 in telegram, twitter, facebook, gmail, github, vk.</p>
 </center>
 </body>
 </html>
@@ -96,6 +95,16 @@ function html_p($message) {
 // Message after action
 function html_top_message($message) {
         return "<p class=top_message>$message</p>\n";
+}
+
+// Message after action
+function html_top_message_error($message) {
+        return "<p class=top_message_error>$message</p>\n";
+}
+
+// Message after action
+function html_top_message_info($message) {
+        return "<p class=top_message_info>$message</p>\n";
 }
 
 // Return project name as url
@@ -175,7 +184,7 @@ function html_get_menu($flag) {
         $result="";
         $result.="<ul class='main_bar'>\n";
         $result.="<center class='main_bar_text'>\n";
-        $result.="<li><div style='background-color:#2b2b2b;color:white;display=block;text-align:center;padding:1em;cursor:not-allowed'>$pool_name</div></li>";
+//      $result.="<li><div style='background-color:#2b2b2b;color:white;display=block;text-align:center;padding:1em;cursor:not-allowed'>$pool_name</div></li>";
         $result.=html_menu_element("pool_info","Pool info");
 
         if($flag=="unknown") {
@@ -183,6 +192,11 @@ function html_get_menu($flag) {
                 $result.=html_menu_element("register_form","Register");
                 $result.=html_menu_element("payouts","Payouts");
                 $result.=html_menu_element("pool_stats","Pool stats");
+                $submenu="";
+                $submenu.=html_menu_element("currencies","Currencies");
+                $submenu.=html_menu_element("block_explorer","Block explorer");
+                $result.=html_dropdown_menu_element("info","Info",$submenu);
+                $result.=html_menu_element("message_send","Feedback");
         } else {
                 $result.=html_menu_element("settings","Settings");
                 $result.=html_menu_element("your_hosts","Your hosts");
@@ -198,6 +212,11 @@ function html_get_menu($flag) {
                 $result.=html_menu_element("payouts","Payouts");
                 $result.=html_menu_element("pool_stats","Pool stats");
 
+                $submenu="";
+                $submenu.=html_menu_element("currencies","Currencies");
+                $submenu.=html_menu_element("block_explorer","Block explorer");
+                $result.=html_dropdown_menu_element("info","Info",$submenu);
+
                 if($flag=="admin") {
                         $submenu="";
                         $submenu.=html_menu_element("user_control","User control");
@@ -205,8 +224,12 @@ function html_get_menu($flag) {
                         $submenu.=html_menu_element("billing","Billing");
                         $submenu.=html_menu_element("pool_info_editor","Pool info editor");
                         $submenu.=html_menu_element("log","View log");
+                        $submenu.=html_menu_element("messages_view","View messages");
+                        $submenu.=html_menu_element("email_view","View emails");
+
                         $result.=html_dropdown_menu_element("control","Control",$submenu);
                 }
+                $result.=html_menu_element("message_send","Feedback");
         }
         $result.="</center>\n";
         $result.="</ul>\n";
@@ -216,7 +239,7 @@ function html_get_menu($flag) {
 // Dropdown element for menu
 function html_dropdown_menu_element($id,$text,$submenu) {
         return <<<_END
-<li><a href='#' onClick='hide_all_submenu();toggle_block("$id");return false;'>$text &#9660;</a>
+<li><a href='#' onClick='hide_all_submenu("$id");toggle_block("$id");return false;'>$text &#9660;</a>
 <ul id='$id'>
 $submenu
 </ul>
@@ -227,7 +250,7 @@ _END;
 
 // List element for menu
 function html_menu_element($tag,$text) {
-        return "<li><a href='#$tag' onClick='hide_all_submenu();return show_block(\"$tag\");'>$text</a></li>\n";
+        return "<li><a href='#$tag' onClick='hide_all_submenu(\"\");return show_block(\"$tag\");'>$text</a></li>\n";
 }
 
 // Greeting for user
@@ -344,6 +367,7 @@ function html_change_settings_form() {
         $email=db_query_to_variable("SELECT `email` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
         $payout_currency=db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
         $payout_address=db_query_to_variable("SELECT `payout_address` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $send_error_reports=db_query_to_variable("SELECT `send_error_reports` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
 
         $email_html=html_escape($email);
         $payout_address_html=html_escape($payout_address);
@@ -351,15 +375,19 @@ function html_change_settings_form() {
 
         $currency_selector=html_currency_selector($payout_currency);
 
+        if($send_error_reports) $send_error_reports_status="checked";
+        else $send_error_reports_status="";
+
         return <<<_END
 <div id=settings_block class=selectable_block>
 <h2>Settings</h2>
 <p>GRC payouts are instant, alternative currencies payouts are cumulative and manual. It takes 1-2 days when payout limit reached to send payout (because manual mode now).</p>
 <p>Changing alternative (non-GRC) currency or address notice: please note, owed amount linked to address, not to user. If you change address your previous address owed amount will not lost, but won't payed out until payout limit for previous address reached. You can contact admin for manual payout or change address back and receive payout when payout limit reached.</p>
 <form name=change_settings_form method=POST>
-<p><input type=hidden name="action" value="change_settings"></p>
-<p><input type=hidden name="token" value="$username_token"></p>
+<input type=hidden name="action" value="change_settings">
+<input type=hidden name="token" value="$username_token">
 <p>E-mail: <input type=text name=email value='$email_html' size=40></p>
+<p><label><input type=checkbox name=send_error_reports $send_error_reports_status> send reports to email if task errors found</label></p>
 <p>Payout address: <input type=text name=payout_address value='$payout_address_html' size=40> currency $currency_selector (look notice above)</p>
 <p>Password: <input type=password name=password> the password is required to change settings</p>
 <p>New password: <input type=password name=new_password1> only if you wish to change password</p>
@@ -427,7 +455,8 @@ _END;
                 // Project list for this host
                 $host_uid_escaped=db_escape($host_uid);
 
-                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status FROM `boincmgr_attach_projects` AS bap
+                $attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status
+FROM `boincmgr_attach_projects` AS bap
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
 
@@ -485,15 +514,24 @@ WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
                                 $attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
                         }
 
-                        $detach_form=<<<_END
+                        // Tasks report link
+                        $host_uid_escaped=db_escape($host_uid);
+                        $project_uid_escaped=db_escape($project_uid);
+                        $host_id=db_query_to_variable("SELECT `host_id` FROM `boincmgr_host_projects` WHERE `host_uid`='$host_uid_escaped' AND `project_uid`='$project_uid_escaped'");
+
+                        if($host_id!='') $tasks_report_link="<a href='./tasks.php?project_uid=$project_uid&host_id=$host_id'>tasks report</a>";
+                        else $tasks_report_link="";
+
+                        $options_form=<<<_END
 $project_name_html $options_show_html
 <input type=button value='options' onClick="show_project_options_window('$attached_project_uid','$domain_name_html','$project_name_html','$resource_share_html','$options_html');">
 $attached_project_msg
+$tasks_report_link
 <br>
 
 _END;
 
-                        $projects_str.="$detach_form<br>";
+                        $projects_str.="$options_form<br>";
                 }
 
                 if(auth_is_admin($username)) {
@@ -818,193 +856,6 @@ WHERE bphl.`expavg_credit`>'$threshold_escaped' AND bh.`username_uid`='$username
         return $result;
 }
 
-/*
-// Show BOINC results for user
-function html_boinc_results() {
-        global $username;
-
-        $result="";
-
-        // GRC per last day
-        $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
-        // Whitelisted projects count
-        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
-
-        $result.="<div id=boinc_results_block class=selectable_block>\n";
-        $result.="<h2>BOINC results:</h2>\n";
-
-        $result.="<p>That information we received from various BOINC projects:</p>\n";
-
-        $result.="<h3>Results by host</h3>\n";
-        $result.="<table align=center>\n";
-
-        $username_uid=boincmgr_get_username_uid($username);
-        $username_uid_escaped=db_escape($username_uid);
-
-        if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
-        } else {
-                $result.="<tr><th>Domain name</th><th>CPU</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bh.`username_uid`='$username_uid_escaped'
-GROUP BY  bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
-        }
-        foreach($boinc_host_data_array as $boinc_host_data) {
-                $host_username=$boinc_host_data['username'];
-                $host_uid=$boinc_host_data['host_uid'];
-                $domain_name=boincmgr_domain_decode($boinc_host_data['domain_name']);
-                $p_model=$boinc_host_data['p_model'];
-                $expavg_credit=round($boinc_host_data['rac']);
-                $relative_credit=$boinc_host_data['relative_credit'];
-
-                $host_username_html=html_escape($host_username);
-                $domain_name_html=html_escape($domain_name);
-                $p_model_html=html_escape($p_model);
-                $expavg_credit_html=html_escape($expavg_credit);
-
-                $expavg_credit_html=html_format_number($expavg_credit_html);
-
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
-                $grc_per_day_est=round($grc_per_day_est,4);
-
-                $graph=boincmgr_cache_function("canvas_graph_host_all_projects",array($host_uid));
-
-                $p_model_html=str_replace("[","<br>[",$p_model_html);
-                if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
-                else
-                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
-        }
-        $result.="</table>\n";
-
-        // Projects stats for admin is the pool stats
-        if(auth_is_admin($username)==FALSE) {
-                $result.="<h3>Results by project</h3>\n";
-                $result.="<table align=center>\n";
-                $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
-
-                $boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`name` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bp.`name` ASC");
-
-                foreach($boinc_host_data_array as $boinc_host_data) {
-                        $project_uid=$boinc_host_data['project_uid'];
-                        $expavg_credit=round($boinc_host_data['rac']);
-                        $project_name=$boinc_host_data['name'];
-                        $relative_credit=$boinc_host_data['relative_credit'];
-
-                        $expavg_credit_html=html_escape($expavg_credit);
-                        $project_name_html=html_escape($project_name);
-
-                        $expavg_credit_html=html_format_number($expavg_credit_html);
-
-                        $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
-                        $grc_per_day_est=round($grc_per_day_est,4);
-                        $graph=boincmgr_cache_function("canvas_graph_username_project",array($username_uid,$project_uid));
-
-                        $result.="<tr><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
-                }
-                $result.="</table>\n";
-        } else {
-                $result.="<h3>Results by user</h3>\n";
-                $result.="<table align=center>\n";
-                $result.="<tr><th>Username</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
-
-                $boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bu.`username` ASC");
-
-                foreach($boinc_host_data_array as $boinc_host_data) {
-                        $username_uid=$boinc_host_data['username_uid'];
-                        $expavg_credit=round($boinc_host_data['rac']);
-                        $user_name=$boinc_host_data['username'];
-                        $relative_credit=$boinc_host_data['relative_credit'];
-
-                        $expavg_credit_html=html_escape($expavg_credit);
-                        $user_name_html=html_escape($user_name);
-
-                        $expavg_credit_html=html_format_number($expavg_credit_html);
-
-                        $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
-                        $grc_per_day_est=round($grc_per_day_est,4);
-                        $graph=boincmgr_cache_function("canvas_graph_username",array($username_uid));
-
-                        $result.="<tr><td>$user_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
-                }
-                $result.="</table>\n";
-        }
-        $result.="<h3>Results for each project and each host</h3>\n";
-        $result.="<table align=center>\n";
-
-        if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th><th>GRC/day est</th><th>Tasks</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("
-SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
-FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-ORDER BY bu.`username`,bphl.`domain_name`,bp.`name` ASC");
-        } else {
-                $result.="<tr><th>Domain name</th><th>CPU</th><th>Project</th><th>RAC</th><th>RAC 7d graph</th><th>GRC/day est</th><th>Tasks</th></tr>\n";
-                $boinc_host_data_array=db_query_to_array("
-SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
-FROM `boincmgr_project_hosts_last` AS bphl
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
-WHERE bh.`username_uid`='$username_uid_escaped' ORDER BY bphl.`domain_name`,bp.`name` ASC");
-        }
-        foreach($boinc_host_data_array as $boinc_host_data) {
-                if(isset($boinc_host_data['username'])) $host_username=$boinc_host_data['username'];
-                else $host_username="";
-                $host_uid=$boinc_host_data['host_uid'];
-                $project_uid=$boinc_host_data['project_uid'];
-                $host_cpid=$boinc_host_data['host_cpid'];
-                $host_id=$boinc_host_data['host_id'];
-                $domain_name=boincmgr_domain_decode($boinc_host_data['domain_name']);
-                $p_model=$boinc_host_data['p_model'];
-                $expavg_credit=$boinc_host_data['expavg_credit'];
-                $project_name=$boinc_host_data['name'];
-                $relative_credit=$boinc_host_data['relative_credit'];
-
-                $host_username_html=html_escape($host_username);
-                $host_cpid_html=html_escape($host_cpid);
-                $domain_name_html=html_escape($domain_name);
-                $p_model_html=html_escape($p_model);
-                $expavg_credit_html=html_escape($expavg_credit);
-                $project_name_html=html_escape($project_name);
-
-                $tasks_url="<a href='tasks.php?project_uid=$project_uid&host_id=$host_id'>view</a>";
-
-//              $expavg_credit_html=html_format_number($expavg_credit_html);
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
-                $grc_per_day_est=round($grc_per_day_est,4);
-                $graph=boincmgr_cache_function("canvas_graph_host_project",array($host_uid,$project_uid));
-
-                $p_model_html=str_replace("[","<br>[",$p_model_html);
-                if(auth_is_admin($username))
-                        $result.="<tr><td>$host_username_html</td><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td><td>$tasks_url</td></tr>\n";
-                else
-                        $result.="<tr><td>$domain_name_html</td><td>$p_model_html</td><td>$project_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td><td>$tasks_url</td></tr>\n";
-        }
-        $result.="</table>\n";
-        $result.="</div>\n";
-
-        return $result;
-}
-*/
-
 // Show user control form
 function html_user_control_form() {
         global $username_token;
@@ -1162,6 +1013,7 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
                         $stop_date=$owe_data['stop_date'];
 
                         $payout_address_link=html_payout_address_link($currency,$payout_address);
+                        $amount=sprintf("%0.8f",$amount);
 
                         $payout_threshold=boincmgr_get_payout_limit($currency);
                         $payout_fee=boincmgr_get_tx_fee_estimation($currency);
@@ -1339,6 +1191,9 @@ function html_pool_stats() {
         $total_magnitude=115000;
         $magnitude_unit=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='magnitude_unit'");
 
+        $total_pool_mag=0;
+        $total_pool_grc_per_day=0;
+
         foreach($project_array as $project_data) {
                 $name=$project_data['name'];
                 $project_url=$project_data['project_url'];
@@ -1389,6 +1244,9 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
                 $pool_grc_per_day_html=html_escape($pool_grc_per_day);
 
+                $total_pool_grc_per_day+=$pool_grc_per_day;
+                $total_pool_mag+=$project_magnitude;
+//var_dump($total_grc_per_day);
                 $team_expavg_credit_html=html_format_number($team_expavg_credit_html);
                 $expavg_credit_html=html_format_number($expavg_credit_html);
                 $project_magnitude_html=html_format_number($project_magnitude);
@@ -1396,6 +1254,11 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
                 $result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$project_magnitude_html</td><td align=right>$pool_grc_per_day_html</td><td>$pool_project_hosts_html</td><td>$task_report_url</td><td>$status_html</td><td>$graph</td></tr>\n";
         }
+
+        $total_pool_mag_html=html_format_number($total_pool_mag);
+        $total_pool_grc_per_day_html=html_format_number($total_pool_grc_per_day);
+        $result.="<tr><td><strong>Total</strong></td><td align=right></td><td align=right></td><td align=right>$total_pool_mag_html</td><td align=right>$total_pool_grc_per_day_html</td><td></td><td></td><td></td><td></td></tr>\n";
+
         $result.="</table></p>\n";
         $result.="</div>\n";
         return $result;
@@ -1451,6 +1314,190 @@ function html_host_options_form() {
 </div>
 </div>
 _END;
+        return $result;
+}
+
+// Exchange rates block
+function html_currencies() {
+        $result="";
+        $result.="<div id=currencies_block class=selectable_block>\n";
+        $result.="<h2>Payout currencies</h2>\n";
+
+        $result.="<p><table align=center>\n";
+        $result.="<caption>Data for payout currencies:</caption>\n";
+        $result.="<tr><th>Name</th><th>Full name</th><th>Rate per 1 GRC</th><th>Payout limit</th><th>TX fee</th><th>Project fee</th></tr>\n";
+
+        $currency_data_array=db_query_to_array("SELECT `name`,`full_name`,`payout_limit`,`tx_fee`,`project_fee` FROM `boincmgr_currency` ORDER BY `name`");
+
+        foreach($currency_data_array as $currency_data) {
+                $name=$currency_data['name'];
+                $full_name=$currency_data['full_name'];
+                $payout_limit=$currency_data['payout_limit'];
+                $tx_fee=$currency_data['tx_fee'];
+                $project_fee=$currency_data['project_fee'];
+                $exchange_rate=boincmgr_get_payout_rate($name);
+
+                $payout_limit_in_grc=sprintf("%0.2f",$payout_limit/$exchange_rate);
+                $tx_fee_in_grc=sprintf("%0.2f",$tx_fee/$exchange_rate);
+                $exchange_rate=sprintf("%0.8f",$exchange_rate);
+
+                $name_html=html_escape($name);
+                $full_name_html=html_escape($full_name);
+                $payout_limit_html=html_escape($payout_limit." $name ($payout_limit_in_grc GRC)");
+                $payout_limit_in_grc_html=html_escape($payout_limit_in_grc);
+                $tx_fee_html=html_escape($tx_fee." $name ($tx_fee_in_grc GRC)");
+                $project_fee_html=html_escape($project_fee);
+                $exchange_rate_html=html_escape($exchange_rate." $name");
+
+                $result.="<tr><td>$name_html</td><td>$full_name_html</td><td>$exchange_rate_html</td><td align=right>$payout_limit_html</td><td align=right>$tx_fee_html</td><td align=right>$project_fee_html</td></tr>\n";
+        }
+
+        $result.="</table></p>\n";
+        $result.="</div>\n";
+        return $result;
+}
+
+// Block explorer block
+function html_block_explorer() {
+        global $pool_cpid;
+
+        $result="";
+        $result.="<div id=block_explorer_block class=selectable_block>\n";
+        $result.="<h2>Last 500 blocks</h2>\n";
+
+        $result.="<p><table align=center>\n";
+        $result.="<caption>Data from blockchain (at least 110 confirmations, updated hourly):</caption>\n";
+        $result.="<tr><th>Number</th><th>Hash</th><th>Mint</th><th>Interest</th><th>CPID</th><th>Rewards</th><th>Timestamp</th></tr>\n";
+
+        $blocks_data_array=db_query_to_array("SELECT `number`,`hash`,`mint`,`interest`,`cpid`,`rewards_sent`,`timestamp` FROM `boincmgr_blocks` ORDER BY `number` DESC LIMIT 500");
+
+        foreach($blocks_data_array as $blocks_data) {
+                $number=$blocks_data['number'];
+                $hash=$blocks_data['hash'];
+                $mint=$blocks_data['mint'];
+                $interest=$blocks_data['interest'];
+                $cpid=$blocks_data['cpid'];
+                $rewards_sent=$blocks_data['rewards_sent'];
+                $timestamp=$blocks_data['timestamp'];
+
+                $number_html=html_escape($number);
+                $number_link="<a href='https://www.gridcoinstats.eu/block/$number_html'>$number_html</a>";
+
+                $hash_short_html=html_escape(substr($hash,0,10)."...");
+                $hash_html=html_escape($hash);
+                $hash_link="<a href='https://www.gridcoinstats.eu/block/$hash_html'>$hash_short_html</a>";
+
+                $mint_html=html_escape($mint);
+                $interest_html=html_escape($interest);
+
+                $cpid_html=html_escape($cpid);
+                if($cpid=="INVESTOR") $cpid_link=$cpid_html;
+                else $cpid_link="<a href='https://www.gridcoinstats.eu/cpid/$cpid_html'>$cpid_html</a>";
+
+                $timestamp_html=html_escape($timestamp);
+                if($pool_cpid==$cpid) {
+                        if($rewards_sent) $rewards_html="<span class='status_good'>yes</span>";
+                        else $rewards_html="<span class='status_bad'>no</span>";
+                } else {
+                        $rewards_html="not mine";
+                }
+
+                $result.="<tr><td>$number_link</td><td>$hash_link</td><td>$mint_html</td><td>$interest_html</td><td>$cpid_link</td><td>$rewards_html</td><td>$timestamp_html</td></tr>\n";
+        }
+
+        $result.="</table></p>\n";
+        $result.="</div>\n";
+        return $result;
+}
+
+// Messages form
+function html_message_send() {
+        global $username;
+        global $username_token;
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $email=boincmgr_get_user_email($username_uid);
+
+        $result=<<<_END
+<div id=message_send_block class=selectable_block>
+<h2>Feedback</h2>
+<p>You can ask anything here or just send random message to pool administration. Don't forget to set reply address if you want to receive reply.</p>
+<form name=messages method=POST>
+<input type=hidden name="action" value="send_message">
+<input type=hidden name="token" value="$username_token">
+<p>Reply to <input type=text name=reply_to value='$email' size=50> (if you want reply)</p>
+<p><textarea name=message cols=60 rows=10></textarea></p>
+<p><input type=submit value='Send'></p>
+</form>
+_END;
+        return $result;
+}
+
+// View messages form
+function html_messages_view() {
+        $result="";
+        $result.="<div id=messages_view_block class=selectable_block>\n";
+        $result.="<h2>Last 100 messages</h2>\n";
+
+        $result.="<p><table align=center>\n";
+        $result.="<tr><th>Username</th><th>Reply to</th><th>Message</th><th>Timestamp</th></tr>\n";
+
+        $messages_data_array=db_query_to_array("SELECT `username_uid`,`reply_to`,`message`,`timestamp` FROM `boincmgr_messages` ORDER BY `timestamp` DESC LIMIT 100");
+
+        foreach($messages_data_array as $messages_data) {
+                $username_uid=$messages_data['username_uid'];
+                $reply_to=$messages_data['reply_to'];
+                $message=$messages_data['message'];
+                $timestamp=$messages_data['timestamp'];
+
+                if($username_uid!='') {
+                        $username_html=html_escape(boincmgr_get_user_name($username_uid));
+                } else {
+                        $username_html="";
+                }
+                $reply_to_html=html_escape($reply_to);
+                $message_html=html_escape($message);
+                $message_html=str_replace("\n","<br>\n",$message_html);
+                $timestamp_html=html_escape($timestamp);
+
+                $result.="<tr><td>$username_html</td><td>$reply_to_html</td><td>$message_html</td><td>$timestamp_html</td></tr>\n";
+        }
+
+        $result.="</table></p>\n";
+        $result.="</div>\n";
+        return $result;
+}
+
+// View email form
+function html_email_view() {
+        $result="";
+        $result.="<div id=email_view_block class=selectable_block>\n";
+        $result.="<h2>Last 100 email messages from pool</h2>\n";
+
+        $result.="<p><table align=center>\n";
+        $result.="<tr><th>To</th><th>Subject</th><th>Body</th><th>Is sent</th><th>Is success</th><th>Timestamp</th></tr>\n";
+
+        $messages_data_array=db_query_to_array("SELECT `to`,`subject`,`message`,`is_sent`,`is_success`,`timestamp` FROM `boincmgr_email` ORDER BY `timestamp` DESC LIMIT 100");
+
+        foreach($messages_data_array as $messages_data) {
+                $to=$messages_data['to'];
+                $subject=$messages_data['subject'];
+                $message=$messages_data['message'];
+                $is_sent_html=$messages_data['is_sent']?"yes":"no";
+                $is_success_html=$messages_data['is_success']?"yes":"no";
+                $timestamp=$messages_data['timestamp'];
+
+                $to_html=html_escape($to);
+                $subject_html=html_escape($subject);
+                $message_html=html_escape($message);
+                $message_html=str_replace("\n","<br>\n",$message_html);
+                $timestamp_html=html_escape($timestamp);
+
+                $result.="<tr><td>$to_html</td><td>$subject_html</td><td>$message_html</td><td>$is_sent_html</td><td>$is_success_html</td><td>$timestamp_html</td></tr>\n";
+        }
+
+        $result.="</table></p>\n";
+        $result.="</div>\n";
         return $result;
 }
 ?>
