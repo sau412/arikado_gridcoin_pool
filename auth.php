@@ -170,21 +170,23 @@ VALUES ('$username_escaped','$email_escaped','$salt_escaped','$password_hash_sal
 }
 
 // Change password and other settings
-function auth_change_settings($username,$email,$current_password,$new_password_1,$new_password_2,$payout_currency,$payout_address) {
+function auth_change_settings($username,$email,$current_password,$new_password_1,$new_password_2,$payout_currency,$payout_address,$send_error_reports) {
         if(auth_validate_password($current_password)==FALSE) return FALSE;
 
         if($new_password_1 != $new_password_2) return FALSE;
         if(auth_validate_payout_address($payout_address)==FALSE) return FALSE;
         if(auth_validate_payout_currency($payout_currency)==FALSE) return FALSE;
         if($new_password_1 != '' && auth_validate_password($new_password_1)==FALSE) return FALSE;
+        $send_error_reports_text=$send_error_reports?"yes":"no";
 
-        auth_log("Change settings username '$username' mail '$email' payout_currency '$payout_currency' payout_address '$payout_address'");
+        auth_log("Change settings username '$username' mail '$email' payout_currency '$payout_currency' payout_address '$payout_address' email_error_reports '$send_error_reports_text'");
 
         //$username=strtolower($username);
         $username_escaped=db_escape($username);
         $email_escaped=db_escape($email);
         $payout_address_escaped=db_escape($payout_address);
         $payout_currency_escaped=db_escape($payout_currency);
+        $send_error_reports_escaped=$send_error_reports?"1":"0";
 
         $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
         $password_hash=auth_hash($username,$current_password);
@@ -198,9 +200,9 @@ function auth_change_settings($username,$email,$current_password,$new_password_1
                 $salt=bin2hex(random_bytes(16));
                 $salt_escaped=db_escape($salt);
                 $password_hash_salted=hash("sha256",$password_hash.$salt);
-                $result=db_query("UPDATE `boincmgr_users` SET `salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `boincmgr_users` SET `send_error_reports`='$send_error_reports_escaped',`salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         } else {
-                $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`send_error_reports`='$send_error_reports_escaped',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         }
         if($result) return TRUE;
         else return FALSE;
