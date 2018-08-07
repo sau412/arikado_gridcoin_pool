@@ -1,3 +1,4 @@
+/* Global settings */
 html {
         margin:0;
         padding:0;
@@ -42,6 +43,7 @@ table tr, table td, table th {
         padding: 0.5px 1em;
 }
 
+/* All loadable blocks have that class*/
 .selectable_block {
         display: block;
 }
@@ -84,12 +86,29 @@ ul li a:hover {
         background-color: #AAF;
 }
 
+/* Message at the top of the page */
 .top_message {
         display: block;
         background-color: #F7DB04;
         color: black;
         padding: 0.1em 1em;
 }
+
+.top_message_error {
+        display: block;
+        background-color: #F76D02;
+        color: black;
+        padding: 0.1em 1em;
+}
+
+.top_message_info {
+        display: block;
+        background-color: #F7DB04;
+        color: black;
+        padding: 0.1em 1em;
+}
+
+/* Host statuses */
 .host_status_attached {
         color: lightgreen;
         font-weight: bold;
@@ -114,6 +133,8 @@ ul li a:hover {
         color: orange;
         font-weight: bold;
 }
+
+/* Project statuses */
 .project_status_enabled {
         color: lightgreen;
         font-weight: bold;
@@ -130,6 +151,8 @@ ul li a:hover {
         color: blue;
         font-weight: bold;
 }
+
+/* User statuses */
 .user_status_user {
         color: lightgreen;
         font-weight: bold;
@@ -146,6 +169,8 @@ ul li a:hover {
         color: orange;
         font-weight: bold;
 }
+
+/* Other statuses */
 .status_good {
         color: lightgreen;
         font-weight: bold;
@@ -162,6 +187,8 @@ ul li a:hover {
         color: orange;
         font-weight: bold;
 }
+
+/* Window for settings change */
 .pre_window {
         display:none;
         width: 100%;
@@ -189,9 +216,12 @@ ul li a:hover {
         vertical-align: middle;
         text-align: left;
 }
+
+/* Menu bar */
 .main_bar{
         display:block;
         background:#3c3d3c;
         border: outset 0.1em #c2c6c4;
         box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
+
