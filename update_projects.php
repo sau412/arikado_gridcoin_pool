@@ -14,6 +14,8 @@ require_once("billing.php");
 require_once("boincmgr.php");
 require_once("results_parser.php");
 
+//define('DB_DEBUG',1);
+
 db_connect();
 
 // Get enabled and stats only projects
