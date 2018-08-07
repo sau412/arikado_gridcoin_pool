@@ -189,8 +189,8 @@ if(count($rewarding_array)==0) {
                 $mint=$reward_row['mint'];
                 $interest=$reward_row['interest'];
                 $timestamp=$reward_row['timestamp'];
-                //echo "Block $block_number mint $mint interest $interest timestamp $timestamp\n";
-                $prev_billing_timestamp=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
+                // If interval is less than 12 hours, then use stats for 12 hours
+                $prev_billing_timestamp=db_query_to_variable("SELECT LEAST(MAX(`timestamp`),DATE_SUB('$timestamp',INTERVAL 12 HOUR)) FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
                 if($prev_billing_timestamp=="") $prev_billing_timestamp="SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats`";
 
                 echo "Billing from $prev_billing_timestamp to $timestamp reward $mint\n";
