@@ -44,7 +44,7 @@ function show_project_options_window(attach_uid,host_name,project_name,resource_
         document.getElementById("popup_form").style.display="block";
 }
 
-// toggle block visibility
+// Toggle block visibility (for menu)
 function toggle_block(id) {
         if( document.getElementById(id).style.display == "block") {
                 document.getElementById(id).style.display = "none";
@@ -53,10 +53,10 @@ function toggle_block(id) {
         }
 }
 
-// Hide all submenu
-function hide_all_submenu() {
-        var blocks_array = ["boinc","control"];
+// Hide all submenu (for menu)
+function hide_all_submenu(id) {
+        var blocks_array = ["boinc","control","info"];
         blocks_array.forEach(function(element) {
-                if(document.getElementById(element) != null) document.getElementById(element).style.display='none';
+                if(document.getElementById(element) != null && element != id) document.getElementById(element).style.display='none';
         });
 }
