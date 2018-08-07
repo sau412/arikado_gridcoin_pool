@@ -1,4 +1,4 @@
-[B<?php
+<?php
 // Various DB functions
 
 // Connect to DB
@@ -6,15 +6,17 @@ function db_connect() {
         global $db_host,$db_login,$db_password,$db_base;
         $res=mysql_pconnect($db_host,$db_login,$db_password);
         mysql_select_db($db_base);
-        //db_query("SET NAMES 'utf8'");
+//      db_query("SET NAMES 'utf8'");
 }
 
 // Query
 function db_query($query) {
+        if(defined("DB_DEBUG")) echo "$query\n";
         $result=mysql_query($query);
         if($result===FALSE) {
                 $query_escaped=db_escape($query);
-                auth_log("Query error: $query");
+                auth_log("MySQL query error: ".mysql_error());
+                auth_log("Query: $query");
                 die("Query error");
         }
         return $result;
@@ -35,6 +37,15 @@ function db_query_to_array($query) {
 // Escape string
 function db_escape($string) {
         return mysql_real_escape_string($string);
+}
+
+// Escape string
+function db_escape_ascii($string) {
+        $result="";
+        for($i=0;$i!=strlen($string);$i++) {
+                if(ord($string[$i])>=32 && ord($string[$i])<=127) $result.=$string[$i];
+        }
+        return mysql_real_escape_string($result);
 }
 
 // Query and return value from first row first column
@@ -82,6 +93,10 @@ if(!function_exists("mysql_pconnect")) {
         function mysql_insert_id() {
                 global $mysqli_res;
                 return mysqli_insert_id($mysqli_res);
+        }
+        function mysql_error() {
+                global $mysqli_res;
+                return mysqli_error($mysqli_res);
         }
 }
 ?>
