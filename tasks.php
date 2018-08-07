@@ -36,24 +36,69 @@ if(isset($_GET['project_uid'])) {
 }
 
 $page.="<h2>Status stats</h2>\n";
-$tasks_data=db_query_to_array("SELECT bp.`name` as 'Name',bt.`status` AS 'Status',count(*) AS 'Count' FROM `boincmgr_tasks` AS bt
+if(isset($project_uid)) {
+        $tasks_data=db_query_to_array("SELECT bp.`name` as 'Name',bt.`app` AS App,bt.`status` AS 'Status',count(*) AS 'Count',ROUND(SUM(bt.`score`)) AS Score FROM `boincmgr_tasks` AS bt
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
+WHERE $where
+GROUP BY bp.`name`,bt.`app`,bt.`status`");
+        $page.=array_to_table($tasks_data);
+} else {
+        $tasks_data=db_query_to_array("SELECT bp.`name` as 'Name',bt.`status` AS 'Status',count(*) AS 'Count',ROUND(SUM(bt.`score`)) AS Score FROM `boincmgr_tasks` AS bt
 LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
 WHERE $where
 GROUP BY bp.`name`,bt.`status`");
-$page.=array_to_table($tasks_data);
+        $page.=array_to_table($tasks_data);
+}
+
+$page.="<h2>Status history</h2>\n";
+if(isset($project_uid)) {
+        $tasks_data=db_query_to_array("SELECT bp.`name` as 'Name',bt.`app` AS App,bt.`status` AS 'Status',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 0 DAY),bt.`count`,0)) AS 'Today',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 1 DAY),bt.`count`,0)) AS 'day ago',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 2 DAY),bt.`count`,0)) AS '2 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 3 DAY),bt.`count`,0)) AS '3 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 4 DAY),bt.`count`,0)) AS '4 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 5 DAY),bt.`count`,0)) AS '5 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 6 DAY),bt.`count`,0)) AS '6 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 7 DAY),bt.`count`,0)) AS 'week ago'
+FROM `boincmgr_task_stats` AS bt
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
+WHERE $where
+GROUP BY bp.`name`,bt.`app`,bt.`status`");
+        $page.=array_to_table($tasks_data);
+} else {
+        $tasks_data=db_query_to_array("SELECT bp.`name` as 'Name',bt.`status` AS 'Status',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 0 DAY),bt.`count`,0)) AS 'Today',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 1 DAY),bt.`count`,0)) AS 'day ago',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 2 DAY),bt.`count`,0)) AS '2 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 3 DAY),bt.`count`,0)) AS '3 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 4 DAY),bt.`count`,0)) AS '4 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 5 DAY),bt.`count`,0)) AS '5 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 6 DAY),bt.`count`,0)) AS '6 day',
+SUM(IF(bt.`date`=DATE_SUB(CURDATE(),INTERVAL 7 DAY),bt.`count`,0)) AS 'week ago'
+FROM `boincmgr_task_stats` AS bt
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
+WHERE $where
+GROUP BY bp.`name`,bt.`status`");
+        $page.=array_to_table($tasks_data);
+}
 
 $page.="<h2>Project stats</h2>\n";
-$tasks_data=db_query_to_array("SELECT bp.`name`,count(*) AS count,ROUND(SUM(bt.score)) AS score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,ROUND(SUM(bt.score)/SUM(bt.`cpu_time`),4) AS 'score/cpu_time' FROM `boincmgr_tasks` AS bt
+$tasks_data=db_query_to_array("SELECT bp.`name`,count(*) AS 'total count',SUM(IF(bt.`status` IN ('Completed and validated','Completed and validated (1<sup>st</sup>)'),1,0)) AS 'completed',ROUND(SUM(bt.score)) AS score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,
+ROUND(AVG(bp.`team_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `boincmgr_tasks` AS bt
 LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
 WHERE $where
 GROUP BY bp.`name`");
 $page.=array_to_table($tasks_data);
 
-$page.="<h2>Project/app stats</h2>\n";
-$tasks_data=db_query_to_array("SELECT bp.`name`,bt.`app`,count(*) AS count,ROUND(SUM(bt.score)) AS score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,ROUND(SUM(bt.score)/SUM(bt.`cpu_time`),4) AS 'score/cpu_time' FROM `boincmgr_tasks` AS bt
+$page.="<h2>Project/app stats (completed)</h2>\n";
+$tasks_data=db_query_to_array("SELECT bp.`name`,bt.`app`,count(*) AS count,ROUND(SUM(bt.score)) AS sum_score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,
+ROUND(AVG(bp.`team_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `boincmgr_tasks` AS bt
 LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bt.`project_uid`
-WHERE $where
-GROUP BY bp.`name`,bt.`app`");
+WHERE $where AND bt.status IN ('Completed and validated','Completed and validated (1<sup>st</sup>)')
+GROUP BY bp.`name`,bt.`app`
+-- ORDER BY SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`))
+");
 $page.=array_to_table($tasks_data);
 
 if(isset($host_id)) {
