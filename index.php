@@ -51,8 +51,9 @@ if($username!="") {
                         $password=html_strip($_POST['password']);
                         $new_password1=html_strip($_POST['new_password1']);
                         $new_password2=html_strip($_POST['new_password2']);
+                        $send_error_reports=isset($_POST['send_error_reports'])?"1":"0";
 
-                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$payout_currency,$payout_address);
+                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$payout_currency,$payout_address,$send_error_reports);
                         if($result==TRUE) {
                                 setcookie("action_message",$message_change_settings_ok);
                         } else {
@@ -104,6 +105,16 @@ if($username!="") {
                         boincmgr_delete_host($username,$host_uid);
 
                         setcookie("action_message",$message_host_deleted);
+                        header("Location: ./");
+                        die();
+                // Send message
+                } else if($_POST['action']=='send_message') {
+                        $reply_to=html_strip($_POST['reply_to']);
+                        $message=html_strip($_POST['message']);
+
+                        boincmgr_message_send($username_uid,$reply_to,$message);
+
+                        setcookie("action_message",$message_message_sent);
                         header("Location: ./");
                         die();
                 // Next actions for admins
@@ -212,6 +223,9 @@ if($username!="") {
                         case "billing":
                                 if(auth_is_admin($username)) echo html_billing_form();
                                 break;
+                        case "block_explorer":
+                                echo html_block_explorer();
+                                break;
                         case "boinc_results_by_host":
                                 echo html_boinc_results_by_host();
                                 break;
@@ -227,8 +241,20 @@ if($username!="") {
                         case "boinc_results_all":
                                 echo html_boinc_results_all(0);
                                 break;
+                        case "currencies":
+                                echo html_currencies();
+                                break;
+                        case "email_view":
+                                if(auth_is_admin($username)) echo html_email_view();
+                                break;
                         case "log":
                                 if(auth_is_admin($username)) echo html_view_log();
+                                break;
+                        case "message_send":
+                                echo html_message_send();
+                                break;
+                        case "messages_view":
+                                echo html_messages_view();
                                 break;
                         case "payouts":
                                 echo html_payouts();
@@ -289,9 +315,8 @@ if($username!="") {
                         }
                         header("Location: ./");
                         die();
-                }
                 // Login existing user
-                if($_POST['action']=='login') {
+                } else if($_POST['action']=='login') {
                         $username=html_strip($_POST['username']);
                         $password=html_strip($_POST['password']);
                         $login_result=auth_login($username,$password);
@@ -303,15 +328,35 @@ if($username!="") {
                         }
                         header("Location: ./");
                         die();
+                // Send message
+                } else if($_POST['action']=='send_message') {
+                        $username_uid='';
+                        $reply_to=html_strip($_POST['reply_to']);
+                        $message=html_strip($_POST['message']);
+
+                        boincmgr_message_send($username_uid,$reply_to,$message);
+
+                        setcookie("action_message",$message_message_sent);
+                        header("Location: ./");
+                        die();
                 }
         }
 
         if(isset($_GET['ajax']) && isset($_GET['block'])) {
                 $block=html_strip($_GET['block']);
                 switch($block) {
+                        case "block_explorer":
+                                echo html_block_explorer();
+                                break;
+                        case "currencies":
+                                echo html_currencies();
+                                break;
                         default:
                         case "login_form":
                                 echo html_login_form();
+                                break;
+                        case "message_send":
+                                echo html_message_send();
                                 break;
                         case "payouts":
                                 echo html_payouts();
