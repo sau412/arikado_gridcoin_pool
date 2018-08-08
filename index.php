@@ -1,4 +1,9 @@
 <?php
+if(!file_exists("settings.php")) {
+        header("Location: setup.php");
+        die();
+}
+
 require_once("settings.php");
 require_once("db.php");
 require_once("auth.php");
