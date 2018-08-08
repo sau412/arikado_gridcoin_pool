@@ -1,6 +1,7 @@
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET time_zone = "+00:00";
 
+DROP TABLE IF EXISTS `boincmgr_attach_projects`;
 CREATE TABLE `boincmgr_attach_projects` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -11,6 +12,7 @@ CREATE TABLE `boincmgr_attach_projects` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_billing_periods`;
 CREATE TABLE `boincmgr_billing_periods` (
   `uid` int(11) NOT NULL,
   `comment` varchar(100) NOT NULL DEFAULT '',
@@ -19,6 +21,7 @@ CREATE TABLE `boincmgr_billing_periods` (
   `reward` double NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_blocks`;
 CREATE TABLE `boincmgr_blocks` (
   `number` int(11) NOT NULL,
   `hash` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -29,12 +32,14 @@ CREATE TABLE `boincmgr_blocks` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_cache`;
 CREATE TABLE `boincmgr_cache` (
   `hash` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
   `content` text COLLATE utf8_unicode_ci NOT NULL,
   `valid_until` datetime DEFAULT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_currency`;
 CREATE TABLE `boincmgr_currency` (
   `uid` int(11) NOT NULL,
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -48,8 +53,9 @@ CREATE TABLE `boincmgr_currency` (
 
 INSERT INTO `boincmgr_currency` (`uid`, `name`, `full_name`, `payout_limit`, `tx_fee`, `project_fee`, `url_wallet`, `url_tx`) VALUES
 (1, 'GRC', 'GRC (gridcoin slow RAC, instant payout, no fees)', 0, 0.0001, 0, 'https://www.gridcoinstats.eu/address/', 'https://www.gridcoinstats.eu/tx/'),
-(2, 'GRC2', 'GRC (gridcoin quick RAC, instant payout, no fees)', 0, 0.0001, 0, 'https://www.gridcoinstats.eu/address/', 'https://www.gridcoinstats.eu/tx/');
+(7, 'GRC2', 'GRC (gridcoin quick RAC, instant payout, no fees)', 0, 0.0001, 0, 'https://www.gridcoinstats.eu/address/', 'https://www.gridcoinstats.eu/tx/');
 
+DROP TABLE IF EXISTS `boincmgr_email`;
 CREATE TABLE `boincmgr_email` (
   `uid` int(11) NOT NULL,
   `to` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -60,6 +66,7 @@ CREATE TABLE `boincmgr_email` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_hosts`;
 CREATE TABLE `boincmgr_hosts` (
   `uid` int(11) NOT NULL,
   `username_uid` int(11) NOT NULL,
@@ -71,6 +78,7 @@ CREATE TABLE `boincmgr_hosts` (
   `last_query` text NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_host_projects`;
 CREATE TABLE `boincmgr_host_projects` (
   `uid` int(11) NOT NULL,
   `host_uid` int(11) NOT NULL,
@@ -79,12 +87,14 @@ CREATE TABLE `boincmgr_host_projects` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_log`;
 CREATE TABLE `boincmgr_log` (
   `uid` int(11) NOT NULL,
   `message` longtext NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_messages`;
 CREATE TABLE `boincmgr_messages` (
   `uid` int(11) NOT NULL,
   `username_uid` int(11) DEFAULT NULL,
@@ -94,6 +104,7 @@ CREATE TABLE `boincmgr_messages` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_payouts`;
 CREATE TABLE `boincmgr_payouts` (
   `uid` int(11) NOT NULL,
   `billing_uid` int(11) NOT NULL,
@@ -106,6 +117,7 @@ CREATE TABLE `boincmgr_payouts` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_projects`;
 CREATE TABLE `boincmgr_projects` (
   `uid` int(11) NOT NULL,
   `name` varchar(100) NOT NULL,
@@ -140,7 +152,7 @@ INSERT INTO `boincmgr_projects` (`uid`, `name`, `project_url`, `url_signature`, 
 (14, 'Universe@Home', 'https://universeathome.pl/universe/', '327026490f867caaadf593cfbb9a7d9e445b830330257c71d382be2d648c2371\n2746de60f5426ad556f9eb27eb32c130e37588d22559aa30c16818ff706ade17\n6af25947159953ac5526002636458f746ef98ac24c07f97fe1a4e182888dd8de\n227d46f841019895226bf6b05bcd97f33127727d79eb367fbf22cd05c953f893\n.', 'auto', '', 1, '', '', 0, 0, '', '', 1, 'universe.xml', '2018-08-07 14:06:04'),
 (15, 'World Community Grid', 'http://www.worldcommunitygrid.org/', '04787cecdc3876c787b9fe5bc1e9e9c8ff41125ef192a4eea95b5a3e1140dc81\n01e57462e4962cd7a623671375ce9aa6dcc848b360214728175cce6b996fa80d\n33ae1ee092e413f377babe35bb7810e426f3c79cc4c5c0d7918c606cb29f2c60\n7f181c664bb0d85c53d33b40a7ff695da8ebbe254a12c0ae0939d6b3e8a29391\n.', 'auto', '', 0, '', '', 0, 0, '', '', 0, 'wcg.xml', '2018-08-07 14:06:04'),
 (16, 'yafu', 'http://yafu.myfirewall.org/yafu/', '9398939130d4db3209389f11863f18d21f4d1b67396b55ada7202d9c5c61ef66\n1ac2d84d79bfb4ab5ebcd51e848bbd5935521815ca969b2e666a7b4ff9f9ebe2\nbddb836d07e293fd21f80af2e7de72e1508fc8275574604886cbd39a031c2f40\n8a2e22b01461300cf396961a46d61c680b5a1e0dba659f4daadb225ec1e21f70\n.', 'auto', '', 1, '', '', 0, 0, '', '', 0, 'yafu.xml', '2018-08-07 14:06:04'),
-(17, 'yoyo@home', 'http://www.rechenkraft.net/yoyo/', '869dd2898cc9381650a2b1b67660971d8bf6566e1041b485a81bbf5c4efbc73b\n382cae150094d5060457712f495cf5904b5fea73e01814db65958db69540d0d1\n122c5cf27114477a7185c984bf8f85bb56632048697bd2001b13cd33d6b67c15\n9acbf2929a5821e5e45a7fd308087fcc2de9e49c33d7f3c50c70c5448e6862a2\n.', 'auto', '', 0, '', '', 0, 0, '', '', 0, 'yoyo.xml', '2018-08-07 14:06:04'),
+(17, 'yoyo@home', 'http://www.rechenkraft.net/yoyo/', '869dd2898cc9381650a2b1b67660971d8bf6566e1041b485a81bbf5c4efbc73b\n382cae150094d5060457712f495cf5904b5fea73e01814db65958db69540d0d1\n122c5cf27114477a7185c984bf8f85bb56632048697bd2001b13cd33d6b67c15\n9acbf2929a5821e5e45a7fd308087fcc2de9e49c33d7f3c50c70c5448e6862a2\n.', 'stats_only', '', 0, '', '', 0, 0, '', '', 0, 'yoyo.xml', '2018-08-08 09:43:15'),
 (18, 'Amicable Numbers', 'https://sech.me/boinc/Amicable/', 'd4344e86058057e9ff1eb6a24c85ffbbe1e5661c3d1d2881697a1923ce400c12\n66ab4e10fb3f5000312cac1b39946adec3bdac09f5141c2d27816f9d12d03d30\n302bd19d4d3f9d0be55a256b6770c375b68de19d578a8c387602a4829d0b4e4a\n495ac23cb4b329b6c20b17c284648f168f832ca6a82192f019221f76a8d967b6\n.', 'auto', '', 1, '', '', 0, 0, '', '', 1, 'amicable.xml', '2018-08-07 14:06:04'),
 (19, 'collatz', 'https://boinc.thesonntags.com/collatz/', '41642874c3f53b2a1a62f640cf857b0134d33370b08a731063317fde146497a4\n1ca6f6200589bd1df4cb7c496eb17bc7c8369f7a01dd132d47e1f6c9997cc1ea\n0285ff7c780812c5e81c1d4c7e5bd3099f2b9352caefc40dffffeb43dd887444\n034ff8823d43835c82cf31a9a73c3a25bed6267867f81bdaf9bce36cf2524647\n.', 'auto', '', 1, '', '', 0, 0, '', '', 1, 'collatz.xml', '2018-08-07 14:06:04'),
 (20, 'Einstein@Home', 'http://einstein.phys.uwm.edu/', '63d1ea0500f16eb3c587ae99890a0c39c5a8de274794d75bea11a6b770f1d945\n47509267bfd40709d5583fe90f0dd637748f824ef4e76b0658afe7e098265adf\n42fafc19e92bfe88bb5c1b837483ca2a435faca0babc999090cc730a4fc58b76\n4e36c3efcbbb030f32b1838f4cebd0217153c77c167c35e80cf5ba278acbd234\n.', 'auto', '', 1, '', '', 0, 0, '', '', 0, 'einstein.xml', '2018-08-07 14:06:04'),
@@ -150,6 +162,7 @@ INSERT INTO `boincmgr_projects` (`uid`, `name`, `project_url`, `url_signature`, 
 (24, 'PrimeGrid', 'http://www.primegrid.com/', '696f9a2e892692167af134ad044f09e4785e6125aab36c81a524be23be508b71\n1e0964c2f315366738c7e7bbbdcb05257b21a8daeb4d05d7ab628643c4405c9a\nd91f28f0d8ede7a3ec7ae6654358b96cb08702266ea6d08badd51fd5a63bb19d\n45d21908f00b3043129d9e5903f6fea2537d4f882b4d32dc636bdf0661f0f71e\n.', 'auto', '', 1, '', '', 0, 0, '', '', 1, 'primegrid.xml', '2018-08-07 14:06:04'),
 (25, 'SETI@home', 'http://setiathome.berkeley.edu/', '5aec1657b7e56583d4c5171c78277f0e1be7bce1dea7a085b9dab5606544fd03\nd5c43ab421d6d3266f494cac80736bb0e70694dd57553be7a2f488e35ba7b5e6\n068ea93a3aecec3c6acb15578385186ab36aeafa76ec6d02484e146567c7eac9\nded7448024211cb17f65cc5ffde35413f61eeeb3a5607291d13f220abe0dd829\n.', 'auto', '', 1, '', '', 0, 0, '', '', 1, 'seti.xml', '2018-08-07 14:06:04');
 
+DROP TABLE IF EXISTS `boincmgr_project_hosts_last`;
 CREATE TABLE `boincmgr_project_hosts_last` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -162,6 +175,7 @@ CREATE TABLE `boincmgr_project_hosts_last` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_project_host_stats`;
 CREATE TABLE `boincmgr_project_host_stats` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -171,6 +185,7 @@ CREATE TABLE `boincmgr_project_host_stats` (
   `timestamp` timestamp NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_project_stats`;
 CREATE TABLE `boincmgr_project_stats` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -179,6 +194,7 @@ CREATE TABLE `boincmgr_project_stats` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_tasks`;
 CREATE TABLE `boincmgr_tasks` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -196,6 +212,7 @@ CREATE TABLE `boincmgr_tasks` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_task_stats`;
 CREATE TABLE `boincmgr_task_stats` (
   `uid` int(11) NOT NULL,
   `project_uid` int(11) NOT NULL,
@@ -206,6 +223,7 @@ CREATE TABLE `boincmgr_task_stats` (
   `date` date NOT NULL
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_users`;
 CREATE TABLE `boincmgr_users` (
   `uid` int(11) NOT NULL,
   `username` varchar(100) NOT NULL,
@@ -220,6 +238,7 @@ CREATE TABLE `boincmgr_users` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
+DROP TABLE IF EXISTS `boincmgr_user_auth_cookies`;
 CREATE TABLE `boincmgr_user_auth_cookies` (
   `uid` int(11) NOT NULL,
   `username_uid` int(11) NOT NULL,
@@ -227,6 +246,7 @@ CREATE TABLE `boincmgr_user_auth_cookies` (
   `expire_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_variables`;
 CREATE TABLE `boincmgr_variables` (
   `uid` int(11) NOT NULL,
   `name` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
@@ -235,7 +255,7 @@ CREATE TABLE `boincmgr_variables` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 INSERT INTO `boincmgr_variables` (`uid`, `name`, `value`, `timestamp`) VALUES
-(1, 'pool_info', 'Please edit your pool info in Control -> pool info editor', '2018-08-05 13:57:59'),
+(1, 'pool_info', '<p>Go to Control -> Edit pool info to change pool info</p>', '2018-08-08 09:47:04'),
 (2, 'magnitude_unit', '0.225', '2018-08-04 07:55:01'),
 (96, 'hot_wallet_balance', '185.24348664', '2018-08-07 13:55:01'),
 (97, 'BTC_DOGE', '3.95E-7', '2018-08-07 02:20:02'),
@@ -246,6 +266,7 @@ INSERT INTO `boincmgr_variables` (`uid`, `name`, `value`, `timestamp`) VALUES
 (102, 'BTC_XMR', '0.01634302', '2018-08-07 13:50:02'),
 (103, 'BTC_GBYTE', '0.013268035', '2018-08-07 13:50:02');
 
+DROP TABLE IF EXISTS `boincmgr_xml`;
 CREATE TABLE `boincmgr_xml` (
   `uid` int(11) NOT NULL,
   `type` varchar(100) NOT NULL,
@@ -376,3 +397,4 @@ ALTER TABLE `boincmgr_variables`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
 ALTER TABLE `boincmgr_xml`
   MODIFY `uid` int(11) NOT NULL AUTO_INCREMENT;
+
