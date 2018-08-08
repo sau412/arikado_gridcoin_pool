@@ -107,7 +107,7 @@ foreach($project_data_array as $project_data)
         }
 
         $xml=simplexml_load_string($data);
-        if($xml==FALSE) {
+        if($xml==FALSE || isset($xml->error_msg)) {
                 $faults_str_array[]="$project_name (login error)";
                 echo "Login to project error\n";
                 echo $rpc_url."/lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n";
