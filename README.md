@@ -1,5 +1,5 @@
 # General
-Simple gridcoin pool with automated payments
+Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 
 # Requirements
 1) PHP 5/PHP 7
@@ -35,10 +35,10 @@ rpcport=port
 2) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
 3) Check that your cpid are synced (you coud see that in project control page)
 
-# Installation via setup.php (not ready yet)
+# Installation via setup.php
 1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
-2) Run setup via setup.php (not ready yet)
-3) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
+2) Run setup via setup.php
+3) Follow instructions
 
 # Mining guide
 1) Register in pool
@@ -85,8 +85,6 @@ In log section you can view what happening with pool, users, projects, syncs, ac
 1) User actions - registering, attaching, detaching, deleting, syncing
 2) Project syncing
 3) Errors - login errors, SQL errors and other
-## Pool info editor
-You chan change pool info here. Any HTML or scripting allowed.
 
 Samples:
 ```
@@ -96,6 +94,9 @@ Samples:
 4) Query error: SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled') AND `uid` NOT IN ( SELECT bap.`project_uid` FROM `boincmgr_hosts` h LEFT JOIN `boincmgr_attach_projects` bap ON bap.`host_uid`=h.`uid` WHERE `host_uid`='116' AND bap.detach=0 ) ORDER BY `name` ASC
 5) Admin check rewards from '2018-05-27 07:16:21' to '2018-05-30 15:48:12' reward '10.0000'
 ```
+
+## Pool info editor
+You chan change pool info here. Any HTML or scripting allowed.
 
 # Debug interfaces
 You can set $debug_mode=TRUE in settings.php, and XML between users and XML between projects will be written to table boincmgr_xml.
@@ -111,9 +112,5 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 2018-06-07 Estimated GRC/day, view last sync log (for admin), 'project not whitelisted, no rewards' status for project
 
 # To do
-* Feedback page for questions, requests and answers from pool administration (it's me for that pool implementation).
 * More detail stats, graphs and gridcoin exchange rate.
-* crypt_prog integration (for adding projects via interface)
 * Option for distribute coins equally between users (for rains or faucets)
-* If someone wants install their own pool with my sources, I'll do installer (web page for automated pool setup - create settings.php, create and fill tables with data).
-* If someone wants it, I could check how it works on raspberry and do raspberry image (or instrunctions) with that pool, if possible.
