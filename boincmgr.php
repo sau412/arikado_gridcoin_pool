@@ -339,4 +339,9 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
         db_query("INSERT INTO `boincmgr_messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
 }
 
-?>
+// For php 5 only variant for random_bytes is openssl_random_pseudo_bytes from openssl lib
+if(!function_exists("random_bytes")) { ?>
+        function random_bytes($n) {
+                return openssl_random_pseudo_bytes($n);
+        }
+}
