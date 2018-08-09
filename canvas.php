@@ -2,7 +2,7 @@
 // Graphs functions
 
 // Drawing canvas
-function canvas_graph($data,$width,$height) {
+function canvas_graph($data,$width,$height,$days) {
         $result="";
         $canvas_id=uniqid();
 
@@ -37,7 +37,7 @@ function canvas_graph($data,$width,$height) {
         $result.=<<<_END
 var c = document.getElementById("$canvas_id");
 var ctx = c.getContext("2d");
-ctx.fillStyle = 'green';
+ctx.fillStyle = 'lightgreen';
 ctx.beginPath();
 _END;
         foreach($data as $point) {
@@ -65,40 +65,41 @@ _END;
         return $result;
 }
 
+// Graph by host and and project
 function canvas_graph_host_project($host_uid,$project_uid) {
         $host_uid_escaped=db_escape($host_uid);
         $project_uid_escaped=db_escape($project_uid);
         $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid`='$host_uid_escaped' AND `project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,100,30);
+        return canvas_graph($data,100,30,7);
 }
 
 // Graph by host and all projects
 function canvas_graph_host_all_projects($host_uid) {
         $host_uid_escaped=db_escape($host_uid);
         $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid`='$host_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,100,30);
+        return canvas_graph($data,100,30,7);
 }
 
-// Graph by host and all projects
+// Graph by username and all projects
 function canvas_graph_username_project($username_uid,$project_uid) {
         $username_uid_escaped=db_escape($username_uid);
         $project_uid_escaped=db_escape($project_uid);
         $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid_escaped' AND `host_uid` IN (SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid') AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,100,30);
+        return canvas_graph($data,100,30,7);
 }
 
 // Graph by username and all projects
 function canvas_graph_username($username_uid) {
         $username_uid_escaped=db_escape($username_uid);
         $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid` IN (SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid') AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,100,30);
+        return canvas_graph($data,100,30,7);
 }
 
 // Graph by project
 function canvas_graph_project_total($project_uid) {
         $project_uid_escaped=db_escape($project_uid);
         $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 30 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,150,30);
+        return canvas_graph($data,150,30,30);
 }
 
 ?>
