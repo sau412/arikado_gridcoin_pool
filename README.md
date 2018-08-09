@@ -2,12 +2,17 @@
 Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 
 # Requirements
-1) PHP 5/PHP 7
+1) PHP 5 with openssl lib or PHP 7
 2) Apache web server, mysql, tested in ubuntu
 3) At least 2000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
 5) Optionally crypt_prog from BOINC for signing urls
 6) If you want more security: second computer for storing staking wallet outside of web server
+
+# Automatic installation
+1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
+2) Run setup via setup.php
+3) Follow instructions
 
 # Manual installation
 ## BOINC part
@@ -35,11 +40,6 @@ rpcport=port
 2) Run BOINC, attach to any whitelisted project, run gridcoinresearch for staking (you could use different PC or server for that), send beacon, wait for rewards
 3) Check that your cpid are synced (you coud see that in project control page)
 
-# Installation via setup.php
-1) Copy files to web-accessible folder, e.g. /var/www/boinc_pool/
-2) Run setup via setup.php
-3) Follow instructions
-
 # Mining guide
 1) Register in pool
 2) Sync your BOINC client with pool and your username/password
@@ -58,6 +58,8 @@ You can see project BOINC stats here.
 You can login here.
 ## Register
 You can register here.
+## Feedback
+You can leave feedback here, these messages could be read by administrator.
 
 # User interface guide
 ## Settings
@@ -98,6 +100,12 @@ Samples:
 ## Pool info editor
 You chan change pool info here. Any HTML or scripting allowed.
 
+## Messages
+You can read feedback messages here.
+
+## Emails
+You can see pool email texts and statuses here.
+
 # Debug interfaces
 You can set $debug_mode=TRUE in settings.php, and XML between users and XML between projects will be written to table boincmgr_xml.
 
@@ -109,8 +117,10 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 2) If you want, you can distribute coins with "billing" interface. Fill start and stop dates to calculate contribution, reward amount and click "send rewards".
 
 # What's new
+2018-08-09 php 5 checked, automated setup, emails, night mode, two level menu, quick RAC
 2018-06-07 Estimated GRC/day, view last sync log (for admin), 'project not whitelisted, no rewards' status for project
 
 # To do
 * More detail stats, graphs and gridcoin exchange rate.
 * Option for distribute coins equally between users (for rains or faucets)
+* 
