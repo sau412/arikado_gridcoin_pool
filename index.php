@@ -11,6 +11,7 @@ require_once("html.php");
 require_once("billing.php");
 require_once("boincmgr.php");
 require_once("canvas.php");
+require_once("xml_parser.php");
 
 db_connect();
 
@@ -277,6 +278,18 @@ if($username!="") {
                         case "pool_stats":
                                 echo html_pool_stats();
                                 break;
+                        case "rating_by_host_mag":
+                                echo html_rating_by_host_mag();
+                                break;
+                        case "rating_by_host_project_mag":
+                                echo html_rating_by_host_project_mag();
+                                break;
+                        case "rating_by_user_mag":
+                                echo html_rating_by_user_mag();
+                                break;
+                        case "rating_by_user_project_mag":
+                                echo html_rating_by_user_project_mag();
+                                break;
                         case "settings":
                                 echo html_change_settings_form();
                                 break;
@@ -371,6 +384,18 @@ if($username!="") {
                                 break;
                         case "pool_stats":
                                 echo html_pool_stats();
+                                break;
+                        case "rating_by_host_mag":
+                                echo html_rating_by_host_mag();
+                                break;
+                        case "rating_by_host_project_mag":
+                                echo html_rating_by_host_project_mag();
+                                break;
+                        case "rating_by_user_mag":
+                                echo html_rating_by_user_mag();
+                                break;
+                        case "rating_by_user_project_mag":
+                                echo html_rating_by_user_project_mag();
                                 break;
                         case "register_form":
                                 echo html_register_form();
