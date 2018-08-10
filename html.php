@@ -1536,6 +1536,8 @@ function html_email_view() {
 function html_rating_by_host_mag() {
         global $username;
 
+        $result="";
+
         // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
@@ -1590,6 +1592,8 @@ LIMIT 100");
 // Rating by host and project magnitude
 function html_rating_by_host_project_mag() {
         global $username;
+
+        $result="";
 
         // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
@@ -1646,6 +1650,8 @@ LIMIT 100");
 function html_rating_by_user_mag() {
         global $username;
 
+        $result="";
+
         // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
@@ -1680,7 +1686,6 @@ LIMIT 100");
                 $host_count_html=html_format_number($host_count);
                 $magnitude_html=html_format_number($magnitude);
 
-                $p_model_html=str_replace("[","<br>[",$p_model_html);
                 $result.="<tr><td>$n</td><td>$stats_username_html</td><td align=right>$host_count_html</td><td align=right>$magnitude_html</td></tr>\n";
                 $n++;
         }
@@ -1693,6 +1698,8 @@ LIMIT 100");
 // Rating by user and project magnitude
 function html_rating_by_user_project_mag() {
         global $username;
+
+        $result="";
 
         // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
@@ -1731,7 +1738,6 @@ LIMIT 100");
                 $host_count_html=html_format_number($host_count);
                 $magnitude_html=html_format_number($magnitude);
 
-                $p_model_html=str_replace("[","<br>[",$p_model_html);
                 $result.="<tr><td>$n</td><td>$stats_username_html</td><td>$stats_project_name_html</td><td align=right>$host_count_html</td><td align=right>$magnitude_html</td></tr>\n";
                 $n++;
         }
