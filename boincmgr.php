@@ -122,6 +122,90 @@ function boincmgr_get_host_name($uid) {
         else return $hostname_encoded;
 }
 
+// Get host info (CPU, GPU, domain)
+function boincmgr_get_host_info($uid) {
+        $uid_escaped=db_escape($uid);
+        $query_data_encoded=db_query_to_variable("SELECT `last_query` FROM `boincmgr_hosts` WHERE `uid` = '$uid_escaped'");
+        $query_data=boincmgr_domain_decode($query_data_encoded);
+        $host_data=xml_parse_user_request($query_data);
+//var_dump($host_data);
+        $result="";
+        // Hostname
+        if(isset($host_data["domain_name"]) && $host_data["domain_name"]!="") {
+                $result.="Domain name: ".$host_data["domain_name"]."\n";
+        } else {
+                $result.="No host name\n";
+        }
+        // OS data
+        if(isset($host_data["os_name"]) && $host_data["os_name"]!="") {
+                $os_version=$host_data["os_version"];
+                if(strlen($os_version)>50) $os_version=substr($os_version,0,50)."...";
+                $result.="OS name: ".$host_data["os_name"]."\nOS version: $os_version\n";
+        } else {
+                $result.="No OS info\n";
+        }
+        // Product name
+        if(isset($host_data["product_name"]) && $host_data["product_name"]!="") {
+                $result.="Product name: ".$host_data["product_name"]."\n";
+        }
+        // CPU data
+        if(isset($host_data["p_model"]) && $host_data["p_model"]!="") {
+                $result.="CPU: ".$host_data["p_ncpus"]." x ".$host_data["p_model"]."\n";
+        } else {
+                $result.="No CPU info\n";
+        }
+        // GPU data
+        if(isset($host_data["gpus"])) {
+                foreach($host_data["gpus"] as $gpu_info) {
+                        $gpu_count=$gpu_info['count'];
+                        $gpu_model=$gpu_info['name'];
+                        $result.="GPU: $gpu_count x $gpu_model\n";
+                }
+        } else {
+//              $result.="No GPU\n";
+        }
+        return $result;
+}
+
+// Get host short info (OS, number CPU, number GPU)
+function boincmgr_get_host_short_info($uid) {
+        $uid_escaped=db_escape($uid);
+        $query_data_encoded=db_query_to_variable("SELECT `last_query` FROM `boincmgr_hosts` WHERE `uid` = '$uid_escaped'");
+        $query_data=boincmgr_domain_decode($query_data_encoded);
+        $host_data=xml_parse_user_request($query_data);
+//var_dump($host_data);
+        $result="";
+        // CPU data
+        if(isset($host_data["p_model"]) && $host_data["p_model"]!="") {
+                $result.=$host_data["p_ncpus"]." CPU";
+        } else {
+                $result.="No CPU info";
+        }
+        // GPU data
+        if(isset($host_data["gpus"])) {
+                $gpus_count=0;
+                foreach($host_data["gpus"] as $gpu_info) {
+                        $gpu_count=$gpu_info['count'];
+                        $gpu_model=$gpu_info['name'];
+                        $gpus_count+=$gpu_count;
+                }
+                if($gpus_count==0) $result.=", no GPU";
+                else $result.=", $gpus_count GPU";
+        } else {
+                $result.=", no GPU";
+        }
+        // OS data
+        if(isset($host_data["os_name"]) && $host_data["os_name"]!="") {
+                $os_name=$host_data["os_name"];
+                $os_name=str_replace("Microsoft ","",$os_name);
+                $os_name=str_replace("Darwin","Mac OS",$os_name);
+                $result.=", $os_name";
+        } else {
+                $result.=", unknown OS";
+        }
+        return $result;
+}
+
 // Get user name by uid
 function boincmgr_get_user_name($uid) {
         $uid_escaped=db_escape($uid);
@@ -339,10 +423,20 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
         db_query("INSERT INTO `boincmgr_messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
 }
 
+function boincmgr_leave_only_ascii($string) {
+        $result_string="";
+        for($i=0;$i<strlen($string);$i++) {
+                if(ord($string[$i])>=32 && ord($string[$i])<=127)
+                        $result_string.=$string[$i];
+        }
+        return $result_string;
+}
+
 // For php 5 only variant for random_bytes is openssl_random_pseudo_bytes from openssl lib
 if(!function_exists("random_bytes")) {
         function random_bytes($n) {
                 return openssl_random_pseudo_bytes($n);
         }
 }
+
 ?>
