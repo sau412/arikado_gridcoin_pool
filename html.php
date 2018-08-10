@@ -191,7 +191,15 @@ function html_get_menu($flag) {
                 $result.=html_menu_element("login_form","Login");
                 $result.=html_menu_element("register_form","Register");
                 $result.=html_menu_element("payouts","Payouts");
-                $result.=html_menu_element("pool_stats","Pool stats");
+
+                $submenu="";
+                $submenu.=html_menu_element("rating_by_host_mag","Rating by host mag");
+                $submenu.=html_menu_element("rating_by_user_mag","Rating by user mag");
+                $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
+                $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
+                $submenu.=html_menu_element("pool_stats","Pool project stats");
+                $result.=html_dropdown_menu_element("ratings","Statistics",$submenu);
+
                 $submenu="";
                 $submenu.=html_menu_element("currencies","Currencies");
                 $submenu.=html_menu_element("block_explorer","Block explorer");
@@ -210,14 +218,14 @@ function html_get_menu($flag) {
                 $result.=html_dropdown_menu_element("boinc","BOINC results",$submenu);
 
                 $result.=html_menu_element("payouts","Payouts");
-                $result.=html_menu_element("pool_stats","Pool stats");
 
                 $submenu="";
-                $submenu.=html_menu_element("rating_by_host_mag","By host mag");
-                $submenu.=html_menu_element("rating_by_user_mag","By user mag");
-                $submenu.=html_menu_element("rating_by_host_project_mag","By host project mag");
-                $submenu.=html_menu_element("rating_by_user_project_mag","By user project mag");
-                $result.=html_dropdown_menu_element("ratings","Ratings",$submenu);
+                $submenu.=html_menu_element("rating_by_host_mag","Rating by host mag");
+                $submenu.=html_menu_element("rating_by_user_mag","Rating by user mag");
+                $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
+                $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
+                $submenu.=html_menu_element("pool_stats","Pool project stats");
+                $result.=html_dropdown_menu_element("ratings","Statistics",$submenu);
 
                 $submenu="";
                 $submenu.=html_menu_element("currencies","Currencies");
