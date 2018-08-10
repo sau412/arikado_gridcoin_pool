@@ -213,6 +213,13 @@ function html_get_menu($flag) {
                 $result.=html_menu_element("pool_stats","Pool stats");
 
                 $submenu="";
+                $submenu.=html_menu_element("rating_by_host_mag","By host mag");
+                $submenu.=html_menu_element("rating_by_user_mag","By user mag");
+                $submenu.=html_menu_element("rating_by_host_project_mag","By host project mag");
+                $submenu.=html_menu_element("rating_by_user_project_mag","By user project mag");
+                $result.=html_dropdown_menu_element("ratings","Ratings",$submenu);
+
+                $submenu="";
                 $submenu.=html_menu_element("currencies","Currencies");
                 $submenu.=html_menu_element("block_explorer","Block explorer");
                 $result.=html_dropdown_menu_element("info","Info",$submenu);
@@ -416,6 +423,8 @@ function html_user_hosts() {
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 ORDER BY bu.`username`,bh.`domain_name` ASC");
         } else {
+                $username_uid=boincmgr_get_username_uid($username);
+                $result.="<p><a href='tasks.php?username_uid=$username_uid'>View task stats</a></p>";
                 $result.="<tr><th>Domain name</th><th>CPU</th><th>Projects</th></tr>\n";
                 $username_uid=boincmgr_get_username_uid($username);
                 $username_uid_escaped=db_escape($username_uid);
@@ -571,13 +580,17 @@ _END;
 
                         $projects_str.="$attach_form<br>";
                 }
-//                      $result.="<p>Host <b>$domain_name_html</b></p>\n";
-//                      $result.="$projects_str\n";
                 $p_model_html=str_replace("[","<br>[",$p_model_html);
+                $host_info=boincmgr_get_host_info($host_uid);
+                $host_info_html=html_escape($host_info);
+                $host_info_html=str_replace("\n","<br>\n",$host_info_html);
+                $host_info_html=str_replace("[","<br>\n[",$host_info_html);
+//              $host_info_html=str_replace("&amp;","&",$host_info_html);
+
                 if(auth_is_admin($username)) {
-                        $result.="<tr><td>$host_username_html</td><td><p>Domain name: $domain_name_html</p><p>$p_model_html</p><p>$host_delete_form</p></td><td><p>Last sync: $timestamp_html</p><p><a href='?action=view_host_last_query&host_uid=$host_uid&token=$username_token'>View last query</a></p></td><td>$projects_str</td></tr>\n";
+                        $result.="<tr><td>$host_username_html</td><td><p>$host_info_html</p><p>$host_delete_form</p></td><td><p>Last sync: $timestamp_html</p><p><a href='?action=view_host_last_query&host_uid=$host_uid&token=$username_token'>View last query</a></p></td><td>$projects_str</td></tr>\n";
                 } else {
-                        $result.="<tr><td>$domain_name_html $host_delete_form</td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
+                        $result.="<tr><td><p>$host_info_html</p><p>$host_delete_form</p></td><td>$p_model_html</td><td>$projects_str</td></tr>\n";
                 }
         }
         $result.="</table>\n";
@@ -638,7 +651,8 @@ GROUP BY  bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER 
 
                 $expavg_credit_html=html_format_number($expavg_credit_html);
 
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                if($whiltelisted_count>0) $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                else $grc_per_day_est=0;
                 $grc_per_day_est=round($grc_per_day_est,4);
 
                 $graph=boincmgr_cache_function("canvas_graph_host_all_projects",array($host_uid));
@@ -701,7 +715,8 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`
 
                 $expavg_credit_html=html_format_number($expavg_credit_html);
 
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                if($whiltelisted_count>0) $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                else $grc_per_day_est=0;
                 $grc_per_day_est=round($grc_per_day_est,4);
                 if(auth_is_admin($username)) $graph=boincmgr_cache_function("canvas_graph_project_total",array($project_uid));
                 else $graph=boincmgr_cache_function("canvas_graph_username_project",array($username_uid,$project_uid));
@@ -732,7 +747,7 @@ function html_boinc_results_by_user() {
 
         $result.="<h3>Results by user</h3>\n";
         $result.="<table align=center>\n";
-        $result.="<tr><th>Username</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
+        $result.="<tr><th>Username</th><th>Task stats</th><th>&Sigma; RAC</th><th>&Sigma; RAC 7d graph</th><th>GRC/day est</th></tr>\n";
 
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
@@ -762,11 +777,15 @@ GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORD
 
                 $expavg_credit_html=html_format_number($expavg_credit_html);
 
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                if($whiltelisted_count>0) $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                else $grc_per_day_est=0;
+
                 $grc_per_day_est=round($grc_per_day_est,4);
                 $graph=boincmgr_cache_function("canvas_graph_username",array($username_uid));
+                if($username_uid=="") $tasks_url="";
+                else $tasks_url="<a href='tasks.php?username_uid=$username_uid'>view</a>";
 
-                $result.="<tr><td>$user_name_html</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
+                $result.="<tr><td>$user_name_html</td><td>$tasks_url</td><td align=right>$expavg_credit_html</td><td>$graph</td><td>$grc_per_day_est</td></tr>\n";
         }
         $result.="</table>\n";
         $result.="</div>\n";
@@ -840,7 +859,8 @@ WHERE bphl.`expavg_credit`>'$threshold_escaped' AND bh.`username_uid`='$username
                 $tasks_url="<a href='tasks.php?project_uid=$project_uid&host_id=$host_id'>view</a>";
 
 //              $expavg_credit_html=html_format_number($expavg_credit_html);
-                $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                if($whiltelisted_count>0) $grc_per_day_est=($total_grc_per_day/$whiltelisted_count)*($relative_credit);
+                else $grc_per_day_est=0;
                 $grc_per_day_est=round($grc_per_day_est,4);
                 $graph=boincmgr_cache_function("canvas_graph_host_project",array($host_uid,$project_uid));
 
@@ -1184,12 +1204,13 @@ function html_pool_stats() {
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
 
         // GRC per last day
-        $total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
+        //$total_grc_per_day=db_query_to_variable("SELECT SUM(`mint`-`interest`) FROM `boincmgr_blocks` WHERE cpid<>'INVESTOR' AND date_sub(NOW(), INTERVAL 1 DAY)<`timestamp`");
         // Whitelisted projects count
         $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
         // Magnitude unit
         $total_magnitude=115000;
         $magnitude_unit=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='magnitude_unit'");
+        $total_grc_per_day=$total_magnitude*$magnitude_unit;
 
         $total_pool_mag=0;
         $total_pool_grc_per_day=0;
@@ -1207,10 +1228,12 @@ function html_pool_stats() {
 LEFT OUTER JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`project_uid` AND bhp.`host_uid`=bap.`host_uid`
 WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
-                $project_magnitude=$total_magnitude*($expavg_credit/$team_expavg_credit)/$whiltelisted_count;
+                if($whiltelisted_count>0) $project_magnitude=$total_magnitude*($expavg_credit/$team_expavg_credit)/$whiltelisted_count;
+                else $project_magnitude=0;
                 $project_magnitude=round($project_magnitude,4);
 
-                $project_grc_per_day=$total_grc_per_day/$whiltelisted_count;
+                if($whiltelisted_count>0) $project_grc_per_day=$total_grc_per_day/$whiltelisted_count;
+                else $project_grc_per_day=0;
                 if($team_expavg_credit==0) $pool_grc_per_day=0;
                 else $pool_grc_per_day=round(($project_grc_per_day/$team_expavg_credit)*$expavg_credit,4);
 
@@ -1500,4 +1523,214 @@ function html_email_view() {
         $result.="</div>\n";
         return $result;
 }
+
+// Rating by host magnitude
+function html_rating_by_host_mag() {
+        global $username;
+
+        // Whitelisted projects count
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
+        $magnitude_total=115000;
+
+        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<h3>Rating by host magnitude</h3>\n";
+        $result.="<table align=center>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $result.="<tr><th>№</th><th>Username</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
+        $host_stats_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
+HAVING SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100");
+
+        $n=1;
+        foreach($host_stats_data_array as $host_data) {
+                $host_username=$host_data['username'];
+                $host_uid=$host_data['host_uid'];
+                $domain_name=boincmgr_domain_decode($host_data['domain_name']);
+                $p_model=$host_data['p_model'];
+                $magnitude=round($host_data['magnitude'],2);
+                $host_short_info=boincmgr_get_host_short_info($host_uid);
+
+                $host_username_html=html_escape($host_username);
+                $domain_name_html=html_escape($domain_name);
+                $p_model_html=html_escape($p_model);
+                $expavg_credit_html=html_escape($expavg_credit);
+
+                $magnitude_html=html_format_number($magnitude);
+                $host_short_info_html=html_escape($host_short_info);
+
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                $result.="<tr><td>$n</td><td>$host_username_html</td><td>$domain_name_html</td><td>$host_short_info_html</td><td align=right>$magnitude_html</td></tr>\n";
+                $n++;
+        }
+        $result.="</table>\n";
+        $result.="</div>\n";
+
+        return $result;
+}
+
+// Rating by host and project magnitude
+function html_rating_by_host_project_mag() {
+        global $username;
+
+        // Whitelisted projects count
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
+        $magnitude_total=115000;
+
+        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<h3>Rating by host magnitude</h3>\n";
+        $result.="<table align=center>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
+        $host_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`,bp.`name`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
+HAVING SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100");
+
+        $n=1;
+        foreach($host_stats_data_array as $host_data) {
+                $host_username=$host_data['username'];
+                $host_uid=$host_data['host_uid'];
+                $project_name=$host_data['project_name'];
+                $domain_name=boincmgr_domain_decode($host_data['domain_name']);
+                $p_model=$host_data['p_model'];
+                $magnitude=round($host_data['magnitude'],2);
+                $host_short_info=boincmgr_get_host_short_info($host_uid);
+
+                $host_username_html=html_escape($host_username);
+                $domain_name_html=html_escape($domain_name);
+                $p_model_html=html_escape($p_model);
+                $expavg_credit_html=html_escape($expavg_credit);
+                $project_name_html=html_escape($project_name);
+                $magnitude_html=html_format_number($magnitude);
+                $host_short_info_html=html_escape($host_short_info);
+
+                $result.="<tr><td>$n</td><td>$host_username_html</td><td>$project_name_html</td><td>$domain_name_html</td><td>$host_short_info_html</td><td align=right>$magnitude_html</td></tr>\n";
+                $n++;
+        }
+        $result.="</table>\n";
+        $result.="</div>\n";
+
+        return $result;
+}
+
+// Rating by user magnitude
+function html_rating_by_user_mag() {
+        global $username;
+
+        // Whitelisted projects count
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
+        $magnitude_total=115000;
+
+        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<h3>Rating by user magnitude</h3>\n";
+        $result.="<table align=center>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $result.="<tr><th>№</th><th>Username</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
+        $user_stats_data_array=db_query_to_array("SELECT bu.`username`,count(DISTINCT bphl.`host_uid`) as host_count,SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`
+HAVING SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100");
+
+        $n=1;
+        foreach($user_stats_data_array as $user_data) {
+                $stats_username=$user_data['username'];
+                $host_count=$user_data['host_count'];
+                $magnitude=round($user_data['magnitude'],2);
+
+                $stats_username_html=html_escape($stats_username);
+                $host_count_html=html_format_number($host_count);
+                $magnitude_html=html_format_number($magnitude);
+
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                $result.="<tr><td>$n</td><td>$stats_username_html</td><td align=right>$host_count_html</td><td align=right>$magnitude_html</td></tr>\n";
+                $n++;
+        }
+        $result.="</table>\n";
+        $result.="</div>\n";
+
+        return $result;
+}
+
+// Rating by user and project magnitude
+function html_rating_by_user_project_mag() {
+        global $username;
+
+        // Whitelisted projects count
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
+        $magnitude_total=115000;
+
+        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<h3>Rating by user magnitude</h3>\n";
+        $result.="<table align=center>\n";
+
+        $username_uid=boincmgr_get_username_uid($username);
+        $username_uid_escaped=db_escape($username_uid);
+
+        $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
+        $user_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,count(DISTINCT bphl.`host_uid`) as host_count,SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`,bp.`name`
+HAVING SUM($magnitude_total*bphl.`expavg_credit`/(bp.`team_expavg_credit`*$whiltelisted_count))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100");
+
+        $n=1;
+        foreach($user_stats_data_array as $user_data) {
+                $stats_username=$user_data['username'];
+                $stats_project_name=$user_data['project_name'];
+
+                $host_count=$user_data['host_count'];
+                $magnitude=round($user_data['magnitude'],2);
+
+                $stats_username_html=html_escape($stats_username);
+                $stats_project_name_html=html_escape($stats_project_name);
+                $host_count_html=html_format_number($host_count);
+                $magnitude_html=html_format_number($magnitude);
+
+                $p_model_html=str_replace("[","<br>[",$p_model_html);
+                $result.="<tr><td>$n</td><td>$stats_username_html</td><td>$stats_project_name_html</td><td align=right>$host_count_html</td><td align=right>$magnitude_html</td></tr>\n";
+                $n++;
+        }
+        $result.="</table>\n";
+        $result.="</div>\n";
+
+        return $result;
+}
+
 ?>
