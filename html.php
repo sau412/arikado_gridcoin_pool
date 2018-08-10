@@ -1574,7 +1574,6 @@ LIMIT 100");
                 $host_username_html=html_escape($host_username);
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
-                $expavg_credit_html=html_escape($expavg_credit);
 
                 $magnitude_html=html_format_number($magnitude);
                 $host_short_info_html=html_escape($host_short_info);
@@ -1632,7 +1631,6 @@ LIMIT 100");
                 $host_username_html=html_escape($host_username);
                 $domain_name_html=html_escape($domain_name);
                 $p_model_html=html_escape($p_model);
-                $expavg_credit_html=html_escape($expavg_credit);
                 $project_name_html=html_escape($project_name);
                 $magnitude_html=html_format_number($magnitude);
                 $host_short_info_html=html_escape($host_short_info);
