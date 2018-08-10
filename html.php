@@ -198,7 +198,7 @@ function html_get_menu($flag) {
                 $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
                 $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
                 $submenu.=html_menu_element("pool_stats","Pool project stats");
-                $result.=html_dropdown_menu_element("ratings","Statistics",$submenu);
+                $result.=html_dropdown_menu_element("statistics","Statistics",$submenu);
 
                 $submenu="";
                 $submenu.=html_menu_element("currencies","Currencies");
@@ -225,7 +225,7 @@ function html_get_menu($flag) {
                 $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
                 $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
                 $submenu.=html_menu_element("pool_stats","Pool project stats");
-                $result.=html_dropdown_menu_element("ratings","Statistics",$submenu);
+                $result.=html_dropdown_menu_element("statistics","Statistics",$submenu);
 
                 $submenu="";
                 $submenu.=html_menu_element("currencies","Currencies");
@@ -1543,7 +1543,7 @@ function html_rating_by_host_mag() {
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
         $magnitude_total=115000;
 
-        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<div id=rating_by_host_mag_block class=selectable_block>\n";
         $result.="<h3>Rating by host magnitude</h3>\n";
         $result.="<table align=center>\n";
 
@@ -1599,7 +1599,7 @@ function html_rating_by_host_project_mag() {
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
         $magnitude_total=115000;
 
-        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<div id=rating_by_host_project_mag_block class=selectable_block>\n";
         $result.="<h3>Rating by host magnitude</h3>\n";
         $result.="<table align=center>\n";
 
@@ -1655,7 +1655,7 @@ function html_rating_by_user_mag() {
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
         $magnitude_total=115000;
 
-        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<div id=rating_by_user_mag_block class=selectable_block>\n";
         $result.="<h3>Rating by user magnitude</h3>\n";
         $result.="<table align=center>\n";
 
@@ -1704,7 +1704,7 @@ function html_rating_by_user_project_mag() {
         if($whiltelisted_count==0) return "<p>Rating error: no whitelisted projects</p>\n";
         $magnitude_total=115000;
 
-        $result.="<div id=boinc_results_block class=selectable_block>\n";
+        $result.="<div id=rating_by_user_project_mag_block class=selectable_block>\n";
         $result.="<h3>Rating by user magnitude</h3>\n";
         $result.="<table align=center>\n";
 
