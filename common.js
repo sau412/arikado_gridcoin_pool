@@ -55,7 +55,7 @@ function toggle_block(id) {
 
 // Hide all submenu (for menu)
 function hide_all_submenu(id) {
-        var blocks_array = ["boinc","control","info"];
+        var blocks_array = ["boinc","control","info","ratings"];
         blocks_array.forEach(function(element) {
                 if(document.getElementById(element) != null && element != id) document.getElementById(element).style.display='none';
         });
