@@ -65,8 +65,6 @@ if($username!="") {
                         } else {
                                 setcookie("action_message",$message_change_settings_validation_fail);
                         }
-                        header("Location: ./");
-                        die();
                         // Attach project
                 } else if($_POST['action']=='attach') {
                         $project_uid=html_strip($_POST['project_uid']);
@@ -75,16 +73,12 @@ if($username!="") {
                         $attach_result=boincmgr_attach($username,$host_uid,$project_uid);
 
                         setcookie("action_message",$message_project_attached);
-                        header("Location: ./");
-                        die();
                 // Detach project
                 } else if($_POST['action']=='detach') {
                         $attached_uid=html_strip($_POST['attached_uid']);
                         $detach_result=boincmgr_detach($username,$attached_uid);
 
                         setcookie("action_message",$message_project_detached);
-                        header("Location: ./");
-                        die();
                 // Update project_settings
                 } else if($_POST['action']=='update_project_settings') {
                         $attached_uid=html_strip($_POST['attached_uid']);
@@ -103,16 +97,12 @@ if($username!="") {
                         boincmgr_set_project_settings($username,$attached_uid,$resource_share,$options_array);
 
                         setcookie("action_message",$message_project_settings_changed);
-                        header("Location: ./");
-                        die();
                 // Delete host
                 } else if($_POST['action']=='delete_host') {
                         $host_uid=html_strip($_POST['host_uid']);
                         boincmgr_delete_host($username,$host_uid);
 
                         setcookie("action_message",$message_host_deleted);
-                        header("Location: ./");
-                        die();
                 // Send message
                 } else if($_POST['action']=='send_message') {
                         $reply_to=html_strip($_POST['reply_to']);
@@ -121,8 +111,6 @@ if($username!="") {
                         boincmgr_message_send($username_uid,$reply_to,$message);
 
                         setcookie("action_message",$message_message_sent);
-                        header("Location: ./");
-                        die();
                 // Next actions for admins
                 } else if(auth_is_admin($username)) {
                         // Change user status (for admin)
@@ -139,8 +127,6 @@ if($username!="") {
                                 $status_escaped=db_escape($status);
                                 db_query("UPDATE `boincmgr_users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
                                 setcookie("action_message",$message_user_status_changed);
-                                header("Location: ./");
-                                die();
                         // Change project_status (for admin)
                         } else if($_POST['action']=='change_project_status') {
                                 $project_uid=html_strip($_POST['project_uid']);
@@ -155,14 +141,12 @@ if($username!="") {
                                 $status_escaped=db_escape($status);
                                 db_query("UPDATE `boincmgr_projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
                                 setcookie("action_message",$message_project_status_changed);
-                                header("Location: ./");
-                                die();
                         // Calculate payouts
                         } else if($_POST['action']=='billing') {
                                 $start_date=html_strip($_POST['start_date']);
                                 $stop_date=html_strip($_POST['stop_date']);
                                 $reward=html_strip($_POST['reward']);
-                                $check_rewards=html_strip($_POST['check_rewards']);
+                                $check_rewards=isset($_POST['check_rewards'])?1:0;
                                 $project_uid=html_strip($_POST['project_uid']);
                                 $comment=html_strip($_POST['comment']);
                                 if(isset($_POST['antiexp_rewards_flag'])) $antiexp_rac_flag=TRUE;
@@ -181,8 +165,6 @@ if($username!="") {
 
                                 bill_close_period($comment,$start_date,$stop_date,$reward,$check_rewards,$project_uid,$antiexp_rac_flag);
                                 setcookie("action_message",$message_billing_ok);
-                                header("Location: ./");
-                                die();
                         // Edit pool info
                         } else if($_POST['action']=='edit_pool_info') {
                                 $pool_info=html_strip($_POST['pool_info']);
@@ -190,11 +172,9 @@ if($username!="") {
                                 auth_log("Pool info changed by $username");
                                 boincmgr_set_pool_info($pool_info);
                                 setcookie("action_message",$message_pool_info_changed);
-
-                                header("Location: ./");
-                                die();
                         }
                 }
+                html_redirect_and_die("./");
         }
         // Logout
         if(isset($_GET['action'])) {
@@ -203,8 +183,6 @@ if($username!="") {
                 if($_GET['action']=='logout') {
                         auth_logout();
                         setcookie("action_message",$message_logout_success);
-                        header("Location: ./");
-                        die();
                 } else if($_GET['action']=='view_host_last_query') {
                         $host_uid=$_GET['host_uid'];
                         $host_uid_escaped=db_escape($host_uid);
@@ -221,6 +199,7 @@ if($username!="") {
                         echo "</tt></pre>";
                         die();
                 }
+                html_redirect_and_die("./");
         }
 
         if(isset($_GET['ajax']) && isset($_GET['block'])) {
