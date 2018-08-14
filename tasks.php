@@ -22,6 +22,26 @@ require_once("auth.php");
 
 db_connect();
 
+if(isset($_GET['username_uid'])) {
+        $username_uid=html_strip($_GET['username_uid']);
+        $username_uid_escaped=db_escape($username_uid);
+        $page.="<h2>Exists task stats</h2>\n";
+        $exists_stats=db_query_to_array("SELECT IF(FROM_BASE64(bh.`domain_name`)=CONVERT(FROM_BASE64(bh.`domain_name`) USING ASCII),FROM_BASE64(bh.`domain_name`),bh.`domain_name`) AS 'Domain name',
+bp.`name`,count(bt.`uid`) AS 'tasks count',
+CONCAT('<a href=\'tasks.php?project_uid=',bhp.`project_uid`,'&host_id=',bhp.`host_id`,'\'>view</a>') AS URL
+FROM `boincmgr_host_projects` AS bhp
+LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.uid=bhp.host_uid
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bhp.`project_uid`=bp.`uid`
+LEFT OUTER JOIN `boincmgr_tasks` AS bt ON bt.host_id=bhp.host_id AND bt.project_uid=bhp.project_uid
+WHERE bh.username_uid='$username_uid_escaped'
+GROUP BY bh.`domain_name`,bp.`name`,bhp.`project_uid`,bhp.`host_id`
+HAVING count(bt.`uid`)>0");
+        $page.=array_to_table($exists_stats);
+        echo $page;
+        flush();
+        die();
+}
+
 if(isset($_GET['project_uid'])) {
         $project_uid=html_strip($_GET['project_uid']);
         $project_uid_escaped=db_escape($project_uid);
