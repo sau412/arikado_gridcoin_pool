@@ -44,7 +44,7 @@ _END;
                 $timestamp=$point['timestamp'];
                 $value=$point['value'];
 
-                $rel_value=$height*0.1+($height*0.9)*(1-($value-$min_value)/($max_value-$min_value));
+                $rel_value=(1-($value-$min_value)/($max_value-$min_value));
                 $rel_timestamp=($width-1)*($timestamp-$min_timestamp)/($max_timestamp-$min_timestamp);
 
                 if(isset($first_value)) {
@@ -69,14 +69,28 @@ _END;
 function canvas_graph_host_project($host_uid,$project_uid) {
         $host_uid_escaped=db_escape($host_uid);
         $project_uid_escaped=db_escape($project_uid);
-        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid`='$host_uid_escaped' AND `project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+FROM `boincmgr_project_host_stats` AS bphs
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphs.`project_uid`
+WHERE bphs.`host_uid`='$host_uid_escaped' AND bphs.`project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<bphs.`timestamp`
+GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
+ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
         return canvas_graph($data,100,30,7);
 }
 
 // Graph by host and all projects
 function canvas_graph_host_all_projects($host_uid) {
         $host_uid_escaped=db_escape($host_uid);
-        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid`='$host_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+FROM `boincmgr_project_host_stats` AS bphs
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphs.`project_uid`
+WHERE bphs.`host_uid`='$host_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<bphs.`timestamp`
+GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
+ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
         return canvas_graph($data,100,30,7);
 }
 
@@ -84,22 +98,45 @@ function canvas_graph_host_all_projects($host_uid) {
 function canvas_graph_username_project($username_uid,$project_uid) {
         $username_uid_escaped=db_escape($username_uid);
         $project_uid_escaped=db_escape($project_uid);
-        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `project_uid`='$project_uid_escaped' AND `host_uid` IN (SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid') AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+FROM `boincmgr_project_host_stats` AS bphs
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphs.`project_uid`
+LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+WHERE bphs.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$username_uid' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<bphs.`timestamp`
+GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
+ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
         return canvas_graph($data,100,30,7);
 }
 
 // Graph by username and all projects
 function canvas_graph_username($username_uid) {
         $username_uid_escaped=db_escape($username_uid);
-        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_host_stats` WHERE `host_uid` IN (SELECT `uid` FROM `boincmgr_hosts` WHERE `username_uid`='$username_uid') AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+FROM `boincmgr_project_host_stats` AS bphs
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphs.`project_uid`
+LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+WHERE bh.`username_uid`='$username_uid' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 7 DAY)<bphs.`timestamp`
+GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
+ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
         return canvas_graph($data,100,30,7);
 }
 
 // Graph by project
 function canvas_graph_project_total($project_uid) {
         $project_uid_escaped=db_escape($project_uid);
-        $data=db_query_to_array("SELECT AVG(`expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) AS timestamp FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 30 DAY)<`timestamp` GROUP BY TRUNCATE(UNIX_TIMESTAMP(`timestamp`),-4) ORDER BY `timestamp` ASC");
-        return canvas_graph($data,150,30,30);
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $data=db_query_to_array("SELECT $mag_per_project*AVG(bps.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bps.`timestamp`),-4) AS timestamp
+FROM `boincmgr_project_stats` AS bps
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.`uid`=bps.`project_uid`
+WHERE bps.`project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL 30 DAY)<bps.`timestamp`
+GROUP BY TRUNCATE(UNIX_TIMESTAMP(bps.`timestamp`),-4)
+ORDER BY TRUNCATE(UNIX_TIMESTAMP(bps.`timestamp`),-4) ASC");
+        return canvas_graph($data,100,30,7);
 }
 
 ?>
