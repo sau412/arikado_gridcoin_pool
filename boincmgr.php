@@ -62,7 +62,7 @@ function boincmgr_detach($username,$attached_uid) {
 
 // Settings for project
 function boincmgr_set_project_settings($username,$attached_uid,$resource_share,$options_array) {
-        var_dump($username,$attached_uid,$resource_share,$options_array);
+        //var_dump($username,$attached_uid,$resource_share,$options_array);
 
         $attached_uid_escaped=db_escape($attached_uid);
         $host_uid=db_query_to_variable("SELECT `host_uid` FROM `boincmgr_attach_projects` WHERE `uid`='$attached_uid_escaped'");
@@ -423,6 +423,7 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
         db_query("INSERT INTO `boincmgr_messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
 }
 
+// Strip non-ascii chars
 function boincmgr_leave_only_ascii($string) {
         $result_string="";
         for($i=0;$i<strlen($string);$i++) {
@@ -431,6 +432,75 @@ function boincmgr_leave_only_ascii($string) {
         }
         return $result_string;
 }
+
+// Get magnitude per project
+function boincmgr_get_mag_per_project() {
+        $magnitude_total=115000;
+        $whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        if($whiltelisted_count!=0) $mag_per_project=$magnitude_total/$whiltelisted_count;
+        else $mag_per_project=0;
+        return $mag_per_project;
+}
+
+// Get magnitude unit
+function boincmgr_get_magnitude_unit() {
+        return boincmgr_get_variable("magnitude_unit");
+}
+
+// Get project host relative contribution
+function boincmgr_get_relative_contribution_project_host($project_uid,$host_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $host_uid_escaped=db_escape($host_uid);
+        $relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `boincmgr_project_hosts_last` AS bphl
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.uid=bphl.project_uid
+WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+        if($relative_contribution=="") $relative_contribution=0;
+        return $relative_contribution;
+}
+
+// Get project user relative contribution
+function boincmgr_get_relative_contribution_project_user($project_uid,$user_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $user_uid_escaped=db_escape($user_uid);
+        $relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `boincmgr_project_hosts_last` AS bphl
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.uid=bphl.project_uid
+LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.uid=bphl.host_uid
+WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+        if($relative_contribution=="") $relative_contribution=0;
+        return $relative_contribution;
+}
+
+// Get project relative contribution
+function boincmgr_get_relative_contribution_project($project_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $relative_contribution=db_query_to_variable("SELECT SUM(bp.`expavg_credit`/bp.`team_expavg_credit`) FROM `boincmgr_projects` AS bp
+WHERE bp.`uid`='$project_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+        if($relative_contribution=="") $relative_contribution=0;
+        return $relative_contribution;
+}
+
+// Get host relative contribution
+function boincmgr_get_relative_contribution_host($host_uid) {
+        $host_uid_escaped=db_escape($host_uid);
+        $relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `boincmgr_project_hosts_last` AS bphl
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.uid=bphl.project_uid
+WHERE bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+        if($relative_contribution=="") $relative_contribution=0;
+        return $relative_contribution;
+}
+
+// Get user relative contribution
+function boincmgr_get_relative_contribution_user($user_uid) {
+        $user_uid_escaped=db_escape($user_uid);
+        $relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `boincmgr_project_hosts_last` AS bphl
+LEFT OUTER JOIN `boincmgr_projects` AS bp ON bp.uid=bphl.project_uid
+LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.uid=bphl.host_uid
+WHERE bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+        if($relative_contribution=="") $relative_contribution=0;
+        return $relative_contribution;
+}
+
+
 
 // For php 5 only variant for random_bytes is openssl_random_pseudo_bytes from openssl lib
 if(!function_exists("random_bytes")) {
