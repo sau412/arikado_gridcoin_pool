@@ -33,6 +33,12 @@ $pool_cpid="YOUR CPID HERE";
 $recaptcha_public_key="public key here";
 $recaptcha_private_key="private key here";
 
+// Email service
+$email_api_url="https://api.smtp2go.com/v3/email/send";
+$email_api_key="";
+$email_sender="";
+$email_reply_to="";
+
 // Salt for token
 $token_salt="your_salt";
 
