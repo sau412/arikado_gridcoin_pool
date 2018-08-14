@@ -121,6 +121,7 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 2018-06-07 Estimated GRC/day, view last sync log (for admin), 'project not whitelisted, no rewards' status for project
 
 # To do
-* More detail stats, graphs and gridcoin exchange rate.
+* More detail graphs.
 * Option for distribute coins equally between users (for rains or faucets)
-* 
+* Using external wallet API for payouts
+* Comments to host, user, project
