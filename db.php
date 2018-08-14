@@ -17,6 +17,16 @@ function db_query($query) {
                 $query_escaped=db_escape($query);
                 auth_log("MySQL query error: ".mysql_error());
                 auth_log("Query: $query");
+                $debug_backtrace_array=debug_backtrace();
+                $backtrace_string="Stack trace:\n";
+                foreach($debug_backtrace_array as $stack_info) {
+                        $file=$stack_info['file'];
+                        $line=$stack_info['line'];
+                        $func=$stack_info['function'];
+                        $args=implode("','",$stack_info['args']);
+                        $backtrace_string.="File '$file' line '$line' function '$func' arguments '$args'\n";
+                }
+                auth_log($backtrace_string);
                 die("Query error");
         }
         return $result;
