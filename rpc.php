@@ -97,6 +97,8 @@ ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpi
 // Attached projects list (for deleting detached projects)
 $client_still_attached_project_uids=array();
 
+if(!isset($xml_data["projects"])) $xml_data["projects"]=array();
+
 foreach($xml_data["projects"] as $project_data) {
         // Get user data
         $project_name=$project_data["project_name"];
@@ -230,6 +232,10 @@ if(auth_validate_ascii($domain_name)==FALSE) {
 auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
 
 if($debug_mode==TRUE) db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client reply','$reply_xml_escaped')");
+
+$file="";
+$line=0;
+if(headers_sent($file,$line)) auth_log("Headers warning: already sent, file '$file', line '$line'");
 
 echo $reply_xml;
 ?>
