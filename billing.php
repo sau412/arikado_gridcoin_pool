@@ -45,14 +45,17 @@ function bill_close_period($comment,$start_date,$stop_date,$total_reward,$check_
                 $grc_reward_escaped=db_escape($grc_reward);
                 $amount=$grc_reward*$rate;
 
-                $billing_uid_escaped=db_escape($billing_uid);
-                $payout_currency_escaped=db_escape($payout_currency);
-                $rate_escaped=db_escape($rate);
-                $amount_escaped=db_escape($amount);
+                if($check_rewards) {
+                        echo "Address $payout_address GRC reward $grc_reward currency $payout_currency rate $rate result amount $amount<br>\n";
+                } else {
+                        $billing_uid_escaped=db_escape($billing_uid);
+                        $payout_currency_escaped=db_escape($payout_currency);
+                        $rate_escaped=db_escape($rate);
+                        $amount_escaped=db_escape($amount);
 
-                if($check_rewards) echo "Address $payout_address GRC reward $grc_reward currency $payout_currency rate $rate result amount $amount<br>\n";
-                else db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`payout_address`,`grc_amount`,`currency`,`rate`,`amount`)
+                        db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`payout_address`,`grc_amount`,`currency`,`rate`,`amount`)
 VALUES ('$billing_uid_escaped','$payout_address_escaped','$grc_reward_escaped','$payout_currency_escaped','$rate_escaped','$amount_escaped')");
+                }
         }
         if($check_rewards) {
                 flush();
@@ -126,40 +129,6 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
                 $reward_array[$payout_address]+=$grc_reward;
         }
         return $reward_array;
-
-/*
-        $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
-        if($check_rewards) echo "Project RAC $project_total_rac<br>\n";
-        if($project_total_rac!=0) {
-                $user_stats_array=db_query_to_array("SELECT bu.`payout_address`,SUM(bphs.`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
-GROUP BY bu.`payout_address`");
-
-                foreach($user_stats_array as $user_data) {
-                        $host_rac=$user_data['sum_credit'];
-                        $payout_address=$user_data['payout_address'];
-                        if($host_rac==0) continue;
-
-                        $user_reward=($project_reward/$project_total_rac)*$host_rac;
-                        if($user_reward==0) continue;
-
-                        $payout_address_html=html_escape($payout_address);
-                        if($check_rewards) echo "Payout address '$payout_address' RAC $host_rac reward $user_reward<br>\n";
-
-                        if($payout_address!='') $reward_array[$payout_address]=$user_reward;
-                }
-        }
-        if($check_rewards) {
-                echo "<br>\n";
-                flush();
-        }
-        return $reward_array;
-*/
 }
 
 // Bill single user
@@ -190,7 +159,7 @@ GROUP BY HOUR(bphs.`timestamp`),DAY(bphs.`timestamp`),MONTH(bphs.`timestamp`) OR
                 foreach($user_total_rac_data as $data) {
                         $expavg_credit=$data['expavg_credit'];
                         $timestamp=$data['timestamp'];
-                        if($user_uid==25) echo "$expavg_credit;$timestamp;<br>\n";
+                        //if($user_uid==25) echo "$expavg_credit;$timestamp;<br>\n";
                         if(isset($prev_credit) && isset($prev_timestamp)) {
                                 $time_interval=$timestamp-$prev_timestamp;
                                 $exp_value=pow($rac_coef,$time_interval/86400);
