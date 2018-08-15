@@ -29,8 +29,8 @@ function canvas_graph($data,$width,$height,$days) {
         if(isset($max_timestamp)==FALSE) $max_timestamp=0;
 
         // If min=max
-        $max_value=max($min_value+1,$max_value);
-        $max_timestamp=max($min_timestamp+1,$max_timestamp);
+        if($max_value<=$min_value) $max_value=$min_value+1;
+        if($max_timestamp<=$min_timestamp) $max_timestamp=$min_timestamp+1;
 
         $result.="<canvas id=$canvas_id width='$width' height='$height'>Canvas is not supported</canvas>\n";
         $result.="<script>\n";
