@@ -44,7 +44,7 @@ _END;
                 $timestamp=$point['timestamp'];
                 $value=$point['value'];
 
-                $rel_value=(1-($value-$min_value)/($max_value-$min_value));
+                $rel_value=($height-1)*(1-($value-$min_value)/($max_value-$min_value));
                 $rel_timestamp=($width-1)*($timestamp-$min_timestamp)/($max_timestamp-$min_timestamp);
 
                 if(isset($first_value)) {
