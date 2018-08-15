@@ -29,6 +29,8 @@ $message_project_detached="Project detached";
 $message_project_status_changed="Project status changed";
 $message_project_settings_changed="Project settings changed";
 
+$message_message_sent="Message sent";
+
 $message_host_deleted="Host deleted";
 
 $message_user_status_changed="User status changed";
