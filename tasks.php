@@ -22,6 +22,8 @@ require_once("auth.php");
 
 db_connect();
 
+$page="";
+
 if(isset($_GET['username_uid'])) {
         $username_uid=html_strip($_GET['username_uid']);
         $username_uid_escaped=db_escape($username_uid);
