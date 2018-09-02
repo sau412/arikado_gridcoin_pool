@@ -82,8 +82,11 @@ function toggle_night_mode() {
 function set_night_mode(flag) {
         if (flag == 1) {
                 document.getElementById("html").classList.add("html_day");
+                document.getElementById("main_bar").classList="main_bar_dark";
+                
         } else {
                 document.getElementById("html").classList.remove("html_day");
+                document.getElementById("main_bar").classList="main_bar_light";
         }
 }
 
@@ -195,7 +198,7 @@ function html_get_menu($flag) {
         $greeting_user_text=html_greeting_user();
 
         $result="";
-        $result.="<ul class='main_bar'>\n";
+        $result.="<ul id='main_bar' class='main_bar_light'>\n";
         $result.="<center class='main_bar_text'>\n";
 //      $result.="<li><div style='background-color:#2b2b2b;color:white;display=block;text-align:center;padding:1em;cursor:not-allowed'>$pool_name</div></li>";
         $result.=html_menu_element("pool_info","Pool info");
