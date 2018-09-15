@@ -83,10 +83,19 @@ function set_night_mode(flag) {
         if (flag == 1) {
                 document.getElementById("html").classList.add("html_day");
                 document.getElementById("main_bar").classList="main_bar_dark";
-                
+                var menu_items= document.getElementsByClassName("menu_item");
+                for (i=0;i<menu_items.length;i++){
+                        menu_items[i].classList.add("menu_item_light");
+                        menu_items[i].classList.remove("menu_item_dark");
+                }
         } else {
                 document.getElementById("html").classList.remove("html_day");
                 document.getElementById("main_bar").classList="main_bar_light";
+                var menu_items= document.getElementsByClassName("menu_item");
+                for (i=0;i<menu_items.length;i++){
+                        menu_items[i].classList.add("menu_item_dark");
+                        menu_items[i].classList.remove("menu_item_light");
+                }
         }
 }
 
@@ -281,7 +290,7 @@ _END;
 
 // List element for menu
 function html_menu_element($tag,$text) {
-        return "<li><a href='#$tag' onClick='hide_all_submenu(\"\");return show_block(\"$tag\");'>$text</a></li>\n";
+        return "<li class='menu_item'><a href='#$tag' onClick='hide_all_submenu(\"\");return show_block(\"$tag\");'>$text</a></li>\n";
 }
 
 // Greeting for user
