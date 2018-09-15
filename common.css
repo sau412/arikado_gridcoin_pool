@@ -231,4 +231,10 @@ ul li a:hover {
         border: outset 0.1em #c2c6c4;
         box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
-
+.menu_item_light{
+        background:grey;
+        border: 1px solid lightgray;
+}
+.menu_item_dark{
+        background:#3c3d3c;
+}
