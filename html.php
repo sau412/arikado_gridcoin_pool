@@ -82,7 +82,7 @@ function toggle_night_mode() {
 function set_night_mode(flag) {
         if (flag == 1) {
                 document.getElementById("html").classList.add("html_day");
-                document.getElementById("main_bar").classList="main_bar_dark";
+                document.getElementById("main_bar").classList="main_bar_light";
                 var menu_items= document.getElementsByClassName("menu_item");
                 for (i=0;i<menu_items.length;i++){
                         menu_items[i].classList.add("menu_item_light");
@@ -90,7 +90,7 @@ function set_night_mode(flag) {
                 }
         } else {
                 document.getElementById("html").classList.remove("html_day");
-                document.getElementById("main_bar").classList="main_bar_light";
+                document.getElementById("main_bar").classList="main_bar_dark";
                 var menu_items= document.getElementsByClassName("menu_item");
                 for (i=0;i<menu_items.length;i++){
                         menu_items[i].classList.add("menu_item_dark");
@@ -279,7 +279,7 @@ function html_get_menu($flag) {
 // Dropdown element for menu
 function html_dropdown_menu_element($id,$text,$submenu) {
         return <<<_END
-<li><a href='#' onClick='hide_all_submenu("$id");toggle_block("$id");return false;'>$text &#9660;</a>
+<li class="menu_item"><a href='#' onClick='hide_all_submenu("$id");toggle_block("$id");return false;'>$text &#9660;</a>
 <ul id='$id'>
 $submenu
 </ul>
