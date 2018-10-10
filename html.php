@@ -1762,4 +1762,58 @@ LIMIT 100");
         return $result;
 }
 
+function html_faucet() {
+        global $username;
+        global $username_token;
+        global $faucet_plain_amount;
+
+        $result="";
+
+        $magnitude_unit=boincmgr_get_magnitude_unit();
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $username_escaped=db_escape($username);
+
+        $user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`username`='$username_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100
+");
+
+        $claim_today = db_query_to_variable("SELECT 1 FROM `boincmgr_faucet` AS bf JOIN `boincmgr_users` AS bu ON bu.`uid`=bf.`user_uid` WHERE DATE_ADD(`date`,INTERVAL 1 DAY)>NOW() AND bu.`username`='$username_escaped'");
+        $currency = db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+
+        if($user_magnitude == 0) $user_magnitude=0;
+        $user_magnitude=sprintf("%0.2F",$user_magnitude);
+
+        $result.="<h3>Faucet</h3>\n";
+        if($currency!='GRC' && $currency!='GRC2'){
+                $result.="<p>You can claim only GRC</p>";
+        } else if($claim_today == 1) {
+                $result.="<p>You already received coins today</p>";
+        } else if($user_magnitude > 1) {
+                //$amount=sprintf("%0.2F",log($user_magnitude,10));
+                $amount=$faucet_plain_amount;
+
+                $result.=<<<_END
+<form name=faucet_claim method=POST>
+<p>You can claim $amount GRC today (your mag is $user_magnitude)</p>
+<input type=hidden name=action value='claim_faucet'>
+<input type=hidden name=token value='$username_token'>
+<p><input type=submit value='Claim'></p>
+</form>
+
+_END;
+        } else {
+                $result.="<p>You need magnutude>=1 for use faucet (your magnitude currently is $user_magnitude)</p>";
+        }
+        return $result;
+}
+
 ?>
