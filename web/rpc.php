@@ -1,11 +1,11 @@
 <?php
 // RPC for BOINC client
 
-require_once("settings.php");
-require_once("db.php");
-require_once("auth.php");
-require_once("boincmgr.php");
-require_once("xml_parser.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
+require_once("../lib/boincmgr.php");
+require_once("../lib/xml_parser.php");
 
 function xml_error_message($message,$code) {
         global $pool_name;
