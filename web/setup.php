@@ -1,8 +1,8 @@
 <?php
-if(file_exists("settings.php")) die("Pool already installed (settings.php already exists). Check pool's <a href='./'>main page</a>.\n");
+if(file_exists("../lib/settings.php")) die("Pool already installed (settings.php already exists). Check pool's <a href='./'>main page</a>.\n");
 
-require_once("db.php");
-require_once("email.php");
+require_once("../lib/db.php");
+require_once("../lib/email.php");
 
 if(isset($_POST['db_host'])) {
         // Pool settings
