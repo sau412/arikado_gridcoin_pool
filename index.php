@@ -111,6 +111,11 @@ if($username!="") {
                         boincmgr_message_send($username_uid,$reply_to,$message);
 
                         setcookie("action_message",$message_message_sent);
+                // Claim faucet
+                } else if($_POST['action']=='claim_faucet') {
+                        boincmgr_claim_faucet($username_uid);
+
+                        setcookie("action_message",$message_faucet_sent);
                 // Next actions for admins
                 } else if(auth_is_admin($username)) {
                         // Change user status (for admin)
