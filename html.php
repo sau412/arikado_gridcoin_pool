@@ -36,6 +36,15 @@ function html_redirect_and_die($url) {
 // Begin HTML page
 function html_page_begin() {
         global $pool_name;
+        $css_file="common.css";
+
+        // Check is mobile
+        // https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device
+        $user_agent=$_SERVER['HTTP_USER_AGENT'];
+        if(preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $user_agent)) {
+                $css_file='mobile.css';
+        }
+
         return <<<_END
 <!DOCTYPE html>
 <html class="gr__grc_arikado_ru gr__" id="html">
@@ -43,7 +52,7 @@ function html_page_begin() {
 <title>$pool_name gridcoin pool</title>
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-<link rel="stylesheet" type="text/css" href="common.css">
+<link rel="stylesheet" type="text/css" href="$css_file">
 <script src='./common.js'></script>
 <link rel="icon" href="favicon.png" type="image/png">
 <script src='jquery-3.3.1.min.js'></script>
