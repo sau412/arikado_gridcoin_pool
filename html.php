@@ -91,8 +91,20 @@ function toggle_night_mode() {
 function set_night_mode(flag) {
         if (flag == 1) {
                 document.getElementById("html").classList.add("html_day");
+                document.getElementById("main_bar").classList="main_bar_dark";
+                var menu_items= document.getElementsByClassName("menu_item");
+                for (i=0;i<menu_items.length;i++){
+                        menu_items[i].classList.add("menu_item_light");
+                        menu_items[i].classList.remove("menu_item_dark");
+                }
         } else {
                 document.getElementById("html").classList.remove("html_day");
+                document.getElementById("main_bar").classList="main_bar_light";
+                var menu_items= document.getElementsByClassName("menu_item");
+                for (i=0;i<menu_items.length;i++){
+                        menu_items[i].classList.add("menu_item_dark");
+                        menu_items[i].classList.remove("menu_item_light");
+                }
         }
 }
 
@@ -101,7 +113,7 @@ set_night_mode(sessionStorage.getItem("night_mode"));
 </script>
 <hr>
 <center>
-<p>Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 in telegram, twitter, facebook, gmail, github, vk.</p>
+<p>Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 on telegram, twitter, facebook, gmail, github, vk, gridcoin slack and discord.</p>
 </center>
 </body>
 </html>
@@ -204,7 +216,7 @@ function html_get_menu($flag) {
         $greeting_user_text=html_greeting_user();
 
         $result="";
-        $result.="<ul class='main_bar'>\n";
+        $result.="<ul id='main_bar' class='main_bar_light'>\n";
         $result.="<center class='main_bar_text'>\n";
 //      $result.="<li><div style='background-color:#2b2b2b;color:white;display=block;text-align:center;padding:1em;cursor:not-allowed'>$pool_name</div></li>";
         $result.=html_menu_element("pool_info","Pool info");
@@ -267,6 +279,7 @@ function html_get_menu($flag) {
                         $result.=html_dropdown_menu_element("control","Control",$submenu);
                 }
                 $result.=html_menu_element("message_send","Feedback");
+                $result.=html_menu_element("faucet","Faucet");
         }
         $result.="</center>\n";
         $result.="</ul>\n";
@@ -304,7 +317,7 @@ function html_greeting_user() {
 
 // Loadable block for ajax
 function html_loadable_block() {
-        return "<div id='main_block'>Loading block. If not working, you can use <a href='/static/'>static version</a></div>\n";
+        return "<div id='main_block'>Loading block...</div>\n";
 }
 
 // Currency selector
@@ -365,11 +378,11 @@ function html_register_form() {
 <div id=register_form_block class=selectable_block>
 <form name=register_form method=POST>
 <h2>Register</h2>
-<p>Username: <input type=text name=username style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAfBJREFUWAntVk1OwkAUZkoDKza4Utm61iP0AqyIDXahN2BjwiHYGU+gizap4QDuegWN7lyCbMSlCQjU7yO0TOlAi6GwgJc0fT/fzPfmzet0crmD7HsFBAvQbrcrw+Gw5fu+AfOYvgylJ4TwCoVCs1ardYTruqfj8fgV5OUMSVVT93VdP9dAzpVvm5wJHZFbg2LQ2pEYOlZ/oiDvwNcsFoseY4PBwMCrhaeCJyKWZU37KOJcYdi27QdhcuuBIb073BvTNL8ln4NeeR6NRi/wxZKQcGurQs5oNhqLshzVTMBewW/LMU3TTNlO0ieTiStjYhUIyi6DAp0xbEdgTt+LE0aCKQw24U4llsCs4ZRJrYopB6RwqnpA1YQ5NGFZ1YQ41Z5S8IQQdP5laEBRJcD4Vj5DEsW2gE6s6g3d/YP/g+BDnT7GNi2qCjTwGd6riBzHaaCEd3Js01vwCPIbmWBRx1nwAN/1ov+/drgFWIlfKpVukyYihtgkXNp4mABK+1GtVr+SBhJDbBIubVw+Cd/TDgKO2DPiN3YUo6y/nDCNEIsqTKH1en2tcwA9FKEItyDi3aIh8Gl1sRrVnSDzNFDJT1bAy5xpOYGn5fP5JuL95ZjMIn1ya7j5dPGfv0A5eAnpZUY3n5jXcoec5J67D9q+VuAPM47D3XaSeL4AAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"> required, only letters A-Z, a-z, </p>
-<p>Password: <input type=password name=password_1 style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABKRJREFUWAnNl0tsVGUUxzvTTlslZUaCloZHY6BRFkp9sDBuqgINpaBp02dIDImwKDG6ICQ8jBYlhg0rxUBYEALTpulMgBlqOqHRDSikJkZdGG0CRqAGUuwDovQ1/s7NPTffnTu3zMxGvuT2vP7n8Z3vu+dOi4r+5xUoJH8sFquamZmpTqfTVeIfCARGQ6HQH83NzaP5xsu5gL6+vuVzc3NdJN1Kkhd8Ev1MMYni4uJjra2tt3wwLvUjCxgYGFg8Pj7+MV5dPOUub3/hX0zHIpFId0NDw6Q/jO4tZOzv76+Znp6+AOb5TBw7/YduWC2Hr4J/IhOD/GswGHy7vb39tyw2S+VbAC1/ZXZ29hKoiOE8RrIvaPE5WvyjoS8CX8sRvYPufYpZYtjGS0pKNoD/wdA5bNYCCLaMYMMEWq5IEn8ZDof3P6ql9pF9jp8cma6bFLGeIv5ShdISZUzKzqPIVnISp3l20caTJsaPtwvc3dPTIx06ziZkkyvY0FnoW5l+ng7guAWnpAI5w4MkP6yy0GQy+dTU1JToGm19sqKi4kBjY+PftmwRYn1ErEOq4+i2tLW1DagsNGgKNv+p6tj595nJxUbyOIF38AwipoSfnJyMqZ9SfD8jxlWV5+fnu5VX6iqgt7d3NcFeUiN0n8FbLEOoGkwdgY90dnbu7OjoeE94jG9wd1aZePRp5AOqw+9VMM+qLNRVABXKkLEWzn8S/FtbdAhnuVQE7LdVafBPq04pMYawO0OJ+6XHZkFcBQA0J1xKgyhlB0EChEWGX8RulsgjvOjEBu+5V+icWOSoFawuVwEordluG28oSCmXSs55SGSCHiXhmDzC25ghMHGbdwhJr6sAdpnyQl0FYIyoEX5CeYOuNHg/NhvGiUUxVgfV2VUAxjtqgPecp9oKoE4sNnbX9HcVgMH8nD5nAoWnKM/5ZmKyySRdq3pCmDncR4DxOwVC64eHh0OGLOcur1Vey46xUZ3IcVl5oa4OlJaWXgQwJwZyhUdGRjqE14VtSnk/mokhxnawiwUvsZmsX5u+rgKamprGMDoA5sKhRCLxpDowSpsJ8vpCj2AUPzg4uIiNfKIyNMkH6Z4hF3k+RgTYz6vVAEiKq2bsniZIC0nTtvMVMwBzoBT9tKkTHp8Ak1V8dTrOE+NgJs7VATESTH5WnVAgfHUqlXK6oHpJEI1G9zEZH/Du16leqHyS0UXBNKmeOMf5NvyislJPB8RAFz4g8IuwofLy8k319fUP1EEouw7L7mC3kUTO1nn3sb02MTFxFpsz87FfJuaH4pu5fF+reDz+DEfxkI44Q0ScSbyOpDGe1RqMBN08o+ha0L0JdeKi/6msrGwj98uZMeon1AGaSj+elr9LwK9IkO33n8cN7Hl2vp1N3PcYbUXOBbDz9bwV1/wCmXoS3+B128OPD/l2LLg8l9APXVlZKZfzfDY7ehlQv0PPQDez6zW5JJdYOXdAwHK2dGIv7GH4YtHJIvEOvvunLCHPPzl3QOLKTkl0hPbKaDUvlTU988xtwfMqQBPQ3m/4mf0yBVlDCSr/CRW0CipAMnGzb9XU1NSRvIX7kSgo++Pg9B8wltxxbHKPZgAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"> required at least $pool_min_password_length characters</p>
-<p>Re-type password: <input type=password name=password_2 style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAABKRJREFUWAnNl0tsVGUUxzvTTlslZUaCloZHY6BRFkp9sDBuqgINpaBp02dIDImwKDG6ICQ8jBYlhg0rxUBYEALTpulMgBlqOqHRDSikJkZdGG0CRqAGUuwDovQ1/s7NPTffnTu3zMxGvuT2vP7n8Z3vu+dOi4r+5xUoJH8sFquamZmpTqfTVeIfCARGQ6HQH83NzaP5xsu5gL6+vuVzc3NdJN1Kkhd8Ev1MMYni4uJjra2tt3wwLvUjCxgYGFg8Pj7+MV5dPOUub3/hX0zHIpFId0NDw6Q/jO4tZOzv76+Znp6+AOb5TBw7/YduWC2Hr4J/IhOD/GswGHy7vb39tyw2S+VbAC1/ZXZ29hKoiOE8RrIvaPE5WvyjoS8CX8sRvYPufYpZYtjGS0pKNoD/wdA5bNYCCLaMYMMEWq5IEn8ZDof3P6ql9pF9jp8cma6bFLGeIv5ShdISZUzKzqPIVnISp3l20caTJsaPtwvc3dPTIx06ziZkkyvY0FnoW5l+ng7guAWnpAI5w4MkP6yy0GQy+dTU1JToGm19sqKi4kBjY+PftmwRYn1ErEOq4+i2tLW1DagsNGgKNv+p6tj595nJxUbyOIF38AwipoSfnJyMqZ9SfD8jxlWV5+fnu5VX6iqgt7d3NcFeUiN0n8FbLEOoGkwdgY90dnbu7OjoeE94jG9wd1aZePRp5AOqw+9VMM+qLNRVABXKkLEWzn8S/FtbdAhnuVQE7LdVafBPq04pMYawO0OJ+6XHZkFcBQA0J1xKgyhlB0EChEWGX8RulsgjvOjEBu+5V+icWOSoFawuVwEordluG28oSCmXSs55SGSCHiXhmDzC25ghMHGbdwhJr6sAdpnyQl0FYIyoEX5CeYOuNHg/NhvGiUUxVgfV2VUAxjtqgPecp9oKoE4sNnbX9HcVgMH8nD5nAoWnKM/5ZmKyySRdq3pCmDncR4DxOwVC64eHh0OGLOcur1Vey46xUZ3IcVl5oa4OlJaWXgQwJwZyhUdGRjqE14VtSnk/mokhxnawiwUvsZmsX5u+rgKamprGMDoA5sKhRCLxpDowSpsJ8vpCj2AUPzg4uIiNfKIyNMkH6Z4hF3k+RgTYz6vVAEiKq2bsniZIC0nTtvMVMwBzoBT9tKkTHp8Ak1V8dTrOE+NgJs7VATESTH5WnVAgfHUqlXK6oHpJEI1G9zEZH/Du16leqHyS0UXBNKmeOMf5NvyislJPB8RAFz4g8IuwofLy8k319fUP1EEouw7L7mC3kUTO1nn3sb02MTFxFpsz87FfJuaH4pu5fF+reDz+DEfxkI44Q0ScSbyOpDGe1RqMBN08o+ha0L0JdeKi/6msrGwj98uZMeon1AGaSj+elr9LwK9IkO33n8cN7Hl2vp1N3PcYbUXOBbDz9bwV1/wCmXoS3+B128OPD/l2LLg8l9APXVlZKZfzfDY7ehlQv0PPQDez6zW5JJdYOXdAwHK2dGIv7GH4YtHJIvEOvvunLCHPPzl3QOLKTkl0hPbKaDUvlTU988xtwfMqQBPQ3m/4mf0yBVlDCSr/CRW0CipAMnGzb9XU1NSRvIX7kSgo++Pg9B8wltxxbHKPZgAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"></p>
-<p>E-mail: <input type=text name=email size=40 style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAfBJREFUWAntVk1OwkAUZkoDKza4Utm61iP0AqyIDXahN2BjwiHYGU+gizap4QDuegWN7lyCbMSlCQjU7yO0TOlAi6GwgJc0fT/fzPfmzet0crmD7HsFBAvQbrcrw+Gw5fu+AfOYvgylJ4TwCoVCs1ardYTruqfj8fgV5OUMSVVT93VdP9dAzpVvm5wJHZFbg2LQ2pEYOlZ/oiDvwNcsFoseY4PBwMCrhaeCJyKWZU37KOJcYdi27QdhcuuBIb073BvTNL8ln4NeeR6NRi/wxZKQcGurQs5oNhqLshzVTMBewW/LMU3TTNlO0ieTiStjYhUIyi6DAp0xbEdgTt+LE0aCKQw24U4llsCs4ZRJrYopB6RwqnpA1YQ5NGFZ1YQ41Z5S8IQQdP5laEBRJcD4Vj5DEsW2gE6s6g3d/YP/g+BDnT7GNi2qCjTwGd6riBzHaaCEd3Js01vwCPIbmWBRx1nwAN/1ov+/drgFWIlfKpVukyYihtgkXNp4mABK+1GtVr+SBhJDbBIubVw+Cd/TDgKO2DPiN3YUo6y/nDCNEIsqTKH1en2tcwA9FKEItyDi3aIh8Gl1sRrVnSDzNFDJT1bAy5xpOYGn5fP5JuL95ZjMIn1ya7j5dPGfv0A5eAnpZUY3n5jXcoec5J67D9q+VuAPM47D3XaSeL4AAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"> for password recovery (you can write me from that mail, and I send you new password for account)</p>
-<p>Payout address: <input type=text name=payout_address size=40 style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAAXNSR0IArs4c6QAAAfBJREFUWAntVk1OwkAUZkoDKza4Utm61iP0AqyIDXahN2BjwiHYGU+gizap4QDuegWN7lyCbMSlCQjU7yO0TOlAi6GwgJc0fT/fzPfmzet0crmD7HsFBAvQbrcrw+Gw5fu+AfOYvgylJ4TwCoVCs1ardYTruqfj8fgV5OUMSVVT93VdP9dAzpVvm5wJHZFbg2LQ2pEYOlZ/oiDvwNcsFoseY4PBwMCrhaeCJyKWZU37KOJcYdi27QdhcuuBIb073BvTNL8ln4NeeR6NRi/wxZKQcGurQs5oNhqLshzVTMBewW/LMU3TTNlO0ieTiStjYhUIyi6DAp0xbEdgTt+LE0aCKQw24U4llsCs4ZRJrYopB6RwqnpA1YQ5NGFZ1YQ41Z5S8IQQdP5laEBRJcD4Vj5DEsW2gE6s6g3d/YP/g+BDnT7GNi2qCjTwGd6riBzHaaCEd3Js01vwCPIbmWBRx1nwAN/1ov+/drgFWIlfKpVukyYihtgkXNp4mABK+1GtVr+SBhJDbBIubVw+Cd/TDgKO2DPiN3YUo6y/nDCNEIsqTKH1en2tcwA9FKEItyDi3aIh8Gl1sRrVnSDzNFDJT1bAy5xpOYGn5fP5JuL95ZjMIn1ya7j5dPGfv0A5eAnpZUY3n5jXcoec5J67D9q+VuAPM47D3XaSeL4AAAAASUVORK5CYII=&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"> payout currency $currency_selector both required</p>
+<p>Username: <input type=text name=username> required, only letters A-Z, a-z, </p>
+<p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
+<p>Re-type password: <input type=password name=password_2></p>
+<p>E-mail: <input type=text name=email size=40> for password recovery (you can write me from that mail, and I send you new password for account)</p>
+<p>Payout address: <input type=text name=payout_address size=40> payout currency $currency_selector both required</p>
 <p><input type=hidden name="action" value="register"></p>
 <div class="g-recaptcha" data-sitekey="$recaptcha_public_key"></div>
 <p><input type=submit value="Register"></p>
@@ -385,8 +398,8 @@ function html_login_form() {
 <div id=login_form_block class=selectable_block>
 <form name=login_form method=POST>
 <h2>Login</h2>
-<p>Username: <input type=text name=username style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAkCAYAAADo6zjiAAAAAXNSR0IArs4c6QAAAbNJREFUWAntV8FqwkAQnaymUkpChB7tKSfxWCie/Yb+gbdeCqGf0YsQ+hU95QNyDoWCF/HkqdeiIaEUqyZ1ArvodrOHxanQOiCzO28y781skKwFW3scPV1/febP69XqarNeNTB2KGs07U3Ttt/Ozp3bh/u7V7muheQf6ftLUWyYDB5yz1ijuPAub2QRDDunJsdGkAO55KYYjl0OUu1VXOzQZ64Tr+IiPXedGI79bQHdbheCIAD0dUY6gV6vB67rAvo6IxVgWVbFy71KBKkAFaEc2xPQarXA931ot9tyHphiPwpJgSbfe54Hw+EQHMfZ/msVEEURjMfjCjbFeG2dFxPo9/sVOSYzxmAwGIjnTDFRQLMQAjQ5pJAQkCQJ5HlekeERxHEsiE0xUUCzEO9AmqYQhiF0Oh2Yz+ewWCzEY6aYKKBZCAGYs1wuYTabKdNNMWWxnaA4gp3Yry5JBZRlWTXDvaozUgGTyQSyLAP0dbb3DtQlmcan0yngT2ekE9ARc+z4AvC7nauh9iouhpcGamJeX8XF8MaClwaeROWRA7nk+tUnyzGvZrKg0/40gdME/t8EvgG0/NOS6v9NHQAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"></p>
-<p>Password: <input type=password name=password style="background-image: url(&quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAkCAYAAADo6zjiAAAAAXNSR0IArs4c6QAAAbNJREFUWAntV8FqwkAQnaymUkpChB7tKSfxWCie/Yb+gbdeCqGf0YsQ+hU95QNyDoWCF/HkqdeiIaEUqyZ1ArvodrOHxanQOiCzO28y781skKwFW3scPV1/febP69XqarNeNTB2KGs07U3Ttt/Ozp3bh/u7V7muheQf6ftLUWyYDB5yz1ijuPAub2QRDDunJsdGkAO55KYYjl0OUu1VXOzQZ64Tr+IiPXedGI79bQHdbheCIAD0dUY6gV6vB67rAvo6IxVgWVbFy71KBKkAFaEc2xPQarXA931ot9tyHphiPwpJgSbfe54Hw+EQHMfZ/msVEEURjMfjCjbFeG2dFxPo9/sVOSYzxmAwGIjnTDFRQLMQAjQ5pJAQkCQJ5HlekeERxHEsiE0xUUCzEO9AmqYQhiF0Oh2Yz+ewWCzEY6aYKKBZCAGYs1wuYTabKdNNMWWxnaA4gp3Yry5JBZRlWTXDvaozUgGTyQSyLAP0dbb3DtQlmcan0yngT2ekE9ARc+z4AvC7nauh9iouhpcGamJeX8XF8MaClwaeROWRA7nk+tUnyzGvZrKg0/40gdME/t8EvgG0/NOS6v9NHQAAAABJRU5ErkJggg==&quot;); background-repeat: no-repeat; background-attachment: scroll; background-size: 16px 18px; background-position: 98% 50%;"></p>
+<p>Username: <input type=text name=username></p>
+<p>Password: <input type=password name=password></p>
 <p><input type=hidden name="action" value="login"></p>
 <p><input type=submit value="Login"></p>
 </form>
@@ -1065,7 +1078,7 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
 //              $result.="<p>These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</p>";
                 $result.="<table align=center>\n";
                 $result.="<caption>Pool owes table. These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</caption>";
-                $result.="<tr></th><th>Address</th><th>Amount</th><th>Currency</th><th>Payout threshold</th><th>Fee<th>Interval from</th><th>Interval to</th></tr>\n";
+                $result.="<tr></th><th>Address</th><th>Currency amount</th><th>Interval from</th><th>Interval to</th></tr>\n";
                 foreach($owes_data_array as $owe_data) {
                         $payout_address=$owe_data['payout_address'];
                         $amount=$owe_data['amount'];
@@ -1082,7 +1095,7 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
                         $total_fee=$payout_fee+$payout_service_fee;
                         if($currency=="GRC2") $currency="GRC";
 
-                        $result.="<tr><td>$payout_address_link</td><td>$amount</td><td>$currency</td><td>$payout_threshold</td><td>$total_fee</td><td>$start_date</td><td>$stop_date</td></tr>\n";
+                        $result.="<tr><td>$payout_address_link</td><td title='Payout after $payout_threshold $currency'>$amount $currency</td><td>$start_date</td><td>$stop_date</td></tr>\n";
                 }
                 $result.="</table>\n";
         }
@@ -1121,7 +1134,7 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
                         $amount=round($amount,8);
 
                         $payout_address_link=html_payout_address_link($currency,$payout_address);
-                        $grc_amount_html=html_escape($grc_amount);
+                        $grc_amount_html=html_escape(sprintf("%0.8F",$grc_amount));
                         $currency_html=html_escape($currency);
                         $rate_html=html_escape($rate);
                         $amount_html=html_escape($amount);
@@ -1138,7 +1151,7 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
 //              $result.="<p>Alternative currencies</p>\n";
                 $result.="<p><table align=center>\n";
                 $result.="<caption>Alternative currencies</caption>";
-                $result.="<tr></th><th>Address</th><th>GRC amount</th><th>Payout <br>currency</th><th>Rate per<br>1 GRC</th><th>Currency<br>amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
+                $result.="<tr></th><th>Address</th><th>Amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
                 foreach($payout_data_array as $payout_data) {
                         $payout_address=$payout_data['payout_address'];
                         $grc_amount=$payout_data['grc_amount'];
@@ -1152,14 +1165,14 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
                         $amount=round($amount,8);
 
                         $payout_address_link=html_payout_address_link($currency,$payout_address);
-                        $grc_amount_html=html_escape($grc_amount);
+                        $grc_amount_html=html_escape(sprintf("%0.8F",$grc_amount));
                         $currency_html=html_escape($currency);
-                        $rate_html=html_escape($rate);
-                        $amount_html=html_escape($amount);
+                        $rate_html=html_escape(sprintf("%0.8F",$rate));
+                        $amount_html=html_escape(sprintf("%0.8F",$amount));
                         $txid_link=html_txid_link($currency,$txid);
                         $timestamp_html=html_escape($timestamp);
 
-                        $result.="<tr><td>$payout_address_link</td><td>$grc_amount_html</td><td>$currency_html</td><td>$rate_html</td><td>$amount_html</td><td>$txid_link</td><td>$timestamp_html</td></tr>\n";
+                        $result.="<tr><td>$payout_address_link</td><td title='Rate $rate_html $currency_html/GRC'>$amount_html $currency_html<br>($grc_amount_html GRC)</td><td>$txid_link</td><td>$timestamp_html</td></tr>\n";
                 }
                 $result.="</table></p>\n";
         }
@@ -1314,7 +1327,6 @@ LEFT OUTER JOIN `boincmgr_host_projects` AS bhp ON bhp.`project_uid`=bap.`projec
 WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
                 $project_relative_contribution=boincmgr_get_relative_contribution_project($uid);
-//echo "$project_relative_contribution=boincmgr_get_relative_contribution_project($uid);";
                 $mag_formatted=sprintf("%0.2f",$mag_per_project*$project_relative_contribution);
                 $grc_per_day=sprintf("%0.4f",$mag_per_project*$project_relative_contribution*$magnitude_unit);
 
@@ -1429,7 +1441,7 @@ function html_currencies() {
 
         $result.="<p><table align=center>\n";
         $result.="<caption>Data for payout currencies:</caption>\n";
-        $result.="<tr><th>Name</th><th>Full name</th><th>Rate per 1 GRC</th><th>Payout limit</th><th>TX fee</th><th>Project fee</th></tr>\n";
+        $result.="<tr><th>Full name</th><th>Rate per 1 GRC</th><th>Payout limit</th><th>TX fee</th><th>Project fee</th></tr>\n";
 
         $currency_data_array=db_query_to_array("SELECT `name`,`full_name`,`payout_limit`,`tx_fee`,`project_fee` FROM `boincmgr_currency` ORDER BY `name`");
 
@@ -1453,7 +1465,7 @@ function html_currencies() {
                 $project_fee_html=html_escape($project_fee);
                 $exchange_rate_html=html_escape($exchange_rate." $name");
 
-                $result.="<tr><td>$name_html</td><td>$full_name_html</td><td>$exchange_rate_html</td><td align=right>$payout_limit_html</td><td align=right>$tx_fee_html</td><td align=right>$project_fee_html</td></tr>\n";
+                $result.="<tr><td>$full_name_html</td><td>$exchange_rate_html</td><td align=right>$payout_limit_html</td><td align=right>$tx_fee_html</td><td align=right>$project_fee_html</td></tr>\n";
         }
 
         $result.="</table></p>\n";
@@ -1525,11 +1537,11 @@ function html_message_send() {
         $result=<<<_END
 <div id=message_send_block class=selectable_block>
 <h2>Feedback</h2>
-<p>You can ask anything here or just send random message to pool administration. Don't forget to set reply address if you want to receive reply.</p>
+<p>You can ask questions here or just send a random message to the pool administration. Don't forget to set a reply address if you to get a reply.</p>
 <form name=messages method=POST>
 <input type=hidden name="action" value="send_message">
 <input type=hidden name="token" value="$username_token">
-<p>Reply to <input type=text name=reply_to value='$email' size=50> (if you want reply)</p>
+<p>Reply to (if you want a reply) <input type=text name=reply_to value='$email' size=50></p>
 <p><textarea name=message cols=60 rows=10></textarea></p>
 <p><input type=submit value='Send'></p>
 </form>
