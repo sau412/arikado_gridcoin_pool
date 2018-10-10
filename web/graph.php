@@ -1,9 +1,9 @@
 <?php
-require_once("settings.php");
-require_once("db.php");
-require_once("html.php");
-require_once("boincmgr.php");
-require_once("canvas.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/html.php");
+require_once("../lib/boincmgr.php");
+require_once("../lib/canvas.php");
 
 db_connect();
 
