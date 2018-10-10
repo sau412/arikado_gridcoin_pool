@@ -1201,6 +1201,54 @@ _END;
 
 
         $result.="</div>\n";
+
+        $owes_data_array=db_query_to_array("SELECT bp.`payout_address`,bp.`currency`,SUM(bp.`amount`) AS amount,MIN(bbp.`start_date`) AS start_date,MAX(bbp.`stop_date`) AS stop_date
+FROM `boincmgr_payouts` AS bp
+LEFT OUTER JOIN `boincmgr_billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
+WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`payout_address` ASC");
+        if(count($owes_data_array)) {
+                $result.="<h3>Pool owes:</h3>\n";
+                foreach($owes_data_array as $owe_data) {
+                        $result.="<p>\n";
+                        $result.="<table align=center>\n";
+                        $payout_address=$owe_data['payout_address'];
+                        $amount=$owe_data['amount'];
+                        $currency=$owe_data['currency'];
+                        $start_date=$owe_data['start_date'];
+                        $stop_date=$owe_data['stop_date'];
+
+                        $payout_address_link=html_payout_address_link($currency,$payout_address);
+                        $payout_address_html=html_escape($payout_address);
+                        $amount=sprintf("%0.8f",$amount);
+
+                        $payout_threshold=boincmgr_get_payout_limit($currency);
+                        $payout_fee=boincmgr_get_tx_fee_estimation($currency);
+                        $payout_service_fee=boincmgr_get_service_fee($currency);
+                        $total_fee=$payout_fee+$payout_service_fee;
+                        if($currency=="GRC2") $currency="GRC";
+
+                        $result.="<tr><th>Address</th><td>$payout_address_link</td><td rowspan=6><img src='qr.php?str=$payout_address_html'></td></tr>\n";
+                        $result.="<tr><th>Amount</th><td>$amount $currency</td></tr>\n";
+                        $result.="<tr><th>Payout threshold</th><td>$payout_threshold</td></tr>\n";
+                        $result.="<tr><th>Fee</th><td>$total_fee</td></tr>\n";
+                        $result.="<tr><th>Interval</th><td>From $start_date to $stop_date</td></tr>\n";
+                        //$result.="<tr><td>$payout_address_link</td><td>$amount</td><td>$currency</td><td>$payout_threshold</td><td>$total_fee</td><td>$start_date</td><td>$stop_date</td></tr>\n";
+                        $tx_set_form=<<<_END
+<form name=set_tx method=post>
+TX ID <input type=text name=txid>
+<input type=hidden name=action value='set_txid'>
+<input type=hidden name=token value='$username_token'>
+<input type=hidden name=payout_address value='$payout_address'>
+<input type=submit value='Set TX ID'>
+</form>
+
+_END;
+                        $result.="<tr><th>Set TX ID</th><td>$tx_set_form</td></tr>\n";
+                        $result.="</table>\n";
+                        $result.="</p>\n";
+                }
+        }
+
         return $result;
 }
 
