@@ -31,6 +31,8 @@ $message_project_settings_changed="Project settings changed";
 
 $message_message_sent="Message sent";
 
+$message_faucet_sent="Claim succesful";
+
 $message_host_deleted="Host deleted";
 
 $message_user_status_changed="User status changed";
@@ -42,5 +44,6 @@ $message_bad_token="Bad token";
 $message_host_error="Host already belongs to another user";
 
 $message_pool_info_changed="Pool info changed";
+$message_pool_txid_set="TX ID is set";
 
 ?>
