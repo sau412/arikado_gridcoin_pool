@@ -1,0 +1,243 @@
+/* Global settings */
+html {
+        margin:0;
+        padding:0;
+        padding:0;
+        color: white;
+        background-color:#000000; /* Browsers that don't have Gradients */
+        font-family: sans-serif;
+        font-size: 300%;
+}
+
+.html_day {
+        margin:0;
+        padding:0;
+        padding:0;
+        color: black;
+        background-color:#FFFFFF; /* Browsers that don't have Gradients */
+        font-family: sans-serif;
+}
+
+h2, h3 {
+        margin-left:0em;
+        display: box;
+        text-align: center;
+        background: #d9cbdd80;
+        border: solid 0.1em #935ea0;
+}
+
+a:link{
+        color:#cb30f2;
+}
+
+a:visited{
+        color:#e7c6ef;
+}
+
+table {
+        border: 1px solid gray;
+        border-collapse: collapse;
+}
+table tr, table td, table th {
+        border: 1px solid gray;
+        padding: 0.5px 1em;
+}
+
+table td, table th{
+        display:block;
+}
+
+table tr {
+        display: block;
+        padding: 0.5em;
+}
+
+/* All loadable blocks have that class*/
+.selectable_block {
+        display: block;
+}
+
+/* Thanks for https://www.w3schools.com/html/tryit.asp?filename=tryhtml_lists_menu */
+ul {
+//      display: none;
+        list-style-type: none;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background-color: #DDD;
+}
+
+ul li {
+        border: solid 1px gray;
+}
+
+ul li ul:before {
+        content: '';
+}
+
+ul li ul {
+        display:none;
+        border: solid 1px gray;
+        background-color: #333;
+        padding-left: 1em;
+}
+
+ul li>ul li {
+        border: solid 1px gray;
+        float: none;
+}
+
+.main_bar_text li a{
+        display: block;
+        color: white;
+        text-align: left;
+        padding: 1em;
+        text-decoration: none;
+}
+
+ul li a:hover {
+        background-color: #AAF;
+}
+
+/* Message at the top of the page */
+.top_message {
+        display: block;
+        background-color: #F7DB04;
+        color: black;
+        padding: 0.1em 1em;
+}
+
+.top_message_error {
+        display: block;
+        background-color: #F76D02;
+        color: black;
+        padding: 0.1em 1em;
+}
+
+.top_message_info {
+        display: block;
+        background-color: #F7DB04;
+        color: black;
+        padding: 0.1em 1em;
+}
+
+/* Host statuses */
+.host_status_attached {
+        color: lightgreen;
+        font-weight: bold;
+}
+.host_status_sent {
+        color: orange;
+        font-weight: bold;
+}
+.host_status_new {
+        color: orange;
+        font-weight: bold;
+}
+.host_status_incorrect {
+        color: red;
+        font-weight: bold;
+}
+.host_status_unknown {
+        color: orange;
+        font-weight: bold;
+}
+.host_status_detach {
+        color: orange;
+        font-weight: bold;
+}
+
+/* Project statuses */
+.project_status_enabled {
+        color: lightgreen;
+        font-weight: bold;
+}
+.project_status_stats_only {
+        color: orange;
+        font-weight: bold;
+}
+.project_status_disabled {
+        color: red;
+        font-weight: bold;
+}
+.project_status_auto {
+        color: blue;
+        font-weight: bold;
+}
+
+/* User statuses */
+.user_status_user {
+        color: lightgreen;
+        font-weight: bold;
+}
+.user_status_admin {
+        color: blue;
+        font-weight: bold;
+}
+.user_status_banned {
+        color: red;
+        font-weight: bold;
+}
+.user_status_donator {
+        color: orange;
+        font-weight: bold;
+}
+
+/* Other statuses */
+.status_good {
+        color: lightgreen;
+        font-weight: bold;
+}
+.status_bad {
+        color: red;
+        font-weight: bold;
+}
+.status_unknown {
+        color: grey;
+        font-weight: bold;
+}
+.status_orange {
+        color: orange;
+        font-weight: bold;
+}
+
+/* Window for settings change */
+.pre_window {
+        display:none;
+        width: 100%;
+        height: 100%;
+        position: fixed;
+        top: 0;
+        left: 0;
+        overflow: auto;
+        white-space: nowrap;
+        text-align: center;
+}
+.pre_window:before {
+        height: 100%;
+        display: inline-block;
+        vertical-align: middle;
+        content: '';
+}
+.window {
+        background: gray;
+        border: solid 1px #AAA;
+        padding: 0 1em;
+        opacity: 1;
+        display: inline-block;
+        white-space: normal;
+        vertical-align: middle;
+        text-align: left;
+}
+
+/* Menu bar */
+.main_bar_light{
+        display:block;
+        background:#3c3d3c;
+        border: outset 0.1em #c2c6c4;
+        box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
+}
+
+input, select{
+        font-size:100%;
+}
