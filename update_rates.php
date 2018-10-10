@@ -48,4 +48,18 @@ if($data->success=="true") {
         boincmgr_set_variable($pair,$rate);
         echo "$pair $rate\n";
 }
+
+// GRC rate from bittrex
+$bittrex_url="https://bittrex.com/api/v1.1/public/getticker?market=BTC-GRC";
+curl_setopt($ch,CURLOPT_URL,$bittrex_url);
+$result = curl_exec ($ch);
+if($result=="") die("No data from bittrex");
+$data=json_decode($result);
+
+if($data->success=="true") {
+        $pair="BTC_GRC";
+        $rate=($data->result->Bid+$data->result->Ask)/2;
+        boincmgr_set_variable($pair,$rate);
+        echo "$pair $rate\n";
+}
 ?>
