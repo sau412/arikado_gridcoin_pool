@@ -1,7 +1,7 @@
 <?php
 // Project config for BOINC client
 
-require_once("settings.php");
+require_once("../lib/settings.php");
 echo <<<_END
 <?xml version="1.0" encoding="UTF-8" ?>
 <project_config>
