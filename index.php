@@ -177,6 +177,13 @@ if($username!="") {
                                 auth_log("Pool info changed by $username");
                                 boincmgr_set_pool_info($pool_info);
                                 setcookie("action_message",$message_pool_info_changed);
+                        } else if($_POST['action']=='set_txid') {
+                                $payout_address=html_strip($_POST['payout_address']);
+                                $txid=html_strip($_POST['txid']);
+
+                                auth_log("TX ID sent on address '$payout_address' txid '$txid'");
+                                boincmgr_set_txid($payout_address,$txid);
+                                setcookie("action_message",$message_pool_txid_set);
                         }
                 }
                 html_redirect_and_die("./");
