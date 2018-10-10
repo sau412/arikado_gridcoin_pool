@@ -3,9 +3,9 @@
 if(!isset($argc)) die();
 
 // Gridcoinresearch send rewards
-require_once("settings.php");
-require_once("db.php");
-require_once("auth.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
 
 // Send query to gridcoin client
 function grc_rpc_send_query($query) {
