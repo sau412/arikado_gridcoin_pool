@@ -1,17 +1,17 @@
 <?php
-if(!file_exists("settings.php")) {
+if(!file_exists("../lib/settings.php")) {
         header("Location: setup.php");
         die();
 }
 
-require_once("settings.php");
-require_once("db.php");
-require_once("auth.php");
-require_once("html.php");
-require_once("billing.php");
-require_once("boincmgr.php");
-require_once("canvas.php");
-require_once("xml_parser.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
+require_once("../lib/html.php");
+require_once("../lib/billing.php");
+require_once("../lib/boincmgr.php");
+require_once("../lib/canvas.php");
+require_once("../lib/xml_parser.php");
 
 db_connect();
 
