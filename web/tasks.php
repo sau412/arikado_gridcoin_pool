@@ -1,8 +1,8 @@
 <?php
-require_once("settings.php");
-require_once("db.php");
-require_once("html.php");
-require_once("auth.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/html.php");
+require_once("../lib/auth.php");
 ?>
 <!DOCTYPE html>
 <html>
