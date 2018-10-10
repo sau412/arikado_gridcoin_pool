@@ -4,11 +4,11 @@
 
 if(!isset($argc)) die();
 
-require_once("settings.php");
-require_once("db.php");
-require_once("auth.php");
-require_once("billing.php");
-require_once("boincmgr.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
+require_once("../lib/billing.php");
+require_once("../lib/boincmgr.php");
 
 $poloniex_url="https://poloniex.com/public?command=returnTicker";
 $enabled_pairs_array=array("BTC_GRC","BTC_DOGE","BTC_LTC","USDT_BTC","BTC_ETH","BTC_XMR");
