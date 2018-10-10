@@ -45,6 +45,9 @@ $token_salt="your_salt";
 // Debug mode
 $debug_mode=FALSE;
 
+// Faucet
+$faucet_plain_amount=0.1;
+
 // Language file
 require_once("language.php");
 
