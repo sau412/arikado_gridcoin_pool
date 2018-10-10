@@ -4,7 +4,7 @@ html {
         padding:0;
         padding:0;
         color: white;
-        background-color:#000000; /* Browsers that don't have Gradients */
+        background-color:#000000;
         font-family: sans-serif;
 }
 
@@ -13,7 +13,7 @@ html {
         padding:0;
         padding:0;
         color: black;
-        background-color:#FFFFFF; /* Browsers that don't have Gradients */
+        background-color:#FFFFFF;
         font-family: sans-serif;
 }
 
@@ -218,10 +218,25 @@ ul li a:hover {
 }
 
 /* Menu bar */
-.main_bar{
+.main_bar_dark{
         display:block;
         background:#3c3d3c;
         border: outset 0.1em #c2c6c4;
         box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
 
+.main_bar_light{
+        display: block;
+        background: grey;
+        border: outset 0.1em #c2c6c4;
+        box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
+}
+
+.menu_item_light{
+        background:grey;
+        border: 1px solid lightgray;
+}
+
+.menu_item_dark{
+        background:#3c3d3c;
+}
