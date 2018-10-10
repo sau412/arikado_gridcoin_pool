@@ -500,6 +500,41 @@ WHERE bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','auto 
         return $relative_contribution;
 }
 
+// Claim faucet
+function boincmgr_claim_faucet($username_uid) {
+        global $faucet_plain_amount;
+        $amount=$faucet_plain_amount;
+
+        $username_uid_escaped=db_escape($username_uid);
+        $amount_escaped=db_escape($amount);
+
+        $magnitude_unit=boincmgr_get_magnitude_unit();
+        $mag_per_project=boincmgr_get_mag_per_project();
+
+        $user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+FROM `boincmgr_project_hosts_last` AS bphl
+LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
+LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
+LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')
+GROUP BY bu.`username`
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+LIMIT 100
+");
+
+        $claim_today = db_query_to_variable("SELECT 1 FROM `boincmgr_faucet` WHERE DATE_ADD(`date`,INTERVAL 1 DAY)>NOW() AND `user_uid`='$username_uid_escaped'");
+        $currency = db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `uid`='$username_uid_escaped'");
+
+        if($user_magnitude>1 && $claim_today!=1 && ($currency=='GRC' || $currency=='GRC2')) {
+                db_query("INSERT INTO `boincmgr_faucet` (`user_uid`,`grc_amount`,`date`) VALUES ('$username_uid_escaped','$amount_escaped',NOW())");
+
+                $grc_address=db_query_to_variable("SELECT `payout_address` FROM `boincmgr_users` WHERE `uid`='$username_uid_escaped'");
+                $grc_address_escaped=db_escape($grc_address);
+
+                db_query("INSERT INTO `boincmgr_faucet_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$amount_escaped')");
+        }
+}
 
 
 // For php 5 only variant for random_bytes is openssl_random_pseudo_bytes from openssl lib
