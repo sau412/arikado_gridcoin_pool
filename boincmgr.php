@@ -206,6 +206,13 @@ function boincmgr_get_host_short_info($uid) {
         return $result;
 }
 
+// Set TX ID
+function boincmgr_set_txid($payout_address,$txid) {
+        $payout_address_escaped=db_escape($payout_address);
+        $txid_escaped=db_escape($txid);
+        db_query("UPDATE `boincmgr_payouts` SET txid='$txid_escaped' WHERE `txid` IS NULL and `payout_address`='$payout_address_escaped'");
+}
+
 // Get user name by uid
 function boincmgr_get_user_name($uid) {
         $uid_escaped=db_escape($uid);
@@ -535,7 +542,6 @@ LIMIT 100
                 db_query("INSERT INTO `boincmgr_faucet_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$amount_escaped')");
         }
 }
-
 
 // For php 5 only variant for random_bytes is openssl_random_pseudo_bytes from openssl lib
 if(!function_exists("random_bytes")) {
