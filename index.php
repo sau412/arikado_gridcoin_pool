@@ -237,6 +237,9 @@ if($username!="") {
                         case "email_view":
                                 if(auth_is_admin($username)) echo html_email_view();
                                 break;
+                        case "faucet":
+                                echo html_faucet();
+                                break;
                         case "log":
                                 if(auth_is_admin($username)) echo html_view_log();
                                 break;
