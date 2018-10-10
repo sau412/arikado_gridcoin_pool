@@ -3,11 +3,11 @@
 if(!isset($argc)) die();
 
 // Gridcoinresearch send rewards
-require_once("settings.php");
-require_once("db.php");
-require_once("auth.php");
-require_once("boincmgr.php");
-require_once("email.php");
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
+require_once("../lib/boincmgr.php");
+require_once("../lib/email.php");
 
 db_connect();
 
