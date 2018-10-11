@@ -66,6 +66,23 @@ CREATE TABLE `boincmgr_email` (
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+DROP TABLE IF EXISTS `boincmgr_faucet`;
+CREATE TABLE `boincmgr_faucet` (
+  `uid` int(11) NOT NULL,
+  `user_uid` int(11) NOT NULL,
+  `grc_amount` double NOT NULL,
+  `date` date NOT NULL
+) ENGINE=MyISAM DEFAULT CHARSET=utf32 COLLATE=utf32_unicode_ci;
+
+DROP TABLE IF EXISTS `boincmgr_faucet_payouts`;
+CREATE TABLE `boincmgr_faucet_payouts` (
+  `uid` int(11) NOT NULL,
+  `grc_address` varchar(100) COLLATE utf8_unicode_ci NOT NULL,
+  `amount` double NOT NULL,
+  `txid` varchar(100) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+  `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 DROP TABLE IF EXISTS `boincmgr_hosts`;
 CREATE TABLE `boincmgr_hosts` (
   `uid` int(11) NOT NULL,
