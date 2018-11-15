@@ -293,12 +293,16 @@ function boincmgr_delete_host($username,$host_uid) {
 
 // Set pool info
 function boincmgr_set_pool_info($pool_info) {
-        boincmgr_set_variable("pool_info",$pool_info);
+        global $current_language;
+        $news_variable=$current_language["news_variable"];
+        boincmgr_set_variable($news_variable,$pool_info);
 }
 
 // Get pool info
 function boincmgr_get_pool_info() {
-        return boincmgr_get_variable("pool_info");
+        global $current_language;
+        $news_variable=$current_language["news_variable"];
+        return boincmgr_get_variable($news_variable);
 }
 
 // Get variable
