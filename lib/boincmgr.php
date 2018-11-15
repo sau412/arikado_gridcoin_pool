@@ -81,7 +81,7 @@ function boincmgr_set_project_settings($username,$attached_uid,$resource_share,$
 
                 $resource_share_escaped=db_escape($resource_share);
                 $options_str_array=array();
-                $valid_options_array=array("detach","detach_when_done","suspend","dont_request_more_work","abort_not_started","no_cpu","no_cuda","no_ati","no_intel");
+                $valid_options_array=array("detach","detach_when_done","suspend","dont_request_more_work","abort_not_started","no_cpu","no_cuda","no_ati","no_intel","user_override");
                 foreach($valid_options_array as $valid_option) {
                         if(in_array($valid_option,$options_array)) $options_str_array[]=$valid_option;
                 }
@@ -361,46 +361,9 @@ function boincmgr_get_payout_rate($currency) {
                 case "GRC2":
                 case "GRC":
                         return 1;
-                case "DOGE":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $btc_doge_rate=boincmgr_get_variable("BTC_DOGE");
-                        if($btc_doge_rate!=0) $doge_grc_rate=$btc_grc_rate/$btc_doge_rate;
-                        else $doge_grc_rate=0;
-                        return $doge_grc_rate;
-                case "GBYTE":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $btc_gbyte_rate=boincmgr_get_variable("BTC_GBYTE");
-                        if($btc_gbyte_rate!=0) $gbyte_grc_rate=$btc_grc_rate/$btc_gbyte_rate;
-                        else $gbyte_grc_rate=0;
-                        return $gbyte_grc_rate;
-                case "LTC":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $btc_ltc_rate=boincmgr_get_variable("BTC_LTC");
-                        if($btc_ltc_rate!=0) $ltc_grc_rate=$btc_grc_rate/$btc_ltc_rate;
-                        else $ltc_grc_rate=0;
-                        return $ltc_grc_rate;
-                case "ETH":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $btc_eth_rate=boincmgr_get_variable("BTC_ETH");
-                        if($btc_eth_rate!=0) $eth_grc_rate=$btc_grc_rate/$btc_eth_rate;
-                        else $eth_grc_rate=0;
-                        return $eth_grc_rate;
-                case "WMZ":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $usdt_btc_rate=boincmgr_get_variable("USDT_BTC");
-                        $wmz_grc_rate=$btc_grc_rate*$usdt_btc_rate;
-                        return $wmz_grc_rate;
-                case "XMR":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        $btc_xmr_rate=boincmgr_get_variable("BTC_XMR");
-                        if($btc_xmr_rate!=0) $xmr_grc_rate=$btc_grc_rate/$btc_xmr_rate;
-                        else $xmr_grc_rate=0;
-                        return $xmr_grc_rate;
-                case "BTC":
-                        $btc_grc_rate=boincmgr_get_variable("BTC_GRC");
-                        return $btc_grc_rate;
                 default:
-                        return 0;
+                        $currency_escaped=db_escape($currency);
+                        return db_query_to_variable("SELECT `rate_per_grc` FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
         }
 }
 
