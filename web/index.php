@@ -44,6 +44,16 @@ if(isset($_GET['token']) && auth_validate_hash($_GET['token'])) $received_token=
 else if(isset($_POST['token']) && auth_validate_hash($_POST['token'])) $received_token=html_strip($_POST['token']);
 else $received_token="";
 
+// Any user
+if(isset($_POST['action']) && in_array($_POST['action'],array("change_lang"))) {
+        if($username_token!=$received_token) die($message_bad_token);
+        if($_POST['action']=='change_lang') {
+                $lang=$_POST['lang'];
+                if(lang_if_exists($lang)) lang_set_current($lang);
+                html_redirect_and_die("./");
+        }
+}
+
 // Branch for registered user
 if($username!="") {
         if(isset($_POST['action'])) {
@@ -93,6 +103,7 @@ if($username!="") {
                         if(isset($_POST['no_cuda'])) $options_array[]="no_cuda";
                         if(isset($_POST['no_ati'])) $options_array[]="no_ati";
                         if(isset($_POST['no_intel'])) $options_array[]="no_intel";
+                        if(isset($_POST['user_override'])) $options_array[]="user_override";
 
                         boincmgr_set_project_settings($username,$attached_uid,$resource_share,$options_array);
 
