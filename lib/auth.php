@@ -33,12 +33,19 @@ function auth_check() {
         return auth_check_hash($username,$passwd_hash);
 }
 
-// Check auth
+// Checks is user admin
 function auth_is_admin($username) {
-//      $username=strtolower($username);
         $username_escaped=db_escape($username);
         $admin_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='admin'");
         if($admin_exists==1) return TRUE;
+        else return FALSE;
+}
+
+// Checks is user can view everything (for translation purposes)
+function auth_is_editor($username) {
+        $username_escaped=db_escape($username);
+        $right_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='editor'");
+        if($right_exists==1) return TRUE;
         else return FALSE;
 }
 
