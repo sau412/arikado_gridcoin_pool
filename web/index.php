@@ -127,6 +127,13 @@ if($username!="") {
                         boincmgr_claim_faucet($username_uid);
 
                         setcookie("action_message",$message_faucet_sent);
+                // Next actions for admins and editors
+                // Edit pool info
+                } else if((auth_is_editor($username) || auth_is_admin($username)) && $_POST['action']=='edit_pool_info' ) {
+                                $pool_info=html_strip($_POST['pool_info']);
+                                auth_log("Pool info changed by $username");
+                                boincmgr_set_pool_info($pool_info);
+                                setcookie("action_message",$message_pool_info_changed);
                 // Next actions for admins
                 } else if(auth_is_admin($username)) {
                         // Change user status (for admin)
@@ -181,13 +188,6 @@ if($username!="") {
 
                                 bill_close_period($comment,$start_date,$stop_date,$reward,$check_rewards,$project_uid,$antiexp_rac_flag);
                                 setcookie("action_message",$message_billing_ok);
-                        // Edit pool info
-                        } else if($_POST['action']=='edit_pool_info') {
-                                $pool_info=html_strip($_POST['pool_info']);
-
-                                auth_log("Pool info changed by $username");
-                                boincmgr_set_pool_info($pool_info);
-                                setcookie("action_message",$message_pool_info_changed);
                         } else if($_POST['action']=='set_txid') {
                                 $payout_address=html_strip($_POST['payout_address']);
                                 $txid=html_strip($_POST['txid']);
@@ -278,7 +278,9 @@ if($username!="") {
                                 echo html_pool_info();
                                 break;
                         case "pool_info_editor":
-                                if(auth_is_admin($username)) echo html_pool_info_editor();
+                                if(auth_is_admin($username) || auth_is_editor($username)) {
+                                        echo html_pool_info_editor();
+                                }
                                 break;
                         case "pool_stats":
                                 echo html_pool_stats();
@@ -315,6 +317,8 @@ if($username!="") {
         // Menu for registered user
         if(auth_is_admin($username)) {
                 echo html_page_header("admin");
+        } else if(auth_is_editor($username)) {
+                echo html_page_header("editor");
         } else {
                 echo html_page_header("user");
         }
