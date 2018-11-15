@@ -298,6 +298,11 @@ function html_get_menu($flag) {
                         $submenu.=html_menu_element("email_view",$current_language["menu_email_view"]);
 
                         $result.=html_dropdown_menu_element("control",$current_language["menu_control"],$submenu);
+                } else if($flag=="editor") {
+                        $submenu="";
+                        $submenu.=html_menu_element("pool_info_editor",$current_language["menu_pool_info_editor"]);
+
+                        $result.=html_dropdown_menu_element("control",$current_language["menu_control"],$submenu);
                 }
                 $result.=html_menu_element("message_send",$current_language["menu_feedback"]);
                 $result.=html_menu_element("faucet",$current_language["menu_faucet"]);
@@ -1010,7 +1015,7 @@ function html_user_control_form() {
 
         $form_hidden_action="<input type=hidden name=action value='change_user_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
-        $user_options="<select name=status><option>banned</option><option selected>user</option><option>admin</option><option>donator</option></select>";
+        $user_options="<select name=status><option>banned</option><option selected>user</option><option>editor</option><option>admin</option><option>donator</option></select>";
         $submit_button="<input type=submit value='change'>";
 
         foreach($users_array as $user_record) {
