@@ -36,7 +36,23 @@ function html_redirect_and_die($url) {
 // Begin HTML page
 function html_page_begin() {
         global $pool_name;
+        global $username_token;
+
         $css_file="common.css";
+
+        // Check current language
+        $current_language=lang_get_current();
+        $next_language=lang_get_next($current_language);
+        $change_language_button=<<<_END
+<div style='float:right;'>
+<form name=change_language method=post>
+<input type=hidden name=action value='change_lang'>
+<input type=hidden name=token value='$username_token'>
+<select name=lang onChange='form.submit();'><option value='en'>english</option><option value='ru'>русский</option></select>
+</form>
+</div>
+
+_END;
 
         // Check is mobile
         // https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device
@@ -59,12 +75,14 @@ function html_page_begin() {
 </head>
 <body data-gr-c-s-loaded="true">
 <div style='float:right;'><input type=button value='&#9680;' onClick='toggle_night_mode();'></div>
-
+$change_language_button
 _END;
 }
 
 // End html page
 function html_page_end() {
+        global $current_language;
+
         echo <<<_END
 <script>
 
@@ -77,12 +95,12 @@ if(hash != null && hash != '') {
 }
 
 function toggle_night_mode() {
-        if (sessionStorage.getItem("night_mode") == 0) {
-                set_night_mode(1);
-                sessionStorage.setItem("night_mode",1);
-        } else {
+        if (sessionStorage.getItem("night_mode") == 1) {
                 set_night_mode(0);
                 sessionStorage.setItem("night_mode",0);
+        } else {
+                set_night_mode(1);
+                sessionStorage.setItem("night_mode",1);
         }
 }
 
@@ -113,7 +131,7 @@ set_night_mode(sessionStorage.getItem("night_mode"));
 </script>
 <hr>
 <center>
-<p>Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 on telegram, twitter, facebook, gmail, github, vk, gridcoin slack and discord.</p>
+<p>${current_language["page_footer_text"]}</p>
 </center>
 </body>
 </html>
@@ -161,9 +179,11 @@ function html_payout_address_link($currency,$payout_address) {
 
 // Return txid as URL
 function html_txid_link($currency,$txid) {
+        global $current_language;
+
         if($txid=="") {
                 if($currency=="GRC" || $currency=="GRC2") return "no txid";
-                else return "limit not reached";
+                else return $current_language["txid_limit_not_reached"];
         } else {
                 $txid_short=substr($txid,0,10);
                 $txid_short_html=html_escape($txid_short);
@@ -212,6 +232,7 @@ _END;
 function html_get_menu($flag) {
         global $username_token;
         global $pool_name;
+        global $current_language;
 
         $greeting_user_text=html_greeting_user();
 
@@ -219,67 +240,67 @@ function html_get_menu($flag) {
         $result.="<ul id='main_bar' class='main_bar_light'>\n";
         $result.="<center class='main_bar_text'>\n";
 //      $result.="<li><div style='background-color:#2b2b2b;color:white;display=block;text-align:center;padding:1em;cursor:not-allowed'>$pool_name</div></li>";
-        $result.=html_menu_element("pool_info","Pool info");
+        $result.=html_menu_element("pool_info",$current_language["menu_pool_info"]);
 
         if($flag=="unknown") {
-                $result.=html_menu_element("login_form","Login");
-                $result.=html_menu_element("register_form","Register");
-                $result.=html_menu_element("payouts","Payouts");
+                $result.=html_menu_element("login_form",$current_language["menu_login"]);
+                $result.=html_menu_element("register_form",$current_language["menu_register"]);
+                $result.=html_menu_element("payouts",$current_language["menu_payouts"]);
 
                 $submenu="";
-                $submenu.=html_menu_element("rating_by_host_mag","Rating by host mag");
-                $submenu.=html_menu_element("rating_by_user_mag","Rating by user mag");
-                $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
-                $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
-                $submenu.=html_menu_element("pool_stats","Pool project stats");
-                $result.=html_dropdown_menu_element("statistics","Statistics",$submenu);
+                $submenu.=html_menu_element("rating_by_host_mag",$current_language["menu_rating_by_host_mag"]);
+                $submenu.=html_menu_element("rating_by_user_mag",$current_language["menu_rating_by_user_mag"]);
+                $submenu.=html_menu_element("rating_by_host_project_mag",$current_language["menu_rating_by_host_project_mag"]);
+                $submenu.=html_menu_element("rating_by_user_project_mag",$current_language["menu_rating_by_user_project_mag"]);
+                $submenu.=html_menu_element("pool_stats",$current_language["menu_pool_stats"]);
+                $result.=html_dropdown_menu_element("statistics",$current_language["menu_statistics"],$submenu);
 
                 $submenu="";
-                $submenu.=html_menu_element("currencies","Currencies");
-                $submenu.=html_menu_element("block_explorer","Block explorer");
-                $result.=html_dropdown_menu_element("info","Info",$submenu);
-                $result.=html_menu_element("message_send","Feedback");
+                $submenu.=html_menu_element("currencies",$current_language["menu_currencies"]);
+                $submenu.=html_menu_element("block_explorer",$current_language["menu_block_explorer"]);
+                $result.=html_dropdown_menu_element("info",$current_language["menu_info"],$submenu);
+                $result.=html_menu_element("message_send",$current_language["menu_feedback"]);
         } else {
-                $result.=html_menu_element("settings","Settings");
-                $result.=html_menu_element("your_hosts","Your hosts");
+                $result.=html_menu_element("settings",$current_language["menu_settings"]);
+                $result.=html_menu_element("your_hosts",$current_language["menu_your_hosts"]);
 
                 $submenu="";
-                $submenu.=html_menu_element("boinc_results_by_host","Results by host");
-                $submenu.=html_menu_element("boinc_results_by_project","Results by project");
-                $submenu.=html_menu_element("boinc_results_by_user","Results by user");
-                $submenu.=html_menu_element("boinc_results_all_valuable","All valuable");
-                $submenu.=html_menu_element("boinc_results_all","All results");
-                $result.=html_dropdown_menu_element("boinc","BOINC results",$submenu);
+                $submenu.=html_menu_element("boinc_results_by_host",$current_language["menu_boinc_results_by_host"]);
+                $submenu.=html_menu_element("boinc_results_by_project",$current_language["menu_boinc_results_by_project"]);
+                $submenu.=html_menu_element("boinc_results_by_user",$current_language["menu_boinc_results_by_user"]);
+                $submenu.=html_menu_element("boinc_results_all_valuable",$current_language["menu_boinc_results_all_valuable"]);
+                $submenu.=html_menu_element("boinc_results_all",$current_language["menu_boinc_results_all"]);
+                $result.=html_dropdown_menu_element("boinc",$current_language["menu_boinc"],$submenu);
 
-                $result.=html_menu_element("payouts","Payouts");
-
-                $submenu="";
-                $submenu.=html_menu_element("rating_by_host_mag","Rating by host mag");
-                $submenu.=html_menu_element("rating_by_user_mag","Rating by user mag");
-                $submenu.=html_menu_element("rating_by_host_project_mag","Rating by host project mag");
-                $submenu.=html_menu_element("rating_by_user_project_mag","Rating by user project mag");
-                $submenu.=html_menu_element("pool_stats","Pool project stats");
-                $result.=html_dropdown_menu_element("statistics","Statistics",$submenu);
+                $result.=html_menu_element("payouts",$current_language["menu_payouts"]);
 
                 $submenu="";
-                $submenu.=html_menu_element("currencies","Currencies");
-                $submenu.=html_menu_element("block_explorer","Block explorer");
-                $result.=html_dropdown_menu_element("info","Info",$submenu);
+                $submenu.=html_menu_element("rating_by_host_mag",$current_language["menu_rating_by_host_mag"]);
+                $submenu.=html_menu_element("rating_by_user_mag",$current_language["menu_rating_by_user_mag"]);
+                $submenu.=html_menu_element("rating_by_host_project_mag",$current_language["menu_rating_by_host_project_mag"]);
+                $submenu.=html_menu_element("rating_by_user_project_mag",$current_language["menu_rating_by_user_project_mag"]);
+                $submenu.=html_menu_element("pool_stats",$current_language["menu_pool_stats"]);
+                $result.=html_dropdown_menu_element("statistics",$current_language["menu_statistics"],$submenu);
+
+                $submenu="";
+                $submenu.=html_menu_element("currencies",$current_language["menu_currencies"]);
+                $submenu.=html_menu_element("block_explorer",$current_language["menu_block_explorer"]);
+                $result.=html_dropdown_menu_element("info",$current_language["menu_info"],$submenu);
 
                 if($flag=="admin") {
                         $submenu="";
-                        $submenu.=html_menu_element("user_control","User control");
-                        $submenu.=html_menu_element("project_control","Project control");
-                        $submenu.=html_menu_element("billing","Billing");
-                        $submenu.=html_menu_element("pool_info_editor","Pool info editor");
-                        $submenu.=html_menu_element("log","View log");
-                        $submenu.=html_menu_element("messages_view","View messages");
-                        $submenu.=html_menu_element("email_view","View emails");
+                        $submenu.=html_menu_element("user_control",$current_language["menu_user_control"]);
+                        $submenu.=html_menu_element("project_control",$current_language["menu_project_control"]);
+                        $submenu.=html_menu_element("billing",$current_language["menu_billing"]);
+                        $submenu.=html_menu_element("pool_info_editor",$current_language["menu_pool_info_editor"]);
+                        $submenu.=html_menu_element("log",$current_language["menu_log"]);
+                        $submenu.=html_menu_element("messages_view",$current_language["menu_messages_view"]);
+                        $submenu.=html_menu_element("email_view",$current_language["menu_email_view"]);
 
-                        $result.=html_dropdown_menu_element("control","Control",$submenu);
+                        $result.=html_dropdown_menu_element("control",$current_language["menu_control"],$submenu);
                 }
-                $result.=html_menu_element("message_send","Feedback");
-                $result.=html_menu_element("faucet","Faucet");
+                $result.=html_menu_element("message_send",$current_language["menu_feedback"]);
+                $result.=html_menu_element("faucet",$current_language["menu_faucet"]);
         }
         $result.="</center>\n";
         $result.="</ul>\n";
@@ -306,10 +327,13 @@ function html_menu_element($tag,$text) {
 // Greeting for user
 function html_greeting_user() {
         global $username,$username_token;
+        global $current_language;
+
+        $greeting_message=$current_language["greeting_message"];
 
         if($username!='') {
         $username_html=html_escape($username);
-                return "Welcome, $username_html (<a href='./?action=logout&token=$username_token'>logout</a>)";
+                return "$greeting_message, $username_html (<a href='./?action=logout&token=$username_token'>logout</a>)";
         } else {
                 return "";
         }
@@ -318,6 +342,36 @@ function html_greeting_user() {
 // Loadable block for ajax
 function html_loadable_block() {
         return "<div id='main_block'>Loading block...</div>\n";
+}
+
+// Header 1 in current language
+function html_block_header_1($header_code) {
+        global $current_language;
+        return "<h2>${current_language[$header_code]}</h2>\n";
+}
+
+// Header 2 in current language
+function html_block_header_2($header_code) {
+        global $current_language;
+        return "<h3>${current_language[$header_code]}</h3>\n";
+}
+
+// Desc in current language
+function html_block_desc($block_code) {
+        global $current_language;
+        return "<p>${current_language[$block_code]}</p>\n";
+}
+
+// Table header
+function html_table_header($header_code) {
+        global $current_language;
+        $result="";
+        $result.="<tr>";
+        foreach($current_language[$header_code] as $element) {
+                $result.="<th>$element</th>";
+        }
+        $result.="</tr>";
+        return $result;
 }
 
 // Currency selector
@@ -370,6 +424,7 @@ _END;
 function html_register_form() {
         global $pool_min_password_length;
         global $recaptcha_public_key;
+        global $current_language;
 
         $currency_selector=html_currency_selector();
 
@@ -377,15 +432,15 @@ function html_register_form() {
 <script src='https://www.google.com/recaptcha/api.js'></script>
 <div id=register_form_block class=selectable_block>
 <form name=register_form method=POST>
-<h2>Register</h2>
-<p>Username: <input type=text name=username> required, only letters A-Z, a-z, </p>
-<p>Password: <input type=password name=password_1> required at least $pool_min_password_length characters</p>
-<p>Re-type password: <input type=password name=password_2></p>
-<p>E-mail: <input type=text name=email size=40> for password recovery (you can write me from that mail, and I send you new password for account)</p>
-<p>Payout address: <input type=text name=payout_address size=40> payout currency $currency_selector both required</p>
+<h2>${current_language["register_header"]}</h2>
+<p>${current_language["register_username"]}: <input type=text name=username> ${current_language["register_username_after"]}</p>
+<p>${current_language["register_password"]}: <input type=password name=password_1> ${current_language["register_password_after"]}</p>
+<p>${current_language["register_retype_password"]}: <input type=password name=password_2></p>
+<p>${current_language["register_email"]}: <input type=text name=email size=40> ${current_language["register_email_after"]}</p>
+<p>${current_language["register_payout_address"]}: <input type=text name=payout_address size=40> ${current_language["register_payout_currency"]} $currency_selector ${current_language["register_payout_currency_after"]}</p>
 <p><input type=hidden name="action" value="register"></p>
 <div class="g-recaptcha" data-sitekey="$recaptcha_public_key"></div>
-<p><input type=submit value="Register"></p>
+<p><input type=submit value="${current_language["register_submit"]}"></p>
 </form>
 </div>
 
@@ -394,14 +449,16 @@ _END;
 
 // Login form
 function html_login_form() {
+        global $current_language;
+
         return <<<_END
 <div id=login_form_block class=selectable_block>
 <form name=login_form method=POST>
-<h2>Login</h2>
-<p>Username: <input type=text name=username></p>
-<p>Password: <input type=password name=password></p>
+<h2>${current_language["login_header"]}</h2>
+<p>${current_language["login_username"]}: <input type=text name=username></p>
+<p>${current_language["login_password"]}: <input type=password name=password></p>
 <p><input type=hidden name="action" value="login"></p>
-<p><input type=submit value="Login"></p>
+<p><input type=submit value="${current_language["login_submit"]}"></p>
 </form>
 </div>
 
@@ -411,6 +468,7 @@ _END;
 // Change settings form
 function html_change_settings_form() {
         global $username,$username_token;
+        global $current_language;
 
         $username_escaped=db_escape($username);
 
@@ -430,20 +488,21 @@ function html_change_settings_form() {
 
         return <<<_END
 <div id=settings_block class=selectable_block>
-<h2>Settings</h2>
-<p>GRC payouts are instant, alternative currencies payouts are cumulative and manual. It takes 1-2 days when payout limit reached to send payout (because manual mode now).</p>
-<p>Changing alternative (non-GRC) currency or address notice: please note, owed amount linked to address, not to user. If you change address your previous address owed amount will not lost, but won't payed out until payout limit for previous address reached. You can contact admin for manual payout or change address back and receive payout when payout limit reached.</p>
+<h2>${current_language["settings_header"]}</h2>
+<p>${current_language["settings_desc"]}</p>
+<p>${current_language["settings_note"]}</p>
 <form name=change_settings_form method=POST>
 <input type=hidden name="action" value="change_settings">
 <input type=hidden name="token" value="$username_token">
-<p>E-mail: <input type=text name=email value='$email_html' size=40></p>
-<p><label><input type=checkbox name=send_error_reports $send_error_reports_status> send reports to email if task errors found</label></p>
-<p>Payout address: <input type=text name=payout_address value='$payout_address_html' size=40> currency $currency_selector (look notice above)</p>
-<p>Password: <input type=password name=password> the password is required to change settings</p>
-<p>New password: <input type=password name=new_password1> only if you wish to change password</p>
-<p>Re-type new password: <input type=password name=new_password2></p>
+<p>${current_language["settings_email"]}: <input type=text name=email value='$email_html' size=40></p>
+<p><label><input type=checkbox name=send_error_reports $send_error_reports_status> ${current_language["settings_email_reports"]}</label></p>
+<p>${current_language["settings_payout_address"]}: <input type=text name=payout_address value='$payout_address_html' size=40>
+${current_language["settings_payout_currency"]} $currency_selector ${current_language["settings_payout_currency_after"]}</p>
+<p>${current_language["settings_password"]}: <input type=password name=password> ${current_language["settings_password_after"]}</p>
+<p>${current_language["settings_new_password1"]}: <input type=password name=new_password1> ${current_language["settings_new_password1_after"]}</p>
+<p>${current_language["settings_new_password2"]}: <input type=password name=new_password2></p>
 <!--<p><label><input type=checkbox onClick='check_deletion();' name=delete_account> delete my account</label></p>-->
-<p><input type=submit value="Update"></p>
+<p><input type=submit value="${current_language["settings_submit"]}"></p>
 </form>
 </div>
 
@@ -453,24 +512,25 @@ _END;
 // Show user hosts
 function html_user_hosts() {
         global $username,$username_token;
+        global $current_language;
 
         $result="";
         $result.="<div id=your_hosts_block class=selectable_block>\n";
-        $result.="<h2>Your hosts</h2>\n";
-        $result.="<p>That information will be synced to your BOINC client. When attaching new project sync second time after 1-2 minutes to avoid incomplete sync. If you sync correctly, then you see your host in BOINC results after 1-3 hours.</p>\n";
+        $result.=html_block_header_1("user_hosts_header");
+        $result.=html_block_desc("user_hosts_desc");
         $result.="<table align=center>\n";
 
         $mag_per_project=boincmgr_get_mag_per_project();
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Host info</th><th>Projects</th></tr>\n";
+                $result.=html_table_header("user_hosts_table_header");
                 $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model`,bh.`timestamp` FROM `boincmgr_hosts` AS bh
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 ORDER BY bu.`username`,bh.`domain_name` ASC");
         } else {
                 $username_uid=boincmgr_get_username_uid($username);
                 $result.="<p><a href='tasks.php?username_uid=$username_uid'>View task stats</a></p>";
-                $result.="<tr><th>Host info</th><th>Projects</th></tr>\n";
+                $result.=html_table_header("user_hosts_table_header");
                 $username_uid=boincmgr_get_username_uid($username);
                 $username_uid_escaped=db_escape($username_uid);
                 $hosts_array=db_query_to_array("SELECT bh.`uid`,bu.`username`,bh.`internal_host_cpid`,bh.`external_host_cpid`,bh.`domain_name`,bh.`p_model`,bh.`timestamp` FROM `boincmgr_hosts` AS bh
@@ -657,6 +717,7 @@ _END;
 // Show BOINC results by host
 function html_boinc_results_by_host() {
         global $username;
+        global $current_language;
 
         $result="";
 
@@ -664,25 +725,23 @@ function html_boinc_results_by_host() {
         $magnitude_unit=boincmgr_get_magnitude_unit();
 
         $result.="<div id=boinc_results_block class=selectable_block>\n";
-        $result.="<h2>BOINC results:</h2>\n";
+        $result.=html_block_header_1("boinc_results_by_host_header");
+        $result.=html_block_desc("boinc_results_by_host_desc");
 
-        $result.="<p>That information we received from various BOINC projects:</p>\n";
-
-        $result.="<h3>Results by host</h3>\n";
         $result.="<table align=center>\n";
 
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>CPU</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th></tr>\n";
+                $result.=html_table_header("boinc_results_by_host_table_header_admin");
                 $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
         } else {
-                $result.="<tr><th>Domain name</th><th>CPU</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day est</th></tr>\n";
+                $result.=html_table_header("boinc_results_by_host_table_header_user");
                 $boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -724,18 +783,18 @@ GROUP BY  bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER 
 // Show BOINC results by project
 function html_boinc_results_by_project() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=boinc_results_block class=selectable_block>\n";
-        $result.="<h2>BOINC results:</h2>\n";
 
-        $result.="<p>That information we received from various BOINC projects:</p>\n";
+        $result.=html_block_header_1("boinc_results_by_project_header");
+        $result.=html_block_desc("boinc_results_by_project_desc");
 
-        // Projects stats for admin is the pool stats
-        $result.="<h3>Results by project</h3>\n";
         $result.="<table align=center>\n";
-        $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th></tr>\n";
+        $result.=html_table_header("boinc_results_by_project_table_header");
+//      $result.="<tr><th>Project</th><th>&Sigma; RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th></tr>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -785,17 +844,18 @@ WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`
 // Show BOINC results by user
 function html_boinc_results_by_user() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=boinc_results_block class=selectable_block>\n";
-        $result.="<h2>BOINC results:</h2>\n";
 
-        $result.="<p>That information we received from various BOINC projects:</p>\n";
+        $result.=html_block_header_1("boinc_results_by_user_header");
+        $result.=html_block_desc("boinc_results_by_user_desc");
 
-        $result.="<h3>Results by user</h3>\n";
         $result.="<table align=center>\n";
-        $result.="<tr><th>Username</th><th>Task stats</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th></tr>\n";
+        $result.=html_table_header("boinc_results_by_user_table_header");
+//      $result.="<tr><th>Username</th><th>Task stats</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th></tr>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -848,17 +908,17 @@ GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORD
 // Show BOINC results for user
 function html_boinc_results_all($threshold) {
         global $username;
+        global $current_language;
 
         $result="";
 
         $threshold_escaped=db_escape($threshold);
 
         $result.="<div id=boinc_results_block class=selectable_block>\n";
-        $result.="<h2>BOINC results:</h2>\n";
 
-        $result.="<p>That information we received from various BOINC projects:</p>\n";
+        $result.=html_block_header_1("boinc_results_all_header");
+        $result.=html_block_desc("boinc_results_all_desc");
 
-        $result.="<h3>Results for each project and each host</h3>\n";
         $result.="<table align=center>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
@@ -868,7 +928,8 @@ function html_boinc_results_all($threshold) {
         $username_uid_escaped=db_escape($username_uid);
 
         if(auth_is_admin($username)) {
-                $result.="<tr><th>Username</th><th>Domain name</th><th>Project</th><th>RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th><th>Tasks</th></tr>\n";
+                $result.=html_table_header("boinc_results_all_table_header_admin");
+//              $result.="<tr><th>Username</th><th>Domain name</th><th>Project</th><th>RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th><th>Tasks</th></tr>\n";
                 $boinc_host_data_array=db_query_to_array("
 SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
 FROM `boincmgr_project_hosts_last` AS bphl
@@ -878,7 +939,8 @@ LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphl.`expavg_credit`>'$threshold_escaped'
 ORDER BY bu.`username`,bphl.`domain_name`,bp.`name` ASC");
         } else {
-                $result.="<tr><th>Domain name</th><th>Project</th><th>RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th><th>Tasks</th></tr>\n";
+                $result.=html_table_header("boinc_results_all_table_header_user");
+//              $result.="<tr><th>Domain name</th><th>Project</th><th>RAC</th><th>Mag 7d graph</th><th>Mag</th><th>&#8776;GRC/day</th><th>Tasks</th></tr>\n";
                 $boinc_host_data_array=db_query_to_array("
 SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
 FROM `boincmgr_project_hosts_last` AS bphl
@@ -933,13 +995,18 @@ WHERE bphl.`expavg_credit`>'$threshold_escaped' AND bh.`username_uid`='$username
 // Show user control form
 function html_user_control_form() {
         global $username_token;
+        global $current_language;
 
         $result="";
         $users_array=db_query_to_array("SELECT `uid`,`username`,`email`,`currency`,`payout_address`,`status` FROM `boincmgr_users`");
         $result.="<div id=user_control_block class=selectable_block>\n";
-        $result.="<h2>User control</h2>\n";
+
+        $result.=html_block_header_1("user_control_header");
+        $result.=html_block_desc("user_control_desc");
+
         $result.="<p><table align=center>\n";
-        $result.="<tr><th>Username</th><th>e-mail</th><th>Currency</th><th>Address</th><th>Last sync</th><th>Status</th><th>Action</th></tr>\n";
+        $result.=html_table_header("user_control_table_header");
+//"<tr><th>Username</th><th>e-mail</th><th>Currency</th><th>Address</th><th>Last sync</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_user_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
@@ -991,13 +1058,22 @@ function html_user_control_form() {
 // Show project control form
 function html_project_control_form() {
         global $username_token,$pool_cpid;
+        global $current_language;
+
         $result="";
         $projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`timestamp` FROM `boincmgr_projects` ORDER BY `name` ASC");
         $result.="<div id=project_control_block class=selectable_block>\n";
-        $result.="<h2>Project control</h2>\n";
-        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
+
+        $result.=html_block_header_1("project_control_header");
+        $result.=html_block_desc("project_control_desc");
+
         $result.="<p><table align=center>\n";
-        $result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Team</th><th>Last query</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
+        $result.=html_table_header("project_control_table_header");
+
+        //$result.="<h2>Project control</h2>\n";
+        //$result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
+        //$result.="<p><table align=center>\n";
+        //$result.="<tr><th>Name</th><th>URL</th><th>CPID</th><th>Weak auth</th><th>Team</th><th>Last query</th><th>Last update</th><th>Status</th><th>Action</th></tr>\n";
 
         $form_hidden_action="<input type=hidden name=action value='change_project_status'>";
         $form_hidden_token="<input type=hidden name=token value='$username_token'>";
@@ -1064,21 +1140,29 @@ function html_project_control_form() {
 function html_payouts() {
         global $username;
         global $username_token;
+        global $current_language;
 
         $result="";
         $result.="<div id=payouts_block class=selectable_block>\n";
 
-        $result.="<h2>Payouts</h2>\n";
+        $result.=html_block_header_1("payouts_header");
+        $result.=html_block_desc("payouts_desc");
+
+        //$result.="<h2>Payouts</h2>\n";
         $owes_data_array=db_query_to_array("SELECT bp.`payout_address`,bp.`currency`,SUM(bp.`amount`) AS amount,MIN(bbp.`start_date`) AS start_date,MAX(bbp.`stop_date`) AS stop_date
 FROM `boincmgr_payouts` AS bp
 LEFT OUTER JOIN `boincmgr_billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
 WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`payout_address` ASC");
         if(count($owes_data_array)) {
-                $result.="<h3>Pool owes:</h3>\n";
+                $result.=html_block_header_2("payouts_owes_header");
+                $result.=html_block_desc("payouts_owes_desc");
+                //$result.="<h3>Pool owes:</h3>\n";
 //              $result.="<p>These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</p>";
                 $result.="<table align=center>\n";
-                $result.="<caption>Pool owes table. These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</caption>";
-                $result.="<tr></th><th>Address</th><th>Currency amount</th><th>Interval from</th><th>Interval to</th></tr>\n";
+
+                //$result.="<caption>Pool owes table. These rewards not send yet, because payout limit is not reached. Fee is tx fee + service fee.</caption>";
+                $result.=html_table_header("project_owes_table_header");
+//              $result.="<tr></th><th>Address</th><th>Currency amount</th><th>Interval from</th><th>Interval to</th></tr>\n";
                 foreach($owes_data_array as $owe_data) {
                         $payout_address=$owe_data['payout_address'];
                         $amount=$owe_data['amount'];
@@ -1099,7 +1183,7 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
                 }
                 $result.="</table>\n";
         }
-        $result.="<p>Last 10 billings from pool:</p>\n";
+        $result.=html_block_desc("payout_billings_pre");
 
         $billings_array=db_query_to_array("SELECT `uid`,`comment`,`start_date`,`stop_date`,`reward` FROM `boincmgr_billing_periods` ORDER BY `stop_date` DESC LIMIT 10");
         foreach($billings_array as $billing) {
@@ -1113,14 +1197,23 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
 
                 $billing_uid_escaped=db_escape($billing_uid);
 
-                $result.="<h3>For period from $start_date to $stop_date pool rewarded with $reward gridcoins ($comment)</h3>\n";
+                $header=html_block_header_2("payout_billings_header");
+                $header=str_replace("%start_date%",$start_date,$header);
+                $header=str_replace("%stop_date%",$stop_date,$header);
+                $header=str_replace("%reward%",$reward,$header);
+                $header=str_replace("%comment%",$comment,$header);
+                $result.=$header;
+
+                //$result.="<h3>For period from $start_date to $stop_date pool rewarded with $reward gridcoins ($comment)</h3>\n";
                 $payout_data_array=db_query_to_array("SELECT `currency`,`grc_amount`,`rate`,`payout_address`,`amount`,`txid`,`timestamp` FROM `boincmgr_payouts`
 WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDER BY `payout_address` ASC");
 
 //              $result.="<p>Gridcoin payouts</p>\n";
+                $result.=html_block_desc("payout_billings_grc_table_pre");
                 $result.="<p><table align=center>\n";
-                $result.="<caption>Gridcoin payouts</caption>";
-                $result.="<tr></th><th>Address</th><th>GRC amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
+                //$result.="<caption>Gridcoin payouts</caption>";
+                $result.=html_table_header("payout_billings_grc_table_header");
+//              $result.="<tr></th><th>Address</th><th>GRC amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
                 foreach($payout_data_array as $payout_data) {
                         $payout_address=$payout_data['payout_address'];
                         $grc_amount=$payout_data['grc_amount'];
@@ -1149,9 +1242,11 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
                 if(count($payout_data_array)==0) continue;
 
 //              $result.="<p>Alternative currencies</p>\n";
+                $result.=html_block_desc("payout_billings_alt_table_pre");
                 $result.="<p><table align=center>\n";
-                $result.="<caption>Alternative currencies</caption>";
-                $result.="<tr></th><th>Address</th><th>Amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
+//              $result.="<caption>Alternative currencies</caption>";
+                $result.=html_table_header("payout_billings_alt_table_header");
+//              $result.="<tr></th><th>Address</th><th>Amount</th><th>TX ID</th><th>Timestamp</th></tr>\n";
                 foreach($payout_data_array as $payout_data) {
                         $payout_address=$payout_data['payout_address'];
                         $grc_amount=$payout_data['grc_amount'];
@@ -1184,6 +1279,7 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
 function html_billing_form() {
         global $username;
         global $username_token;
+        global $current_language;
 
         $result="";
         $result.="<div id=billing_block class=selectable_block>\n";
@@ -1267,6 +1363,8 @@ _END;
 
 // Show log
 function html_view_log() {
+        global $current_language;
+
         $result="";
         $result.="<div id=log_block class=selectable_block>\n";
         $result.="<h2>View log</h2>\n";
@@ -1292,18 +1390,28 @@ function html_view_log() {
 
 // Show pool stats
 function html_pool_stats() {
+        global $current_language;
+
         $result="";
         $result.="<div id=pool_stats_block class=selectable_block>\n";
-        $result.="<h2>Pool stats</h2>\n";
-        $result.="<p><a href='tasks.php'>Global task report page</a></p>\n";
-        $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
+
+        $result.=html_block_header_1("pool_stats_header");
+        $result.=html_block_desc("pool_stats_desc");
+
+        $result.="<p><table align=center>\n";
+        $result.=html_table_header("pool_stats_table_header");
+
+//      $result.="<h2>Pool stats</h2>\n";
+//      $result.="<p><a href='tasks.php'>Global task report page</a></p>\n";
+//      $result.="<p>Enabled (or auto enabled) means project data updated and rewards are on. Stats only - users cannot attach by themselves, rewards on, auto disabled - only downloading stats, no rewards, disabled - do not check anything about this project (no rewards too).</p>";
 
         $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
         if($start_date=="") $start_date="2018-01-01 20:20:16";
         $stop_date=db_query_to_variable("SELECT NOW()");
 
-        $result.="<p><table align=center>\n";
-        $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool mag</th><th>&#8776;Pool GRC/day</th><th>Hosts</th><th>Task report</th><th>Status</th><th>Pool mag 7d graph</th></tr>\n";
+//      $result.="<p><table align=center>\n";
+//      $result.=html_table_header("pool_stats_table_header");
+//      $result.="<tr><th>Project</th><th>Team RAC</th><th>Pool RAC</th><th>Pool mag</th><th>&#8776;Pool GRC/day</th><th>Hosts</th><th>Task report</th><th>Status</th><th>Pool mag 7d graph</th></tr>\n";
 
         $project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `boincmgr_projects` ORDER BY `name` ASC");
 
@@ -1382,8 +1490,11 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 
 function html_pool_info_editor() {
         global $username_token;
+        global $current_language;
 
-        $pool_info=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='pool_info'");
+        $news_variable=$current_language["news_variable"];
+
+        $pool_info=db_query_to_variable("SELECT `value` FROM `boincmgr_variables` WHERE `name`='$news_variable'");
         $pool_info_html=html_escape($pool_info);
 
         $result=<<<_END
@@ -1405,6 +1516,8 @@ _END;
 
 function html_host_options_form() {
         global $username_token;
+        global $current_language;
+
         $result="";
         $result.=<<<_END
 <div class='pre_window' id='popup_form'>
@@ -1425,6 +1538,7 @@ function html_host_options_form() {
 <p><label><input type=checkbox id='host_options_form_no_cuda' name='no_cuda'> no CUDA tasks</label></p>
 <p><label><input type=checkbox id='host_options_form_no_ati' name='no_ati'> no ATI tasks</label></p>
 <p><label><input type=checkbox id='host_options_form_no_intel' name='no_intel'> no intel GPU tasks</label></p>
+<p><label><input type=checkbox id='host_options_form_user_override' name='user_override'> user settings overrides pool</label></p>
 <p><input type=submit value='Save'> <input type=button value='Cancel' onClick='document.getElementById("popup_form").style.display="none";'></p>
 </form>
 </div>
@@ -1435,13 +1549,22 @@ _END;
 
 // Exchange rates block
 function html_currencies() {
+        global $current_language;
+
         $result="";
         $result.="<div id=currencies_block class=selectable_block>\n";
-        $result.="<h2>Payout currencies</h2>\n";
+
+        $result.=html_block_header_1("currencies_header");
+        $result.=html_block_desc("currencies_desc");
 
         $result.="<p><table align=center>\n";
-        $result.="<caption>Data for payout currencies:</caption>\n";
-        $result.="<tr><th>Full name</th><th>Rate per 1 GRC</th><th>Payout limit</th><th>TX fee</th><th>Project fee</th></tr>\n";
+        $result.=html_table_header("currencies_table_header");
+
+//      $result.="<h2>Payout currencies</h2>\n";
+
+//      $result.="<p><table align=center>\n";
+//      $result.="<caption>Data for payout currencies:</caption>\n";
+//      $result.="<tr><th>Full name</th><th>Rate per 1 GRC</th><th>Payout limit</th><th>TX fee</th><th>Project fee</th></tr>\n";
 
         $currency_data_array=db_query_to_array("SELECT `name`,`full_name`,`payout_limit`,`tx_fee`,`project_fee` FROM `boincmgr_currency` ORDER BY `name`");
 
@@ -1476,14 +1599,22 @@ function html_currencies() {
 // Block explorer block
 function html_block_explorer() {
         global $pool_cpid;
+        global $current_language;
 
         $result="";
         $result.="<div id=block_explorer_block class=selectable_block>\n";
-        $result.="<h2>Last 500 blocks</h2>\n";
+
+        $result.=html_block_header_1("block_explorer_header");
+        $result.=html_block_desc("block_explorer_desc");
 
         $result.="<p><table align=center>\n";
-        $result.="<caption>Data from blockchain (at least 110 confirmations, updated hourly):</caption>\n";
-        $result.="<tr><th>Number</th><th>Hash</th><th>Mint</th><th>Interest</th><th>CPID</th><th>Rewards</th><th>Timestamp</th></tr>\n";
+        $result.=html_table_header("block_explorer_table_header");
+
+        //$result.="<h2>Last 500 blocks</h2>\n";
+
+        //$result.="<p><table align=center>\n";
+        //$result.="<caption>Data from blockchain (at least 110 confirmations, updated hourly):</caption>\n";
+        //$result.="<tr><th>Number</th><th>Hash</th><th>Mint</th><th>Interest</th><th>CPID</th><th>Rewards</th><th>Timestamp</th></tr>\n";
 
         $blocks_data_array=db_query_to_array("SELECT `number`,`hash`,`mint`,`interest`,`cpid`,`rewards_sent`,`timestamp` FROM `boincmgr_blocks` ORDER BY `number` DESC LIMIT 500");
 
@@ -1530,20 +1661,24 @@ function html_block_explorer() {
 function html_message_send() {
         global $username;
         global $username_token;
+        global $current_language;
 
         $username_uid=boincmgr_get_username_uid($username);
         $email=boincmgr_get_user_email($username_uid);
 
+        $header=html_block_header_1("feedback_header");
+        $desc=html_block_desc("feedback_desc");
+
         $result=<<<_END
 <div id=message_send_block class=selectable_block>
-<h2>Feedback</h2>
-<p>You can ask questions here or just send a random message to the pool administration. Don't forget to set a reply address if you to get a reply.</p>
+$header
+$desc
 <form name=messages method=POST>
 <input type=hidden name="action" value="send_message">
 <input type=hidden name="token" value="$username_token">
-<p>Reply to (if you want a reply) <input type=text name=reply_to value='$email' size=50></p>
+<p>${current_language["feedback_email"]} <input type=text name=reply_to value='$email' size=50></p>
 <p><textarea name=message cols=60 rows=10></textarea></p>
-<p><input type=submit value='Send'></p>
+<p><input type=submit value='${current_language["feedback_submit"]}'></p>
 </form>
 _END;
         return $result;
@@ -1551,6 +1686,8 @@ _END;
 
 // View messages form
 function html_messages_view() {
+        global $current_language;
+
         $result="";
         $result.="<div id=messages_view_block class=selectable_block>\n";
         $result.="<h2>Last 100 messages</h2>\n";
@@ -1586,6 +1723,8 @@ function html_messages_view() {
 
 // View email form
 function html_email_view() {
+        global $current_language;
+
         $result="";
         $result.="<div id=email_view_block class=selectable_block>\n";
         $result.="<h2>Last 100 email messages from pool</h2>\n";
@@ -1620,12 +1759,20 @@ function html_email_view() {
 // Rating by host magnitude
 function html_rating_by_host_mag() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=rating_by_host_mag_block class=selectable_block>\n";
-        $result.="<h3>Rating by host magnitude</h3>\n";
-        $result.="<table align=center>\n";
+
+        $result.=html_block_header_1("rating_by_host_mag_header");
+        $result.=html_block_desc("rating_by_host_mag_desc");
+
+        $result.="<p><table align=center>\n";
+        $result.=html_table_header("rating_by_host_mag_table_header");
+
+//      $result.="<h3>Rating by host magnitude</h3>\n";
+//      $result.="<table align=center>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -1633,7 +1780,7 @@ function html_rating_by_host_mag() {
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
-        $result.="<tr><th>№</th><th>Username</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
+//      $result.="<tr><th>№</th><th>Username</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
         $host_stats_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
 FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -1674,12 +1821,20 @@ LIMIT 100");
 // Rating by host and project magnitude
 function html_rating_by_host_project_mag() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=rating_by_host_project_mag_block class=selectable_block>\n";
-        $result.="<h3>Rating by host magnitude</h3>\n";
-        $result.="<table align=center>\n";
+
+        $result.=html_block_header_1("rating_by_host_project_mag_header");
+        $result.=html_block_desc("rating_by_host_project_mag_desc");
+
+        $result.="<p><table align=center>\n";
+        $result.=html_table_header("rating_by_host_project_mag_table_header");
+
+//      $result.="<h3>Rating by host magnitude</h3>\n";
+//      $result.="<table align=center>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -1687,7 +1842,7 @@ function html_rating_by_host_project_mag() {
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
-        $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
+//      $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Domain name</th><th>Summary</th><th>Magnitude</th></tr>\n";
         $host_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
 FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -1728,12 +1883,20 @@ LIMIT 100");
 // Rating by user magnitude
 function html_rating_by_user_mag() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=rating_by_user_mag_block class=selectable_block>\n";
-        $result.="<h3>Rating by user magnitude</h3>\n";
-        $result.="<table align=center>\n";
+
+        $result.=html_block_header_1("rating_by_user_mag_header");
+        $result.=html_block_desc("rating_by_user_mag_desc");
+
+        $result.="<p><table align=center>\n";
+        $result.=html_table_header("rating_by_user_mag_table_header");
+
+//      $result.="<h3>Rating by user magnitude</h3>\n";
+//      $result.="<table align=center>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -1741,7 +1904,7 @@ function html_rating_by_user_mag() {
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
-        $result.="<tr><th>№</th><th>Username</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
+//      $result.="<tr><th>№</th><th>Username</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
         $user_stats_data_array=db_query_to_array("SELECT bu.`username`,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
 FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -1775,12 +1938,20 @@ LIMIT 100");
 // Rating by user and project magnitude
 function html_rating_by_user_project_mag() {
         global $username;
+        global $current_language;
 
         $result="";
 
         $result.="<div id=rating_by_user_project_mag_block class=selectable_block>\n";
-        $result.="<h3>Rating by user magnitude</h3>\n";
-        $result.="<table align=center>\n";
+
+        $result.=html_block_header_1("rating_by_user_project_mag_header");
+        $result.=html_block_desc("rating_by_user_project_mag_desc");
+
+        $result.="<p><table align=center>\n";
+        $result.=html_table_header("rating_by_user_project_mag_table_header");
+
+//      $result.="<h3>Rating by user magnitude</h3>\n";
+//      $result.="<table align=center>\n";
 
         $magnitude_unit=boincmgr_get_magnitude_unit();
         $mag_per_project=boincmgr_get_mag_per_project();
@@ -1788,7 +1959,7 @@ function html_rating_by_user_project_mag() {
         $username_uid=boincmgr_get_username_uid($username);
         $username_uid_escaped=db_escape($username_uid);
 
-        $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
+//      $result.="<tr><th>№</th><th>Username</th><th>Project name</th><th>Hosts count</th><th>Magnitude</th></tr>\n";
         $user_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
 FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -1826,6 +1997,7 @@ function html_faucet() {
         global $username;
         global $username_token;
         global $faucet_plain_amount;
+        global $current_language;
 
         $result="";
 
@@ -1852,14 +2024,23 @@ LIMIT 100
         if($user_magnitude == 0) $user_magnitude=0;
         $user_magnitude=sprintf("%0.2F",$user_magnitude);
 
-        $result.="<h3>Faucet</h3>\n";
+        $result.=html_block_header_1("faucet_header");
+        $result.=html_block_desc("faucet_desc");
+
+//      $result.="<h3>Faucet</h3>\n";
         if($currency!='GRC' && $currency!='GRC2'){
-                $result.="<p>You can claim only GRC</p>";
+                $result.=html_block_desc("faucet_only_grc");
+//              $result.="<p>You can claim only GRC</p>";
         } else if($claim_today == 1) {
-                $result.="<p>You already received coins today</p>";
+                $result.=html_block_desc("faucet_already_claimed");
+//              $result.="<p>You already received coins today</p>";
         } else if($user_magnitude > 1) {
                 //$amount=sprintf("%0.2F",log($user_magnitude,10));
                 $amount=$faucet_plain_amount;
+
+                $desc=html_block_desc("faucet_ready");
+                $desc=str_replace("%amount%",$amount,$desc);
+                $desc=str_replace("%magnitude%",$user_magnitude,$desc);
 
                 $result.=<<<_END
 <form name=faucet_claim method=POST>
@@ -1871,7 +2052,10 @@ LIMIT 100
 
 _END;
         } else {
-                $result.="<p>You need magnutude>=1 for use faucet (your magnitude currently is $user_magnitude)</p>";
+                $desc=html_block_desc("faucet_low_magnitude");
+                $desc=str_replace("%magnitude%",$user_magnitude,$desc);
+                $result.=$desc;
+//              $result.="<p>You need magnutude>=1 for use faucet (your magnitude currently is $user_magnitude)</p>";
         }
         return $result;
 }
