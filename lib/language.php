@@ -340,7 +340,8 @@ $lang_data_json=<<<_END
         },
 "settings_payout_currency_after":{
         "en":"(look notice above)",
-        "ru":"(смотри сообщение выше)"
+        "ru":"(смотри сообщение выше)",
+        "de":"(siehe den obigen Hinweis)"
         },
 "settings_password":{
         "en":"Password",
