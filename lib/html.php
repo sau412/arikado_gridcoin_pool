@@ -42,13 +42,12 @@ function html_page_begin() {
 
         // Check current language
         $current_language=lang_get_current();
-        $next_language=lang_get_next($current_language);
         $change_language_button=<<<_END
 <div style='float:right;'>
 <form name=change_language method=post>
 <input type=hidden name=action value='change_lang'>
 <input type=hidden name=token value='$username_token'>
-<select name=lang onChange='form.submit();'><option>language</option><option value='en'>english</option><option value='ru'>русский</option></select>
+<select name=lang onChange='form.submit();'><option>language</option><option value='en'>english</option><option value='ru'>русский</option><option value='de'>Deutsch</option><option value='zh'>中文</option></select>
 </form>
 </div>
 
