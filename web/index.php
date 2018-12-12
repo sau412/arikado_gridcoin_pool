@@ -327,16 +327,20 @@ if($username!="") {
         if(isset($_POST['action'])) {
                 // Register new user
                 if($_POST['action']=="register") {
-                        $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
-                        if(auth_recaptcha_check($recaptcha_response)) {
-                                $username=html_strip($_POST['username']);
-                                $password_1=html_strip($_POST['password_1']);
-                                $password_2=html_strip($_POST['password_2']);
-                                $email=html_strip($_POST['email']);
-                                $payout_address=html_strip($_POST['payout_address']);
-                                $payout_currency=html_strip($_POST['payout_currency']);
-                                $register_result=auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address);
-                                setcookie("action_message",$auth_register_result_to_message[$register_result]);
+                        if(isset($_POST['g-recaptcha-response'])) {
+                                $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
+                                if(auth_recaptcha_check($recaptcha_response)) {
+                                        $username=html_strip($_POST['username']);
+                                        $password_1=html_strip($_POST['password_1']);
+                                        $password_2=html_strip($_POST['password_2']);
+                                        $email=html_strip($_POST['email']);
+                                        $payout_address=html_strip($_POST['payout_address']);
+                                        $payout_currency=html_strip($_POST['payout_currency']);
+                                        $register_result=auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address);
+                                        setcookie("action_message",$auth_register_result_to_message[$register_result]);
+                                } else {
+                                        setcookie("action_message",$message_register_recaptcha_error);
+                                }
                         } else {
                                 setcookie("action_message",$message_register_recaptcha_error);
                         }
@@ -344,14 +348,23 @@ if($username!="") {
                         die();
                 // Login existing user
                 } else if($_POST['action']=='login') {
-                        $username=html_strip($_POST['username']);
-                        $password=html_strip($_POST['password']);
-                        $login_result=auth_login($username,$password);
+                        if(isset($_POST['g-recaptcha-response'])) {
+                                $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
+                                if(auth_recaptcha_check($recaptcha_response)) {
+                                        $username=html_strip($_POST['username']);
+                                        $password=html_strip($_POST['password']);
+                                        $login_result=auth_login($username,$password);
 
-                        if($login_result==TRUE) {
-                                auth_get_new_token($username);
+                                        if($login_result==TRUE) {
+                                                auth_get_new_token($username);
+                                        } else {
+                                                setcookie("action_message",$message_login_fail);
+                                        }
+                                } else {
+                                        setcookie("action_message",$message_login_recaptcha_error);
+                                }
                         } else {
-                                setcookie("action_message",$message_login_fail);
+                                setcookie("action_message",$message_login_recaptcha_error);
                         }
                         header("Location: ./");
                         die();
