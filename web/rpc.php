@@ -38,6 +38,11 @@ if(count($xml_data)==0) {
         die();
 }
 
+// Fill unset data
+// Username, password, cpid cannot be empty, others could
+if(!isset($xml_data["domain_name"])) $xml_data["domain_name"]="";
+if(!isset($xml_data["p_model"])) $xml_data["p_model"]="";
+
 // Get data from array
 $username=$xml_data["name"];
 $password_hash=$xml_data["password_hash"];
@@ -100,6 +105,8 @@ $client_still_attached_project_uids=array();
 if(!isset($xml_data["projects"])) $xml_data["projects"]=array();
 
 foreach($xml_data["projects"] as $project_data) {
+        if(!isset($project_data["project_name"])) continue;
+
         // Get user data
         $project_name=$project_data["project_name"];
         $project_host_id=$project_data["hostid"];
