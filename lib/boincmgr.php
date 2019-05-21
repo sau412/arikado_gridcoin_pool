@@ -490,7 +490,7 @@ FROM `boincmgr_project_hosts_last` AS bphl
 LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only') AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
