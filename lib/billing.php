@@ -101,6 +101,21 @@ WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admi
         return $result;
 }
 
+// Return users with project contribution exists
+function bill_get_user_project_contribution_exists($project_uid) {
+        $project_uid_escaped=db_escape($project_uid);
+        $result=array();
+        $data=db_query_to_array("SELECT DISTINCT `username_uid`
+                                        FROM `boincmgr_project_host_stats` AS bphs
+                                        JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+                                        WHERE `project_uid`='$project_uid_escaped' AND `expavg_credit`>0");
+        foreach($data as $row) {
+                $username_uid=$row['username_uid'];
+                $result[$username_uid]=1;
+        }
+        return $result;
+}
+
 // Calculate rewards for single project
 function bill_single_project($project_uid,$start_date,$stop_date,$project_reward,$check_rewards,$anxtiexp_rac_flag) {
         if($check_rewards) {
@@ -112,11 +127,17 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         $stop_date_escaped=db_escape($stop_date);
         $project_uid_escaped=db_escape($project_uid);
 
+        $users_with_contribution_exists=bill_get_user_project_contribution_exists($project_uid);
+
         $user_reward_data=array();
         $user_uids_array=db_query_to_array("SELECT `uid` FROM `boincmgr_users`");
         foreach($user_uids_array as $user_uid_data) {
                 $user_uid=$user_uid_data['uid'];
-                $user_reward_data[]=bill_single_user($project_uid,$user_uid,$start_date,$stop_date,$project_reward,$check_rewards,$anxtiexp_rac_flag);
+                if(isset($users_with_contribution_exists[$user_uid])) {
+                        $user_reward_data[]=bill_single_user($project_uid,$user_uid,$start_date,$stop_date,$project_reward,$check_rewards,$anxtiexp_rac_flag);
+                } else {
+                        //echo "No contribution from user $user_uid\n";
+                }
         }
 
         foreach($user_reward_data as $single_user_reward_data) {
@@ -220,6 +241,126 @@ function reward_array_combine($reward_array_1,$reward_array_2) {
                 else $reward_array[$payout_address]=$reward;
         }
         return $reward_array;
+}
+
+// Close period
+function bill_forecast_close_period() {
+        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `boincmgr_project_host_stats` WHERE `is_payed_out`=0");
+        $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
+        $stop_date=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_project_host_stats` WHERE `interval` IS NOT NULL");
+
+        $comment="Gridcoin forecast miner rewards";
+
+        $comment_escaped=db_escape($comment);
+        $start_date_escaped=db_escape($start_date);
+        $stop_date_escaped=db_escape($stop_date);
+        $grc_reward_escaped=db_escape($grc_reward);
+
+        db_query("INSERT INTO `boincmgr_billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
+        $billing_uid=mysql_insert_id();
+        $billing_uid_escaped=db_escape($billing_uid);
+
+        // Get all unsent payouts
+        $unsent_payouts_array=db_query_to_array("SELECT bh.`username_uid`,bphs.`currency`,
+SUM(bphs.`grc_amount`) AS grc_amount,
+SUM(bphs.`currency_amount`) AS currency_amount,
+bu.`payout_address`
+FROM `boincmgr_project_host_stats` AS bphs
+JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`is_payed_out`=0 AND bphs.`timestamp` BETWEEN '$start_date' AND '$stop_date'
+GROUP BY bh.`username_uid`,bphs.`currency`
+HAVING SUM(bphs.`currency_amount`)>0
+");
+
+        foreach($unsent_payouts_array as $unsent_payouts_row) {
+                $user_uid=$unsent_payouts_row['username_uid'];
+                $currency=$unsent_payouts_row['currency'];
+                $grc_amount=$unsent_payouts_row['grc_amount'];
+                $currency_amount=$unsent_payouts_row['currency_amount'];
+                $payout_address=$unsent_payouts_row['payout_address'];
+
+                if($grc_amount>0) $rate=$currency_amount/$grc_amount;
+                else $rate=0;
+
+                $user_uid_escaped=db_escape($user_uid);
+                $currency_escaped=db_escape($currency);
+                $grc_amount_escaped=db_escape($grc_amount);
+                $currency_amount_escaped=db_escape($currency_amount);
+                $payout_address_escaped=db_escape($payout_address);
+                $rate_escaped=db_escape($rate);
+
+                db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
+VALUES ('$billing_uid_escaped','$user_uid_escaped','$grc_amount_escaped','$currency_escaped','$rate_escaped',
+        '$payout_address_escaped','$currency_amount_escaped')");
+                boincmgr_update_balance($user_uid);
+        }
+
+        // Mark as payed out
+        db_query("UPDATE `boincmgr_project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
+}
+
+// Send unsent
+function bill_send_unsent() {
+        $start_date=db_query_to_variable("SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats` WHERE `is_payed_out`=0");
+        $stop_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
+        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `boincmgr_project_host_stats`
+                                                WHERE `is_payed_out`=0 AND `interval` IS NOT NULL
+                                                AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
+
+        $comment="Gridcoin unsent rewards";
+
+        $comment_escaped=db_escape($comment);
+        $start_date_escaped=db_escape($start_date);
+        $stop_date_escaped=db_escape($stop_date);
+        $grc_reward_escaped=db_escape($grc_reward);
+
+echo "Period is from $start_date to $stop_date reward $grc_reward\n";
+//die();
+//      db_query("INSERT INTO `boincmgr_billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
+//      $billing_uid=mysql_insert_id();
+//      $billing_uid_escaped=db_escape($billing_uid);
+
+        // Get all unsent payouts
+        $unsent_payouts_array=db_query_to_array("SELECT bh.`username_uid`,bphs.`currency`,
+SUM(bphs.`grc_amount`) AS grc_amount,
+SUM(bphs.`currency_amount`) AS currency_amount,
+bu.`payout_address`
+FROM `boincmgr_project_host_stats` AS bphs
+JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+WHERE bphs.`is_payed_out`=0 AND bphs.`timestamp` BETWEEN '$start_date' AND '$stop_date'
+GROUP BY bh.`username_uid`,bphs.`currency`
+HAVING SUM(bphs.`currency_amount`)>0
+");
+
+        foreach($unsent_payouts_array as $unsent_payouts_row) {
+                $user_uid=$unsent_payouts_row['username_uid'];
+                $currency=$unsent_payouts_row['currency'];
+                $grc_amount=$unsent_payouts_row['grc_amount'];
+                $currency_amount=$unsent_payouts_row['currency_amount'];
+                $payout_address=$unsent_payouts_row['payout_address'];
+
+                if($grc_amount>0) $rate=$currency_amount/$grc_amount;
+                else $rate=0;
+
+                $user_uid_escaped=db_escape($user_uid);
+                $currency_escaped=db_escape($currency);
+                $grc_amount_escaped=db_escape($grc_amount);
+                $currency_amount_escaped=db_escape($currency_amount);
+                $payout_address_escaped=db_escape($payout_address);
+                $rate_escaped=db_escape($rate);
+
+echo "$payout_address $grc_amount GRC\n";
+continue;
+                db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
+VALUES ('$billing_uid_escaped','$user_uid_escaped','$grc_amount_escaped','$currency_escaped','$rate_escaped',
+        '$payout_address_escaped','$currency_amount_escaped')");
+                boincmgr_update_balance($user_uid);
+        }
+
+        // Mark as payed out
+        //db_query("UPDATE `boincmgr_project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
 }
 
 ?>
