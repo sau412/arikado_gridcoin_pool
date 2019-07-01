@@ -30,7 +30,7 @@ if(isset($_POST['db_host'])) {
         if($xml==FALSE || isset($xml->error_msg)) {
                 echo "<p>Error:</p>";
                 echo "<pre><tt>$data</tt></pre>";
-                die();
+//                die();
         } else {
                 echo "<p>It works!</p>\n";
         }
@@ -58,7 +58,7 @@ if(isset($_POST['db_host'])) {
         } else {
                 echo "<p>Error:</p>";
                 echo "<pre><tt>$result</tt></pre>";
-                die();
+//                die();
         }
         // ReCAPTCHA
         $recaptcha_public=stripslashes($_POST['recaptcha_public']);
@@ -111,7 +111,7 @@ if(isset($_POST['db_host'])) {
 
         echo "<p>Add admin user</p>\n";
         flush();
-        db_query("INSERT IGNORE INTO `boincmgr_users` (`username`,`email`,`salt`,`passwd_hash`,`payout_address`,`status`) VALUES ('$admin_login','','$salt_escaped','$admin_passwd_hash','','admin')");
+        db_query("INSERT IGNORE INTO `users` (`username`,`email`,`salt`,`passwd_hash`,`payout_address`,`status`) VALUES ('$admin_login','','$salt_escaped','$admin_passwd_hash','','admin')");
 
         $settings_file=<<<_END
 <?php
