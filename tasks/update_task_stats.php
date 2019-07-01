@@ -9,6 +9,14 @@ require_once("../lib/auth.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/email.php");
 
+$f=fopen("/tmp/lockfile_task_stats","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 db_connect();
 
 
