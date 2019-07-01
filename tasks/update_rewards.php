@@ -4,10 +4,19 @@ require_once("../lib/db.php");
 require_once("../lib/auth.php");
 require_once("../lib/boincmgr.php");
 
+$f=fopen("/tmp/lockfile_rewards","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 db_connect();
 
 $magnitude_unit=boincmgr_get_variable("magnitude_unit");
 $magnitude_unit_escaped=db_escape($magnitude_unit);
+echo "Magnitude unit: $magnitude_unit\n";
 
 $project_count=boincmgr_get_variable("project_count");
 $project_count_escaped=db_escape($project_count);
@@ -18,6 +27,9 @@ $magnitude_total=115000;
 
 //var_dump($magnitude_unit); die();
 
+$count=db_query_to_variable("SELECT count(*) FROM `project_host_stats` WHERE `interval` IS NULL");
+echo "Remaining results: $count\n";
+
 $data_array=db_query_to_array("SELECT bphs.`uid`,bphs.`project_uid`,bphs.`host_uid`,bphs.`host_id`,bphs.`expavg_credit`,bphs.`total_credit`,bphs.`timestamp`,UNIX_TIMESTAMP(bphs.`timestamp`) AS unix_timestamp,
 bp.`superblock_expavg_credit`,bp.`present_in_superblock`,bu.`currency`,bc.`rate_per_grc`,bu.`uid` AS user_uid
 FROM `project_host_stats` AS bphs
@@ -25,7 +37,7 @@ LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
 LEFT OUTER JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 LEFT OUTER JOIN `currency` AS bc ON bc.`name`=bu.`currency`
-WHERE `interval` IS NULL ORDER BY `timestamp` DESC LIMIT 10000");
+WHERE `interval` IS NULL ORDER BY `timestamp` DESC LIMIT 200");
 
 foreach($data_array as $data_point) {
         $uid=$data_point['uid'];
@@ -71,6 +83,7 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
         if($project_in_superblock==0) {
                 $grc_amount=0;
         } else {
+                //echo "$grc_amount=($magnitude_total/$project_count) * $magnitude_unit * ($time_delta/86400) * $expavg_credit/$project_superblock_expavg_credit;\n";
                 $grc_amount=($magnitude_total/$project_count) * $magnitude_unit * ($time_delta/86400) * $expavg_credit/$project_superblock_expavg_credit;
         }
 
@@ -94,7 +107,6 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
 
         db_query("UPDATE `project_host_stats` SET `interval`='$time_delta_escaped',`magnitude_unit`='$magnitude_unit_escaped',`grc_amount`='$grc_amount_escaped',
 `exchange_rate`='$rate_per_grc_escaped',`currency`='$currency_escaped',`currency_amount`='$currency_amount_escaped',`is_payed_out`=0 WHERE `uid`='$uid_escaped'");
-        boincmgr_update_balance($user_uid);
-        //db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
+        db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
 }
 ?>
