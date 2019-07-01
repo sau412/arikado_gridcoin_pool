@@ -47,7 +47,7 @@ function email_add($to,$subject,$body) {
         $subject_escaped=db_escape($subject);
         $body_escaped=db_escape($body);
 
-        db_query("INSERT INTO `boincmgr_email` (`to`,`subject`,`message`) VALUES ('$to_escaped','$subject_escaped','$body_escaped')");
+        db_query("INSERT INTO `email` (`to`,`subject`,`message`) VALUES ('$to_escaped','$subject_escaped','$body_escaped')");
 }
 
 // Set email status
@@ -59,12 +59,12 @@ function email_set_status($email_uid,$status) {
 
         $status_escaped=db_escape($status);
 
-        db_query("UPDATE `boincmgr_email` SET `is_sent`=1,`is_success`='$status_escaped' WHERE `uid`='$email_uid_escaped'");
+        db_query("UPDATE `email` SET `is_sent`=1,`is_success`='$status_escaped' WHERE `uid`='$email_uid_escaped'");
 }
 
 // Send emails from query
 function email_send_all() {
-        $unsent_emails_array=db_query_to_array("SELECT `uid`,`to`,`subject`,`message` FROM `boincmgr_email` WHERE `is_sent`=0");
+        $unsent_emails_array=db_query_to_array("SELECT `uid`,`to`,`subject`,`message` FROM `email` WHERE `is_sent`=0");
         foreach($unsent_emails_array as $email_data) {
                 $email_uid=$email_data['uid'];
                 $to=$email_data['to'];
