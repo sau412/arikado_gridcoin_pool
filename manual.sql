@@ -253,8 +253,6 @@ CREATE TABLE `variables` (
   `value` text COLLATE utf8_unicode_ci NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-CREATE TABLE `view_host_stats` (
-);
 
 CREATE TABLE `xml` (
   `uid` int(11) NOT NULL,
