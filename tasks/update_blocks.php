@@ -7,6 +7,14 @@ require_once("../lib/settings.php");
 require_once("../lib/db.php");
 require_once("../lib/auth.php");
 
+$f=fopen("/tmp/lockfile_blocks","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 // Send query to gridcoin client
 function grc_rpc_send_query($query) {
         global $grc_rpc_host,$grc_rpc_port,$grc_rpc_login,$grc_rpc_password;
@@ -53,7 +61,10 @@ db_connect();
 $current_block=db_query_to_variable("SELECT MAX(`number`)+1 FROM `blocks`");
 
 // 1110 = 1000 + 110 confirmations to stake blocks
-if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
+if($current_block=="") {
+        echo "Current block not found\n";
+        $current_block=grc_rpc_get_block_count()-1110;
+}
 //if($current_block=="") $current_block=1257860;
 
 do{
