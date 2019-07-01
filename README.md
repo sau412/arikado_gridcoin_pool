@@ -25,7 +25,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 ## Apache, PHP, MySQL part
 1) Copy files to folder, e.g. /var/www/boinc_pool/
 2) Set web access to /var/www/boinc_pool/web
-3) Create DB and user for pool
+3) Create DB and DB user for pool
 4) Run manual.sql in pool's DB
 5) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 6) Change settings in your settings.php
