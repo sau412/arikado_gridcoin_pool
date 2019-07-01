@@ -12,22 +12,25 @@ require_once("../lib/billing.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/canvas.php");
 require_once("../lib/xml_parser.php");
+require_once("../lib/captcha.php");
 
 db_connect();
 
 // Get auth_cookie from cookies and check authentification
-if(isset($_COOKIE['auth_cookie']) && auth_validate_auth_cookie($_COOKIE['auth_cookie'])) {
-        $auth_cookie=html_strip($_COOKIE['auth_cookie']);
-        $auth_cookie_escaped=db_escape($auth_cookie);
-        $username_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_user_auth_cookies` WHERE `cookie_token`='$auth_cookie_escaped' AND `expire_date`>CURRENT_TIMESTAMP");
-        if($username_uid) {
-                $username=boincmgr_get_user_name($username_uid);
-                db_query("UPDATE `boincmgr_user_auth_cookies` SET `expire_date`=DATE_ADD(NOW(),INTERVAL 2 DAY) WHERE `cookie_token`='$auth_cookie_escaped'");
-        } else {
-                $username="";
-        }
+$auth_cookie=auth_cookie();
+$auth_cookie_escaped=db_escape($auth_cookie);
+$username_uid=db_query_to_variable("SELECT `username_uid` FROM `user_auth_cookies` WHERE `cookie_token`='$auth_cookie_escaped' AND `expire_date`>CURRENT_TIMESTAMP");
+if($username_uid) {
+        $username=boincmgr_get_user_name($username_uid);
+        db_query("UPDATE `user_auth_cookies` SET `expire_date`=DATE_ADD(NOW(),INTERVAL 2 DAY) WHERE `cookie_token`='$auth_cookie_escaped'");
 } else {
         $username="";
+}
+
+// Captcha
+if(isset($_GET['captcha'])) {
+        captcha_show($auth_cookie);
+        die();
 }
 
 // Check if action message exists
@@ -148,7 +151,7 @@ if($username!="") {
 
                                 $user_uid_escaped=db_escape($user_uid);
                                 $status_escaped=db_escape($status);
-                                db_query("UPDATE `boincmgr_users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
+                                db_query("UPDATE `users` SET `status`='$status_escaped' WHERE `uid`='$user_uid_escaped'");
                                 setcookie("action_message",$message_user_status_changed);
                         // Change project_status (for admin)
                         } else if($_POST['action']=='change_project_status') {
@@ -162,7 +165,7 @@ if($username!="") {
 
                                 $project_uid_escaped=db_escape($project_uid);
                                 $status_escaped=db_escape($status);
-                                db_query("UPDATE `boincmgr_projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
+                                db_query("UPDATE `projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
                                 setcookie("action_message",$message_project_status_changed);
                         // Calculate payouts
                         } else if($_POST['action']=='billing') {
@@ -209,7 +212,7 @@ if($username!="") {
                 } else if($_GET['action']=='view_host_last_query') {
                         $host_uid=$_GET['host_uid'];
                         $host_uid_escaped=db_escape($host_uid);
-                        $result_encoded=db_query_to_variable("SELECT `last_query` FROM `boincmgr_hosts` WHERE `uid`='$host_uid_escaped'");
+                        $result_encoded=db_query_to_variable("SELECT `last_query` FROM `hosts` WHERE `uid`='$host_uid_escaped'");
                         echo "<pre><tt>";
                         echo html_escape(base64_decode($result_encoded));
                         echo "</tt></pre>";
@@ -327,45 +330,39 @@ if($username!="") {
         if(isset($_POST['action'])) {
                 // Register new user
                 if($_POST['action']=="register") {
-                        if(isset($_POST['g-recaptcha-response'])) {
-                                $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
-                                if(auth_recaptcha_check($recaptcha_response)) {
-                                        $username=html_strip($_POST['username']);
-                                        $password_1=html_strip($_POST['password_1']);
-                                        $password_2=html_strip($_POST['password_2']);
-                                        $email=html_strip($_POST['email']);
-                                        $payout_address=html_strip($_POST['payout_address']);
-                                        $payout_currency=html_strip($_POST['payout_currency']);
-                                        $register_result=auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address);
-                                        setcookie("action_message",$auth_register_result_to_message[$register_result]);
-                                } else {
-                                        setcookie("action_message",$message_register_recaptcha_error);
-                                }
+                        $captcha_code=stripslashes($_POST['captcha_code']);
+                        if(captcha_check($auth_cookie,$captcha_code)) {
+                                $username=html_strip($_POST['username']);
+                                $password_1=html_strip($_POST['password_1']);
+                                $password_2=html_strip($_POST['password_2']);
+                                $email=html_strip($_POST['email']);
+                                $payout_address=html_strip($_POST['payout_address']);
+                                $payout_currency=html_strip($_POST['payout_currency']);
+                                $register_result=auth_add_user($username,$email,$password_1,$password_2,$payout_currency,$payout_address);
+                                setcookie("action_message",$auth_register_result_to_message[$register_result]);
                         } else {
                                 setcookie("action_message",$message_register_recaptcha_error);
                         }
+                        captcha_regenerate($auth_cookie);
                         header("Location: ./");
                         die();
                 // Login existing user
                 } else if($_POST['action']=='login') {
-                        if(isset($_POST['g-recaptcha-response'])) {
-                                $recaptcha_response=html_strip($_POST['g-recaptcha-response']);
-                                if(auth_recaptcha_check($recaptcha_response)) {
-                                        $username=html_strip($_POST['username']);
-                                        $password=html_strip($_POST['password']);
-                                        $login_result=auth_login($username,$password);
+                        $captcha_code=stripslashes($_POST['captcha_code']);
+                        if(captcha_check($auth_cookie,$captcha_code)) {
+                                $username=html_strip($_POST['username']);
+                                $password=html_strip($_POST['password']);
+                                $login_result=auth_login($auth_cookie,$username,$password);
 
-                                        if($login_result==TRUE) {
-                                                auth_get_new_token($username);
-                                        } else {
-                                                setcookie("action_message",$message_login_fail);
-                                        }
+                                if($login_result==TRUE) {
+                                        auth_get_new_token($username);
                                 } else {
-                                        setcookie("action_message",$message_login_recaptcha_error);
+                                        setcookie("action_message",$message_login_fail);
                                 }
                         } else {
                                 setcookie("action_message",$message_login_recaptcha_error);
                         }
+                        captcha_regenerate($auth_cookie);
                         header("Location: ./");
                         die();
                 // Send message
