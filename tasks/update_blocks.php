@@ -50,7 +50,7 @@ function grc_rpc_get_block_info($hash) {
 
 // Check if unsent rewards exists
 db_connect();
-$current_block=db_query_to_variable("SELECT MAX(`number`)+1 FROM `boincmgr_blocks`");
+$current_block=db_query_to_variable("SELECT MAX(`number`)+1 FROM `blocks`");
 
 // 1110 = 1000 + 110 confirmations to stake blocks
 if($current_block=="") $current_block=grc_rpc_get_block_count()-1110;
@@ -80,7 +80,7 @@ do{
 
         if($confirmations <= 110) break;
 
-        db_query("INSERT INTO `boincmgr_blocks` (`number`,`hash`,`mint`,`cpid`,`interest`,`rewards_sent`,`timestamp`) VALUES ('$current_block_escaped','$block_hash_escaped','$mint_escaped','$cpid_escaped','$interest_escaped',0,FROM_UNIXTIME('$time_escaped'))");
+        db_query("INSERT INTO `blocks` (`number`,`hash`,`mint`,`cpid`,`interest`,`rewards_sent`,`timestamp`) VALUES ('$current_block_escaped','$block_hash_escaped','$mint_escaped','$cpid_escaped','$interest_escaped',0,FROM_UNIXTIME('$time_escaped'))");
 
         $current_block++;
 
