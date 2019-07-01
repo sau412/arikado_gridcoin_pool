@@ -12,19 +12,19 @@ require_once("../lib/email.php");
 db_connect();
 
 
-db_query("INSERT IGNORE INTO `boincmgr_task_stats` (`project_uid`,`host_id`,`app`,`status`,`count`,`date`)
-SELECT `project_uid`,`host_id`,`app`,`status`,count(*),CURDATE() FROM `boincmgr_tasks`
+db_query("INSERT IGNORE INTO `task_stats` (`project_uid`,`host_id`,`app`,`status`,`count`,`date`)
+SELECT `project_uid`,`host_id`,`app`,`status`,count(*),CURDATE() FROM `tasks`
 GROUP BY `project_uid`,`host_id`,`app`,`status`
 ");
 
 
-$tasks_stats_array=db_query("SELECT bu.`username`,bu.`email`,bhp.`project_uid`,bh.`uid` AS host_uid,bts.`status`,
+$tasks_stats_array=db_query_to_array("SELECT bu.`username`,bu.`email`,bhp.`project_uid`,bh.`uid` AS host_uid,bts.`status`,
 SUM(IF(bts.`date`=DATE_SUB(CURDATE(),INTERVAL 0 DAY),bts.`count`,0)) AS 'today',
 SUM(IF(bts.`date`=DATE_SUB(CURDATE(),INTERVAL 1 DAY),bts.`count`,0)) AS 'yesterday'
-FROM `boincmgr_task_stats` AS bts
-LEFT OUTER JOIN `boincmgr_host_projects` AS bhp ON bhp.`host_id`=bts.`host_id` AND bhp.`project_uid`=bts.`project_uid`
-LEFT OUTER JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bhp.`host_uid`
-LEFT OUTER JOIN `boincmgr_users` AS bu ON bh.`username_uid`=bu.`uid`
+FROM `task_stats` AS bts
+LEFT OUTER JOIN `host_projects` AS bhp ON bhp.`host_id`=bts.`host_id` AND bhp.`project_uid`=bts.`project_uid`
+LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bhp.`host_uid`
+LEFT OUTER JOIN `users` AS bu ON bh.`username_uid`=bu.`uid`
 WHERE bhp.host_id IS NOT NULL AND bu.send_error_reports=1
 GROUP BY bu.`username`,bu.`email`,bhp.`project_uid`,bh.`uid`,bts.`status`");
 
