@@ -57,7 +57,7 @@ function toggle_block(id) {
 function hide_all_submenu(id) {
         var blocks_array = ["boinc","control","info","statistics"];
         blocks_array.forEach(function(element) {
-                if(document.getElementById(element) != null && element != id) {
+                if(document.getElementById(element) !== null && element != id) {
                         document.getElementById(element).style.display='none';
                 }
         });
