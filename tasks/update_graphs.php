@@ -2,6 +2,14 @@
 // Update graphs cache
 if(!isset($argc)) die();
 
+$f=fopen("/tmp/lockfile_graphs","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 require_once("../lib/settings.php");
 require_once("../lib/db.php");
 require_once("../lib/boincmgr.php");
@@ -28,7 +36,7 @@ echo "\n";
 
 echo "Updating users graphs\n";
 $user_uid_array=db_query_to_array("SELECT `uid` FROM `users`");
-$index=0;
+$index=1;
 foreach($user_uid_array as $user_uid_row) {
         echo "User $index of ".count($user_uid_array)."\n";
         $user_uid=$user_uid_row['uid'];
