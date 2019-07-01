@@ -33,15 +33,25 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 
 ## Cron jobs
 ```
+# Updace currency rates
 20 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rates_coingecko.php
+# Update data from projects (user contribution, RAC, tasks, etc)
 5 * * * * www-data cd /var/www/boinc_pool/tasks && php update_projects.php
+# Update gridcoin superblock data
 4 * * * * www-data cd /var/www/boinc_pool/tasks && php update_superblock_data.php
+# Update latest gridcoin blocks
 15 * * * * www-data cd /var/www/boinc_pool/tasks && php update_blocks.php
+# Cache graphs
 25 * * * * www-data cd /var/www/boinc_pool/tasks && php update_graphs.php
+# Update task statuses and send emails on errors
 0 12 * * * www-data cd /var/www/boinc_pool/tasks && php update_task_stats.php
+# Update user reward
 */10 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rewards.php
+# Move user rewards to payments
 30 10 * * * www-data cd /var/www/boinc_pool/tasks && php do_billing.php
+# Send user rewards
 25,55 * * * * www-data cd /var/www/boinc_pool/tasks && php send_rewards_grc.php
+# Send faucet rewards
 */5 * * * * www-data cd /var/www/boinc_pool/tasks && php faucet_send_rewards.php
 ```
 
