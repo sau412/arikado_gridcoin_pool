@@ -187,18 +187,26 @@ _END;
         $catalog=getcwd();
         $username=exec('whoami');
         echo <<<_END
-# Update BOINC projects data
-5 * * * * $username php $catalog/update_projects.php
-# Update gridcoin research blocks data
-15 * * * * $username php $catalog/update_blocks.php
-# Update currency rates
-20,50 * * * * $username php $catalog/update_rates.php
-# Send rewards (if exists)
-25,55 * * * * $username php $catalog/send_rewards.php
-# Update graphs cache
-30 * * * * $username php $catalog/update_graphs.php
-# Update task stats and send alerts on errors
-1 1 * * * $username php $catalog/update_task_stats.php
+# Updace currency rates
+20 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rates_coingecko.php
+# Update data from projects (user contribution, RAC, tasks, etc)
+5 * * * * www-data cd /var/www/boinc_pool/tasks && php update_projects.php
+# Update gridcoin superblock data
+4 * * * * www-data cd /var/www/boinc_pool/tasks && php update_superblock_data.php
+# Update latest gridcoin blocks
+15 * * * * www-data cd /var/www/boinc_pool/tasks && php update_blocks.php
+# Cache graphs
+25 * * * * www-data cd /var/www/boinc_pool/tasks && php update_graphs.php
+# Update task statuses and send emails on errors
+0 12 * * * www-data cd /var/www/boinc_pool/tasks && php update_task_stats.php
+# Update user reward
+*/10 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rewards.php
+# Move user rewards to payments
+30 10 * * * www-data cd /var/www/boinc_pool/tasks && php do_billing.php
+# Send user rewards
+25,55 * * * * www-data cd /var/www/boinc_pool/tasks && php send_rewards_grc.php
+# Send faucet rewards
+*/5 * * * * www-data cd /var/www/boinc_pool/tasks && php faucet_send_rewards.php
 
 _END;
         die();
