@@ -10,8 +10,8 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 6) If you want more security: second computer for storing staking wallet outside of web server
 
 # Automatic installation
-1) Copy files to folder, e.g. /var/boinc_pool/
-2) Set web access to /var/boinc_pool/web
+1) Copy files to folder, e.g. /var/www/boinc_pool/
+2) Set web access to /var/www/boinc_pool/web
 3) Run setup via setup.php
 4) Follow instructions
 
@@ -23,8 +23,8 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 4) Yoyo@home has no weak auth key. You can use full access key for private pool
 
 ## Apache, PHP, MySQL part
-1) Copy files to folder, e.g. /var/boinc_pool/
-2) Set web access to /var/boinc_pool/web
+1) Copy files to folder, e.g. /var/www/boinc_pool/
+2) Set web access to /var/www/boinc_pool/web
 3) Create DB and user for pool
 4) Run manual.sql in pool's DB
 5) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
