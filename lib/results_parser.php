@@ -60,7 +60,7 @@ function results_parse_page($project_uid,$data) {
                                 $app_escaped=db_escape($app);
 
                                 // Write to DB
-                                db_query("INSERT INTO `boincmgr_tasks` (`project_uid`,`result_name`,`result_id`,`workunit_id`,`host_id`,`sent`,`deadline`,`status`,`elapsed_time`,`cpu_time`,`score`,`app`)
+                                db_query("INSERT INTO `tasks` (`project_uid`,`result_name`,`result_id`,`workunit_id`,`host_id`,`sent`,`deadline`,`status`,`elapsed_time`,`cpu_time`,`score`,`app`)
 VALUES ('$project_uid_escaped','$result_name_escaped','$result_id_escaped','$workunit_id_escaped','$host_id_escaped','$sent_escaped','$deadline_escaped','$status_escaped','$elapsed_time_escaped','$cpu_time_escaped','$score_escaped','$app_escaped')
 ON DUPLICATE KEY UPDATE `result_name`=VALUES(`result_name`),`status`=VALUES(`status`),`elapsed_time`=VALUES(`elapsed_time`),`cpu_time`=VALUES(`cpu_time`),`score`=VALUES(`score`)");
 
