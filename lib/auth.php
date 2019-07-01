@@ -36,7 +36,7 @@ function auth_check() {
 // Checks is user admin
 function auth_is_admin($username) {
         $username_escaped=db_escape($username);
-        $admin_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='admin'");
+        $admin_exists=db_query_to_variable("SELECT 1 FROM `users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='admin'");
         if($admin_exists==1) return TRUE;
         else return FALSE;
 }
@@ -44,7 +44,7 @@ function auth_is_admin($username) {
 // Checks is user can view everything (for translation purposes)
 function auth_is_editor($username) {
         $username_escaped=db_escape($username);
-        $right_exists=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='editor'");
+        $right_exists=db_query_to_variable("SELECT 1 FROM `users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `status`='editor'");
         if($right_exists==1) return TRUE;
         else return FALSE;
 }
@@ -56,7 +56,7 @@ function auth_check_hash($username,$passwd_hash) {
         //$passwd_hash_escaped=db_escape($passwd_hash);
         $passwd_hash_salted=auth_hash_salt($username,$passwd_hash);
 
-        $count=db_query_to_variable("SELECT count(*) FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `passwd_hash`='$passwd_hash_salted' AND `status`<>'banned'");
+        $count=db_query_to_variable("SELECT count(*) FROM `users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `passwd_hash`='$passwd_hash_salted' AND `status`<>'banned'");
         if($count==1) return TRUE;
         else return FALSE;
 }
@@ -135,7 +135,7 @@ function auth_validate_auth_cookie($auth_cookie) {
 // Check payout currency
 function auth_validate_payout_currency($currency) {
         $currency_escaped=db_escape($currency);
-        $exists=db_query_to_variable("SELECT 1 FROM `boincmgr_currency` WHERE `name`='$currency_escaped'");
+        $exists=db_query_to_variable("SELECT 1 FROM `currency` WHERE `name`='$currency_escaped'");
         if($exists) return TRUE;
         else return FALSE;
         $valid_currency_array=array("GRC","DOGE","ETH","BTC","LTC");
@@ -161,7 +161,7 @@ function auth_add_user($username,$email,$password_1,$password_2,$payout_currency
         $password_hash=auth_hash($username,$password_1);
 
         // Check is username exists
-        $username_exists_flag=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE LOWER(`username`)=LOWER('$username_escaped')");
+        $username_exists_flag=db_query_to_variable("SELECT 1 FROM `users` WHERE LOWER(`username`)=LOWER('$username_escaped')");
         if($username_exists_flag) return AUTH_REGISTER_FAIL_USERNAME_EXISTS;
 
         // Add new user
@@ -170,7 +170,7 @@ function auth_add_user($username,$email,$password_1,$password_2,$payout_currency
         $salt_escaped=db_escape($salt);
         $password_hash_salted=hash("sha256",$password_hash.$salt);
 
-        $result=db_query("INSERT INTO `boincmgr_users` (`username`,`email`,`salt`,`passwd_hash`,`currency`,`payout_address`,`status`)
+        $result=db_query("INSERT INTO `users` (`username`,`email`,`salt`,`passwd_hash`,`currency`,`payout_address`,`status`)
 VALUES ('$username_escaped','$email_escaped','$salt_escaped','$password_hash_salted','$payout_currency_escaped','$payout_address_escaped','user')");
         if($result) return AUTH_REGISTER_OK;
         else return AUTH_REGISTER_FAIL_DB;
@@ -195,10 +195,10 @@ function auth_change_settings($username,$email,$current_password,$new_password_1
         $payout_currency_escaped=db_escape($payout_currency);
         $send_error_reports_escaped=$send_error_reports?"1":"0";
 
-        $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $salt=db_query_to_variable("SELECT `salt` FROM `users` WHERE `username`='$username_escaped'");
         $password_hash=auth_hash($username,$current_password);
         $password_hash_salted=hash("sha256",$password_hash.$salt);
-        $password_user_match=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `passwd_hash`='$password_hash_salted'");
+        $password_user_match=db_query_to_variable("SELECT 1 FROM `users` WHERE `username`='$username_escaped' AND `passwd_hash`='$password_hash_salted'");
         if($password_user_match==FALSE) return FALSE;
 
         if($new_password_1!='') {
@@ -207,16 +207,21 @@ function auth_change_settings($username,$email,$current_password,$new_password_1
                 $salt=bin2hex(random_bytes(16));
                 $salt_escaped=db_escape($salt);
                 $password_hash_salted=hash("sha256",$password_hash.$salt);
-                $result=db_query("UPDATE `boincmgr_users` SET `send_error_reports`='$send_error_reports_escaped',`salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `users` SET `send_error_reports`='$send_error_reports_escaped',`salt`='$salt_escaped',`email`='$email_escaped',`passwd_hash`='$password_hash_salted',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         } else {
-                $result=db_query("UPDATE `boincmgr_users` SET `email`='$email_escaped',`send_error_reports`='$send_error_reports_escaped',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
+                $result=db_query("UPDATE `users` SET `email`='$email_escaped',`send_error_reports`='$send_error_reports_escaped',`currency`='$payout_currency_escaped',`payout_address`='$payout_address_escaped' WHERE `username`='$username_escaped'");
         }
+        
+        // Update user balance - required when changing currency
+        $user_uid=boincmgr_get_username_uid($username);
+        boincmgr_update_balance($user_uid);
+
         if($result) return TRUE;
         else return FALSE;
 }
 
 // Auth existing user
-function auth_login($username,$password) {
+function auth_login($auth_cookie,$username,$password) {
         if(auth_validate_username($username)==FALSE) return FALSE;
         if(auth_validate_password($password)==FALSE) return FALSE;
 
@@ -224,18 +229,37 @@ function auth_login($username,$password) {
 
         if(auth_check_hash($username,$passwd_hash)) {
                 auth_log("Login username '$username'");
-                $auth_cookie=bin2hex(random_bytes(32));
+                //$auth_cookie=bin2hex(random_bytes(32));
                 $username_uid=boincmgr_get_username_uid($username);
                 $username_uid_escaped=db_escape($username_uid);
                 $auth_cookie_escaped=db_escape($auth_cookie);
 
-                db_query("INSERT INTO `boincmgr_user_auth_cookies` (`username_uid`,`cookie_token`,`expire_date`) VALUES ('$username_uid_escaped','$auth_cookie_escaped',DATE_ADD(NOW(),INTERVAL 2 DAY))");
-                setcookie("auth_cookie",$auth_cookie,time()+30*24*60*60); // 30 days
+                db_query("UPDATE `user_auth_cookies` SET `username_uid`='$username_uid_escaped' WHERE `cookie_token`='$auth_cookie_escaped'");
+//echo "UPDATE `user_auth_cookies` SET `username_uid`='$username_uid_escaped' WHERE `cookie_token`='$auth_cookie_escaped'";
+                //setcookie("auth_cookie",$auth_cookie,time()+30*24*60*60); // 30 days
                 return TRUE;
         } else {
                 auth_log("Login failed username '$username'");
                 return FALSE;
         }
+}
+
+// Generate auth cookie
+function auth_cookie() {
+        if(isset($_COOKIE['auth_cookie']) && auth_validate_auth_cookie($_COOKIE['auth_cookie'])) {
+                $auth_cookie=html_strip($_COOKIE['auth_cookie']);
+                $auth_cookie_escaped=db_escape($auth_cookie);
+                $exists=db_query_to_variable("SELECT 1 FROM `user_auth_cookies` WHERE `cookie_token`='$auth_cookie_escaped'");
+                if($exists) {
+                        db_query("UPDATE `user_auth_cookies` SET `expire_date`=DATE_ADD(NOW(),INTERVAL 2 DAY) WHERE `cookie_token`='$auth_cookie_escaped'");
+                        return $auth_cookie;
+                }
+        }
+        $auth_cookie=bin2hex(random_bytes(32));
+        $auth_cookie_escaped=db_escape($auth_cookie);
+        db_query("INSERT INTO `user_auth_cookies` (`cookie_token`,`expire_date`) VALUES ('$auth_cookie_escaped',DATE_ADD(NOW(),INTERVAL 2 DAY))");
+        setcookie("auth_cookie",$auth_cookie,time()+30*24*60*60); // 30 days
+        return $auth_cookie;
 }
 
 // Password to hash
@@ -248,7 +272,7 @@ function auth_hash($username,$password) {
 function auth_hash_salt($username,$password_hash) {
         $username_escaped=db_escape($username);
         $password_hash_escaped=db_escape($password_hash);
-        $salt=db_query_to_variable("SELECT `salt` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $salt=db_query_to_variable("SELECT `salt` FROM `users` WHERE `username`='$username_escaped'");
 //auth_log("Debug: username '$username' hash '$hash' salt '$salt' salted hash '".hash("sha256",$password_hash.$salt)."'");
         return hash("sha256",$password_hash.$salt);
 }
@@ -269,14 +293,14 @@ function auth_get_new_token($username) {
         $username_escaped=db_escape($username);
         $token=md5(uniqid().$token_salt);
 
-        db_query("UPDATE `boincmgr_users` SET `token`='$token' WHERE `username`='$username_escaped'");
+        db_query("UPDATE `users` SET `token`='$token' WHERE `username`='$username_escaped'");
         return $token;
 }
 
 // Get current user token
 function auth_get_current_token($username) {
         $username_escaped=db_escape($username);
-        $token=db_query_to_variable("SELECT `token` FROM `boincmgr_users` WHERE `username`='$username_escaped'");
+        $token=db_query_to_variable("SELECT `token` FROM `users` WHERE `username`='$username_escaped'");
         return $token;
 }
 
@@ -284,7 +308,7 @@ function auth_get_current_token($username) {
 function auth_check_token($username,$token) {
         $username_escaped=db_escape($username);
         $token_escaped=db_escape($token);
-        $count=db_query_to_variable("SELECT 1 FROM `boincmgr_users` WHERE `username`='$username_escaped' AND `token`='$token_escaped'");
+        $count=db_query_to_variable("SELECT 1 FROM `users` WHERE `username`='$username_escaped' AND `token`='$token_escaped'");
         if($count==1) return TRUE;
         else return FALSE;
 }
@@ -292,13 +316,13 @@ function auth_check_token($username,$token) {
 // Write action to log
 function auth_log($message) {
         $message_escaped=db_escape($message);
-        db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
+        db_query("INSERT INTO `log` (`message`) VALUES ('$message_escaped')");
 }
 
 // Write debug log
 //function auth_log_debug($type,$message) {
 //      $message_escaped=db_escape($message);
-//      db_query("INSERT INTO `boincmgr_log` (`message`) VALUES ('$message_escaped')");
+//      db_query("INSERT INTO `log` (`message`) VALUES ('$message_escaped')");
 //}
 
 function auth_recaptcha_check($response) {
