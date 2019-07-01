@@ -109,7 +109,7 @@ boincmgr_set_variable("hot_wallet_balance",$current_balance);
 $magnitude_unit=grc_rpc_get_magnitude_unit();
 boincmgr_set_variable("magnitude_unit",$magnitude_unit);
 //$magnitude_unit_escaped=db_escape($magnitude_unit);
-//db_query_to_variable("INSERT INTO `boincmgr_variables` (`name`,`value`) VALUES ('magnitude_unit','$magnitude_unit_escaped')");
+//db_query_to_variable("INSERT INTO `variables` (`name`,`value`) VALUES ('magnitude_unit','$magnitude_unit_escaped')");
 
 // Get whitelisted projects
 $whitelisted_projects_array=grc_rpc_get_projects();
@@ -130,7 +130,7 @@ foreach($whitelisted_projects_array as $whitelisted_project) {
         $project_url_http=str_replace("https:","http:",$project_url);
         $project_url_https=str_replace("http:","https:",$project_url_http);
 
-        $exists_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_projects` WHERE `project_url` IN ('$project_url_http','$project_url_https')");
+        $exists_uid=db_query_to_variable("SELECT `uid` FROM `projects` WHERE `project_url` IN ('$project_url_http','$project_url_https')");
 
         if($exists_uid==FALSE) {
                 curl_setopt($ch,CURLOPT_POST,FALSE);
@@ -148,7 +148,7 @@ foreach($whitelisted_projects_array as $whitelisted_project) {
                 $name=(string)$xml->name;
                 $whitelisted_names[]=$name;
                 $name_escaped=db_escape($name);
-                $exists_uid=db_query_to_variable("SELECT `uid` FROM `boincmgr_projects` WHERE `name`='$name_escaped'");
+                $exists_uid=db_query_to_variable("SELECT `uid` FROM `projects` WHERE `name`='$name_escaped'");
                 if($exists_uid!=FALSE) {
                         $whitelisted_uids[]=$exists_uid;
                 } else {
@@ -166,20 +166,20 @@ foreach($whitelisted_projects_array as $whitelisted_project) {
 // Update projects only if no errors when checking whitelisted projects
 if($no_errors_flag==TRUE) {
         $whitelisted_uids_str=implode("','",$whitelisted_uids);
-        $to_be_enabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `boincmgr_projects` WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto disabled')");
-        $to_be_disabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `boincmgr_projects` WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled')");
+        $to_be_enabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `projects` WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto disabled')");
+        $to_be_disabled=db_query_to_variable("SELECT GROUP_CONCAT(`name` SEPARATOR ', ') FROM `projects` WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled')");
         if($to_be_enabled!='') auth_log("Auto change project status: enable projects: $to_be_enabled");
         if($to_be_disabled!='') auth_log("Auto change project status: disable projects: $to_be_disabled");
 
-        db_query("UPDATE `boincmgr_projects` SET `status`='auto enabled' WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
-        db_query("UPDATE `boincmgr_projects` SET `status`='auto disabled' WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
+        db_query("UPDATE `projects` SET `status`='auto enabled' WHERE `uid` IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
+        db_query("UPDATE `projects` SET `status`='auto disabled' WHERE `uid` NOT IN ('$whitelisted_uids_str') AND `status` IN ('auto','auto enabled','auto disabled')");
         echo "Auto project statuses updated\n";
 } else {
         echo "Errors while updating project statuses, skipping automatic change\n";
 }
 
 // Check if exists blocks, mined with pool cpid
-$rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0 ORDER BY `number` ASC");
+$rewarding_array=db_query_to_array("SELECT `number`,`mint`,`interest`,`timestamp` FROM `blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=0 ORDER BY `number` ASC");
 
 if(count($rewarding_array)==0) {
         echo "No reward blocks for now\n";
@@ -190,8 +190,8 @@ if(count($rewarding_array)==0) {
                 $interest=$reward_row['interest'];
                 $timestamp=$reward_row['timestamp'];
                 // If interval is less than 12 hours, then use stats for 12 hours
-                $prev_billing_timestamp=db_query_to_variable("SELECT LEAST(MAX(`timestamp`),DATE_SUB('$timestamp',INTERVAL 12 HOUR)) FROM `boincmgr_blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
-                if($prev_billing_timestamp=="") $prev_billing_timestamp="SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats`";
+                $prev_billing_timestamp=db_query_to_variable("SELECT LEAST(MAX(`timestamp`),DATE_SUB('$timestamp',INTERVAL 12 HOUR)) FROM `blocks` WHERE `cpid`='$pool_cpid' AND `rewards_sent`=1");
+                if($prev_billing_timestamp=="") $prev_billing_timestamp="SELECT MIN(`timestamp`) FROM `project_host_stats`";
 
                 echo "Billing from $prev_billing_timestamp to $timestamp reward $mint\n";
                 $start_date=$prev_billing_timestamp;
@@ -202,11 +202,11 @@ if(count($rewarding_array)==0) {
                 $reward=$mint;
                 auth_log("Auto billing from '$start_date' to '$stop_date' reward '$reward'");
                 bill_close_period("Gridcoin miner rewards",$start_date,$stop_date,$reward,$check_rewards,$project_uid,$antiexp_rac_flag);
-                db_query("UPDATE `boincmgr_blocks` SET `rewards_sent`=1 WHERE `number`='$block_number'");
+                db_query("UPDATE `blocks` SET `rewards_sent`=1 WHERE `number`='$block_number'");
         }
 }
 
-$unsent_count=db_query_to_variable("SELECT count(*) FROM `boincmgr_payouts` WHERE `txid` IS NULL");
+$unsent_count=db_query_to_variable("SELECT count(*) FROM `payouts` WHERE `txid` IS NULL");
 
 if($unsent_count==0) {
         echo "No unsent rewards for now\n";
@@ -220,7 +220,7 @@ if(grc_rpc_unlock_wallet() == FALSE) {
 }
 
 // Get payout information for GRC
-$payout_data_array=db_query_to_array("SELECT `uid`,`payout_address`,`currency`,`amount` FROM `boincmgr_payouts` WHERE `currency` IN ('GRC','GRC2') AND `txid` IS NULL");
+$payout_data_array=db_query_to_array("SELECT `uid`,`payout_address`,`currency`,`amount` FROM `payouts` WHERE `currency` IN ('GRC','GRC2') AND `txid` IS NULL");
 
 foreach($payout_data_array as $payout_data) {
         $uid=$payout_data['uid'];
@@ -245,7 +245,7 @@ foreach($payout_data_array as $payout_data) {
                                 auth_log("Sent reward to '$grc_address' reward '$amount'");
                                 $uid_escaped=db_escape($uid);
                                 $txid_escaped=db_escape($txid);
-                                db_query("UPDATE `boincmgr_payouts` SET `txid`='$txid_escaped' WHERE `uid`='$uid_escaped'");
+                                db_query("UPDATE `payouts` SET `txid`='$txid_escaped' WHERE `uid`='$uid_escaped'");
                                 $current_balance-=$amount;
                         } else {
                                 // Sending error
