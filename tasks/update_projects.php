@@ -5,6 +5,14 @@ if(!isset($argc)) die();
 if(isset($argv[1]) && $argv[1]=="test") $test_mode=TRUE;
 else $test_mode=FALSE;
 
+$f=fopen("/tmp/lockfile_projects","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 //$test_mode=TRUE;
 
 require_once("../lib/settings.php");
@@ -247,7 +255,6 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
                 $domain_name=(string)$host_data->domain_name;
                 $p_model=(string)$host_data->p_model;
                 $expavg_credit=(string)$host_data->expavg_credit;
-                $total_credit=(string)$host_data->total_credit;
 
                 // Validate data
                 if(auth_validate_integer($host_id)==FALSE) { echo "Host id validation error\n"; continue; }
@@ -255,7 +262,6 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
                 if(auth_validate_domain($domain_name)==FALSE) { echo "Host domain name validation error\n"; continue; }
                 if(auth_validate_ascii($p_model)==FALSE) { echo "Host CPU model validation error\n"; continue; }
                 if(auth_validate_float($expavg_credit)==FALSE) { echo "Host expavg_credit validation error\n"; continue; }
-                if(auth_validate_float($total_credit)==FALSE) { echo "Host total_credit validation error\n"; continue; }
 
                 // Escape data
                 $host_id_escaped=db_escape($host_id);
@@ -263,7 +269,6 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
                 $domain_name_escaped=db_escape(boincmgr_domain_encode($domain_name));
                 $p_model_escaped=db_escape($p_model);
                 $expavg_credit_escaped=db_escape($expavg_credit);
-                $total_credit_escaped=db_escape($total_credit);
 
                 // Get host uid by project_uid, host_id and host_cpid - most secure
                 // Sometimes BOINC returns internal cpid, sometimes external cpid
@@ -285,15 +290,14 @@ WHERE bhp.`host_id`='$host_id_escaped' AND bhp.`project_uid`='$project_uid_escap
                 $host_uid_escaped=db_escape($host_uid);
 
                 // Write last results
-                db_query("INSERT INTO `project_hosts_last` (`project_uid`,`host_uid`,`host_id`,`host_cpid`,`domain_name`,`p_model`,`expavg_credit`,`total_credit`)
-VALUES ($project_uid_escaped,'$host_uid_escaped','$host_id_escaped','$host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$expavg_credit_escaped','$total_credit_escaped')
-ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpid`),`domain_name`=VALUES(`domain_name`),
-                        `p_model`=VALUES(`p_model`),`expavg_credit`=VALUES(`expavg_credit`),`total_credit`=VALUES(`total_credit`),`timestamp`=CURRENT_TIMESTAMP");
+                db_query("INSERT INTO `project_hosts_last` (`project_uid`,`host_uid`,`host_id`,`host_cpid`,`domain_name`,`p_model`,`expavg_credit`)
+VALUES ($project_uid_escaped,'$host_uid_escaped','$host_id_escaped','$host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$expavg_credit_escaped')
+ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`expavg_credit`=VALUES(`expavg_credit`),`timestamp`=CURRENT_TIMESTAMP");
 
                 if($test_mode==FALSE) {
                         // Write hosts expavg_credit for billing purposes
-                        db_query("INSERT INTO `project_host_stats` (`project_uid`,`host_uid`,`host_id`,`expavg_credit`,`total_credit`)
-VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped','$total_credit_escaped')");
+                        db_query("INSERT INTO `project_host_stats` (`project_uid`,`host_uid`,`host_id`,`expavg_credit`)
+VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
                 }
         }
 
