@@ -4,7 +4,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 # Requirements
 1) PHP 5 with openssl lib or PHP 7
 2) Apache web server, mysql, tested in ubuntu
-3) At least 2000 gridcoins for staking (more GRC means faster stakes)
+3) At least 10000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
 5) Optionally crypt_prog from BOINC for signing urls
 6) If you want more security: second computer for storing staking wallet outside of web server
@@ -30,6 +30,20 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 5) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 6) Change settings in your settings.php
 7) Regiter new user via web, then change his status to "admin" in boincmgs_users
+
+## Cron jobs
+```
+20 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rates_coingecko.php
+5 * * * * www-data cd /var/www/boinc_pool/tasks && php update_projects.php
+4 * * * * www-data cd /var/www/boinc_pool/tasks && php update_superblock_data.php
+15 * * * * www-data cd /var/www/boinc_pool/tasks && php update_blocks.php
+25 * * * * www-data cd /var/www/boinc_pool/tasks && php update_graphs.php
+0 12 * * * www-data cd /var/www/boinc_pool/tasks && php update_task_stats.php
+*/10 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rewards.php
+30 10 * * * www-data cd /var/www/boinc_pool/tasks && php do_billing.php
+25,55 * * * * www-data cd /var/www/boinc_pool/tasks && php send_rewards_grc.php
+*/5 * * * * www-data cd /var/www/boinc_pool/tasks && php faucet_send_rewards.php
+```
 
 ## Gridcoin research wallet, beacon
 1) Run gridcoinresearchd in CLI mode with RPC:
