@@ -85,7 +85,7 @@ $username_uid_escaped=db_escape($username_uid);
 $host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
 $host_uid_escaped=db_escape($host_uid);
 
-$host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_hosts` WHERE `internal_host_cpid`='$host_cpid_escaped'");
+$host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `hosts` WHERE `internal_host_cpid`='$host_cpid_escaped'");
 if(FALSE && $host_owner_uid!="" && $username_uid!=$host_owner_uid) {
         auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid'");
         echo xml_error_message($message_host_error,-102);
@@ -95,7 +95,7 @@ if(FALSE && $host_owner_uid!="" && $username_uid!=$host_owner_uid) {
 $base64_query=base64_encode($data);
 $base64_query_escaped=db_escape($base64_query);
 
-db_query("INSERT INTO `boincmgr_hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`last_query`)
+db_query("INSERT INTO `hosts` (`username_uid`,`internal_host_cpid`,`external_host_cpid`,`domain_name`,`p_model`,`last_query`)
 VALUES ('$username_uid_escaped','$host_cpid_escaped','$external_host_cpid_escaped','$domain_name_escaped','$p_model_escaped','$base64_query_escaped')
 ON DUPLICATE KEY UPDATE `username_uid`=VALUES(`username_uid`),`external_host_cpid`=VALUES(`external_host_cpid`),`domain_name`=VALUES(`domain_name`),`p_model`=VALUES(`p_model`),`last_query`=VALUES(`last_query`),`timestamp`=CURRENT_TIMESTAMP");
 
@@ -128,13 +128,13 @@ foreach($xml_data["projects"] as $project_data) {
                 // Just check that it was attached correctly earlier
                 if($weak_key=="") {
                         $project_host_id_escaped=db_escape($project_host_id);
-                        $host_id_exists=db_query_to_variable("SELECT `host_id` FROM `boincmgr_host_projects` WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `host_id`='$project_host_id_escaped'");
+                        $host_id_exists=db_query_to_variable("SELECT `host_id` FROM `host_projects` WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `host_id`='$project_host_id_escaped'");
                         if($host_id_exists==TRUE) {
                                 // If pool has host_id, then state unknown (may be attached correcly)
-                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='unknown',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                                db_query("UPDATE `attach_projects` SET `status`='unknown',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
                         } else {
                                 // If pool has no host_id, then state incorrect (not attached correctly)
-                                db_query("UPDATE `boincmgr_attach_projects` SET `status`='incorrect',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
+                                db_query("UPDATE `attach_projects` SET `status`='incorrect',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status`<>'detach'");
                         }
                 } else {
                         $weak_key_correct=boincmgr_check_weak_key($project_uid,$weak_key);
@@ -145,19 +145,19 @@ foreach($xml_data["projects"] as $project_data) {
                                 $client_still_attached_project_uids[]=$project_uid_escaped;
 
                                 // Search for duplicating host of another user
-                                $exists_host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `boincmgr_host_projects` AS bhp
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.uid=bhp.host_uid
+                                $exists_host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `host_projects` AS bhp
+LEFT JOIN `hosts` AS bh ON bh.uid=bhp.host_uid
 WHERE bhp.`project_uid`='$project_uid_escaped' AND bhp.`host_id`='$project_host_id_escaped' AND bh.`internal_host_cpid`='$host_cpid_escaped'");
 
                                 // If new host_id or user match, then store data
                                 if($exists_host_owner_uid==FALSE || $exists_host_owner_uid==$username_uid_escaped) {
                                         // Store host_id in DB
-                                        db_query("INSERT INTO `boincmgr_host_projects` (`host_uid`,`project_uid`,`host_id`)
+                                        db_query("INSERT INTO `host_projects` (`host_uid`,`project_uid`,`host_id`)
 VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
 ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
 
                                         // Mark attachment as correct
-                                        db_query("UPDATE `boincmgr_attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status` NOT IN ('detach')");
+                                        db_query("UPDATE `attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status` NOT IN ('detach')");
                                 } else {
                                         // Stop sync, may be host stealing attempt
                                         auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid' project '$project_name' host_id '$project_host_id'");
@@ -171,15 +171,15 @@ ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
 
 // Delete detached projects from db
 $client_still_attached_project_uids_string=implode("','",$client_still_attached_project_uids);
-db_query("DELETE FROM `boincmgr_attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `status` IN ('detach') AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
+db_query("DELETE FROM `attach_projects` WHERE `host_uid`='$host_uid_escaped' AND `status` IN ('detach') AND `project_uid` NOT IN ('$client_still_attached_project_uids_string')");
 
 // Get project data for this host
-$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`status`,bap.`resource_share`,bap.`options` FROM `boincmgr_attach_projects` AS bap
-LEFT JOIN `boincmgr_projects` AS bp ON bp.`uid`=bap.`project_uid`
+$project_data_array=db_query_to_array("SELECT bp.`project_url`,bp.`url_signature`,bp.`weak_auth`,bap.`status`,bap.`resource_share`,bap.`options` FROM `attach_projects` AS bap
+LEFT JOIN `projects` AS bp ON bp.`uid`=bap.`project_uid`
 WHERE bap.`host_uid`='$host_uid_escaped'");
 
 // Update attaching status
-db_query("UPDATE `boincmgr_attach_projects` SET `status`='sent' WHERE `host_uid`='$host_uid_escaped' AND (`status`='new' OR `status`='')");
+db_query("UPDATE `attach_projects` SET `status`='sent' WHERE `host_uid`='$host_uid_escaped' AND (`status`='new' OR `status`='')");
 
 $reply_xml.=<<<_END
 <name>$pool_name</name>
