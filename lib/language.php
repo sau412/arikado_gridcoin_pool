@@ -17,6 +17,7 @@ $message_register_fail_db="Register fail. DB error, contact admin.";
 $message_register_fail_username_exists="Register fail. Username exists.";
 
 $message_register_recaptcha_error="Register fail. Invalid reCAPTCHA.";
+$message_login_recaptcha_error="Login fail. Invalid reCAPTCHA.";
 
 $message_register_success="Registration complete. Enter your login and password to login.";
 
@@ -31,7 +32,7 @@ $message_project_settings_changed="Project settings changed";
 
 $message_message_sent="Message sent";
 
-$message_faucet_sent="Claim succesful";
+$message_faucet_sent="Claim successful";
 
 $message_host_deleted="Host deleted";
 
@@ -529,10 +530,10 @@ $lang_data_json=<<<_END
         "zh":"各BOINC项目接收的信息"
         },
 "boinc_results_all_table_header_user":{
-        "en":{"1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"},
-        "ru":{"1":"Название","2":"Проект","3":"Маг за 7 дней","4":"Магнитуда","5":"&#8776;GRC в день"},
-        "de":{"1":"Host Name","2":"Projekt","3":"7 Tage mag Graph","4":"Mag","5":"&#8776;GRC/Tag"},
-        "zh":{"1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"}
+        "en":{"1":"Domain name","2":"Project","3":"RAC","4":"Mag 7d graph","5":"Mag","6":"&#8776;GRC/day","7":"Tasks"},
+        "ru":{"1":"Название","2":"Проект","3":"RAC","4":"Маг за 7 дней","5":"Магнитуда","6":"&#8776;GRC в день","7":"Задания"},
+        "de":{"1":"Host Name","2":"Projekt","3":"RAC","4":"7 Tage mag Graph","5":"Mag","6":"&#8776;GRC/Tag","7":"Aufgaben"},
+        "zh":{"1":"Domain name","2":"Project","3":"RAC","4":"Mag 7d graph","5":"Mag","6":"&#8776;GRC/day","7":"Tasks"}
         },
 "boinc_results_all_table_header_admin":{
         "en":{"0":"Username","1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"},
@@ -576,13 +577,13 @@ $lang_data_json=<<<_END
         "de":{"0":"Name","1":"URL","2":"CPID","3":"Schwacher authentikator","4":"Team","5":"Letzte Anfrage","6":"Letzte Aktualisierung","7":"Status","8":"Aktion"},
         "zh":{"0":"Name","1":"URL","2":"CPID","3":"Weak auth","4":"Team","5":"Last query","6":"Last update","7":"Status","8":"Action"}
         },
-"payouts_header":{
+"payout_header":{
         "en":"Payouts",
         "ru":"Выплаты",
         "de":"Auszahlungen",
         "zh":"支付"
         },
-"payouts_desc":{
+"payout_desc":{
         "en":"",
         "ru":"",
         "de":"",
