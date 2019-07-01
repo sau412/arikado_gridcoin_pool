@@ -260,10 +260,6 @@ CREATE TABLE `xml` (
   `message` text COLLATE utf8_unicode_ci NOT NULL,
   `timestamp` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
-DROP TABLE IF EXISTS `view_host_stats`;
-
-CREATE ALGORITHM=UNDEFINED DEFINER=`u0403486_grcpool`@`localhost` SQL SECURITY DEFINER VIEW `view_host_stats`  AS  select `bphs`.`uid` AS `uid`,`bphs`.`project_uid` AS `project_uid`,`bphs`.`host_uid` AS `host_uid`,`bphs`.`expavg_credit` AS `expavg_credit`,`bphs`.`interval` AS `interval`,`bphs`.`magnitude_unit` AS `magnitude_unit`,`bphs`.`grc_amount` AS `grc_amount`,`bphs`.`is_payed_out` AS `is_payed_out`,`bphs`.`timestamp` AS `timestamp`,`bu`.`username` AS `username`,`bu`.`payout_address` AS `payout_address` from ((`boincmgr_project_host_stats` `bphs` join `boincmgr_hosts` `bh` on((`bh`.`uid` = `bphs`.`host_uid`))) join `boincmgr_users` `bu` on((`bu`.`uid` = `bh`.`username_uid`))) ;
-
 
 ALTER TABLE `attach_projects`
   ADD PRIMARY KEY (`uid`),
