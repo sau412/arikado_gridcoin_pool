@@ -23,3 +23,6 @@ INSERT INTO `variables` (`uid`, `name`, `value`, `timestamp`) VALUES
 
 INSERT INTO `projects` (`uid`, `name`, `superblock_name`, `project_url`, `url_signature`, `status`, `weak_auth`, `update_weak_auth`, `cpid`, `team`, `expavg_credit`, `team_expavg_credit`, `present_in_superblock`, `superblock_expavg_credit`, `last_query`, `comment`, `gpu_present`, `file`, `timestamp`) VALUES
 (1, 'NumberFields@home', 'numberfields@home', 'http://numberfields.asu.edu/NumberFields/', '', 'auto enabled', '', 1, '', 'Gridcoin', 374.7666636065081, 1566990.743827976, 1, 1351137, '', '', 0, 'numberfields.xml', '2019-07-01 13:05:05');
+
+INSERT INTO `users` (`uid`, `username`, `email`, `send_error_reports`, `salt`, `passwd_hash`, `balance`, `currency`, `payout_address`, `status`, `token`, `timestamp`) VALUES
+(7, 'user', 'mail@example.com', 1, '', '', 0, 'GRC', '', 'user', '', '2019-07-01 13:30:35'),
