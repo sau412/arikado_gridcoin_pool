@@ -3,6 +3,14 @@
 
 if(!isset($argc)) die();
 
+$f=fopen("/tmp/lockfile_rates","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+                die("Lockfile locked\n");
+        }
+}
+
 require_once("../lib/settings.php");
 require_once("../lib/db.php");
 require_once("../lib/auth.php");
