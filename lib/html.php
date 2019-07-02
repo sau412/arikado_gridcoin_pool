@@ -256,7 +256,6 @@ function html_get_menu($flag) {
 
                 $submenu="";
                 $submenu.=html_menu_element("currencies",$current_language["menu_currencies"]);
-                $submenu.=html_menu_element("block_explorer",$current_language["menu_block_explorer"]);
                 $result.=html_dropdown_menu_element("info",$current_language["menu_info"],$submenu);
                 $result.=html_menu_element("message_send",$current_language["menu_feedback"]);
         } else {
@@ -283,7 +282,6 @@ function html_get_menu($flag) {
 
                 $submenu="";
                 $submenu.=html_menu_element("currencies",$current_language["menu_currencies"]);
-                $submenu.=html_menu_element("block_explorer",$current_language["menu_block_explorer"]);
                 $result.=html_dropdown_menu_element("info",$current_language["menu_info"],$submenu);
 
                 if($flag=="admin") {
