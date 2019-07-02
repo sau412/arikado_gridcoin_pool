@@ -8,12 +8,12 @@ function bill_close_period($comment,$start_date,$stop_date,$total_reward,$check_
         $comment_escaped=db_escape($comment);
 
         if(!$check_rewards) {
-                db_query("INSERT INTO `boincmgr_billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
+                db_query("INSERT INTO `billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$total_reward_escaped')");
                 $billing_uid=mysql_insert_id();
         }
 
         $reward_array=array();
-        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only') ORDER BY `name` ASC");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','auto enabled','stats only') ORDER BY `name` ASC");
 
         if($bill_single_project_uid==0) $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
         else $proportions_array=array($bill_single_project_uid=>1);
@@ -40,7 +40,7 @@ function bill_close_period($comment,$start_date,$stop_date,$total_reward,$check_
         // Write rewards to db
         foreach($reward_array as $payout_address => $grc_reward) {
                 $payout_address_escaped=db_escape($payout_address);
-                $payout_currency=db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `payout_address`='$payout_address_escaped'");
+                $payout_currency=db_query_to_variable("SELECT `currency` FROM `users` WHERE `payout_address`='$payout_address_escaped'");
                 $rate=boincmgr_get_payout_rate($payout_currency);
                 $grc_reward_escaped=db_escape($grc_reward);
                 $amount=$grc_reward*$rate;
@@ -53,7 +53,7 @@ function bill_close_period($comment,$start_date,$stop_date,$total_reward,$check_
                         $rate_escaped=db_escape($rate);
                         $amount_escaped=db_escape($amount);
 
-                        db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`payout_address`,`grc_amount`,`currency`,`rate`,`amount`)
+                        db_query("INSERT INTO `payouts` (`billing_uid`,`payout_address`,`grc_amount`,`currency`,`rate`,`amount`)
 VALUES ('$billing_uid_escaped','$payout_address_escaped','$grc_reward_escaped','$payout_currency_escaped','$rate_escaped','$amount_escaped')");
                 }
         }
@@ -69,19 +69,19 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
         $stop_date_escaped=db_escape($stop_date);
         $pre_result=array();
         $result=array();
-        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `boincmgr_projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+        $enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','auto enabled','stats only') AND `present_in_superblock`=1");
         $contrib_sum=0;
         foreach($enabled_projects_array as $project) {
                 $project_uid=$project['uid'];
                 $project_name=$project['name'];
                 $project_uid_escaped=db_escape($project_uid);
                 // Some users are donators, their reward distributed between others
-                $pool_expavg_sum=db_query_to_variable("SELECT AVG(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+                $pool_expavg_sum=db_query_to_variable("SELECT AVG(bphs.`expavg_credit`) FROM `project_host_stats` AS bphs
+LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
-                //$pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
-                $team_expavg_sum=db_query_to_variable("SELECT AVG(`team_expavg_credit`) FROM `boincmgr_project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+                //$pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+                $team_expavg_sum=db_query_to_variable("SELECT AVG(`team_expavg_credit`) FROM `project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
                 if($team_expavg_sum==0 || $pool_expavg_sum==0) continue;
                 $contrib_pool_to_team=$pool_expavg_sum/$team_expavg_sum;
                 $contrib_sum+=$contrib_pool_to_team;
@@ -106,8 +106,8 @@ function bill_get_user_project_contribution_exists($project_uid) {
         $project_uid_escaped=db_escape($project_uid);
         $result=array();
         $data=db_query_to_array("SELECT DISTINCT `username_uid`
-                                        FROM `boincmgr_project_host_stats` AS bphs
-                                        JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+                                        FROM `project_host_stats` AS bphs
+                                        JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
                                         WHERE `project_uid`='$project_uid_escaped' AND `expavg_credit`>0");
         foreach($data as $row) {
                 $username_uid=$row['username_uid'];
@@ -130,7 +130,7 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
         $users_with_contribution_exists=bill_get_user_project_contribution_exists($project_uid);
 
         $user_reward_data=array();
-        $user_uids_array=db_query_to_array("SELECT `uid` FROM `boincmgr_users`");
+        $user_uids_array=db_query_to_array("SELECT `uid` FROM `users`");
         foreach($user_uids_array as $user_uid_data) {
                 $user_uid=$user_uid_data['uid'];
                 if(isset($users_with_contribution_exists[$user_uid])) {
@@ -144,7 +144,7 @@ function bill_single_project($project_uid,$start_date,$stop_date,$project_reward
                 $user_uid=$single_user_reward_data['user_uid'];
                 $grc_reward=$single_user_reward_data['grc_reward'];
                 $user_uid_escaped=db_escape($user_uid);
-                $payout_address=db_query_to_variable("SELECT `payout_address` FROM `boincmgr_users` WHERE `uid`='$user_uid_escaped'");
+                $payout_address=db_query_to_variable("SELECT `payout_address` FROM `users` WHERE `uid`='$user_uid_escaped'");
                 if($payout_address=="" || $grc_reward==0) continue;
                 if(!isset($reward_array[$payout_address]))$reward_array[$payout_address]=0;
                 $reward_array[$payout_address]+=$grc_reward;
@@ -159,18 +159,18 @@ function bill_single_user($project_uid,$user_uid,$start_date,$stop_date,$project
         $start_date_escaped=db_escape($start_date);
         $stop_date_escaped=db_escape($stop_date);
 
-        $currency=db_query_to_variable("SELECT `currency` FROM `boincmgr_users` WHERE `uid`='$user_uid_escaped'");
+        $currency=db_query_to_variable("SELECT `currency` FROM `users` WHERE `uid`='$user_uid_escaped'");
 
         if($currency!="GRC" && $anxtiexp_rac_flag==TRUE) {
-                $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+                $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `project_host_stats` AS bphs
+LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
                 if($project_total_rac=="") $project_total_rac=0;
 
-                $user_total_rac_data=db_query_to_array("SELECT SUM(bphs.`expavg_credit`) AS expavg_credit,MIN(UNIX_TIMESTAMP(bphs.`timestamp`)) AS `timestamp` FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+                $user_total_rac_data=db_query_to_array("SELECT SUM(bphs.`expavg_credit`) AS expavg_credit,MIN(UNIX_TIMESTAMP(bphs.`timestamp`)) AS `timestamp` FROM `project_host_stats` AS bphs
+LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`uid`='$user_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'
 GROUP BY HOUR(bphs.`timestamp`),DAY(bphs.`timestamp`),MONTH(bphs.`timestamp`) ORDER BY MIN(UNIX_TIMESTAMP(bphs.`timestamp`)) ASC");
 
@@ -206,15 +206,15 @@ GROUP BY HOUR(bphs.`timestamp`),DAY(bphs.`timestamp`),MONTH(bphs.`timestamp`) OR
                         "grc_reward"=>$grc_reward,
                 );
         } else {
-                $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+                $project_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) FROM `project_host_stats` AS bphs
+LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
                 if($project_total_rac=="") $project_total_rac=0;
 
-                $user_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) AS sum_credit FROM `boincmgr_project_host_stats` AS bphs
-LEFT JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-LEFT JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+                $user_total_rac=db_query_to_variable("SELECT SUM(bphs.`expavg_credit`) AS sum_credit FROM `project_host_stats` AS bphs
+LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`uid`='$user_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
                 if($user_total_rac=="") $user_total_rac=0;
 
@@ -245,9 +245,9 @@ function reward_array_combine($reward_array_1,$reward_array_2) {
 
 // Close period
 function bill_forecast_close_period() {
-        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `boincmgr_project_host_stats` WHERE `is_payed_out`=0");
-        $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
-        $stop_date=db_query_to_variable("SELECT MAX(`timestamp`) FROM `boincmgr_project_host_stats` WHERE `interval` IS NOT NULL");
+        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `project_host_stats` WHERE `is_payed_out`=0");
+        $start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `billing_periods`");
+        $stop_date=db_query_to_variable("SELECT MAX(`timestamp`) FROM `project_host_stats` WHERE `interval` IS NOT NULL");
 
         $comment="Gridcoin forecast miner rewards";
 
@@ -256,7 +256,7 @@ function bill_forecast_close_period() {
         $stop_date_escaped=db_escape($stop_date);
         $grc_reward_escaped=db_escape($grc_reward);
 
-        db_query("INSERT INTO `boincmgr_billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
+        db_query("INSERT INTO `billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
         $billing_uid=mysql_insert_id();
         $billing_uid_escaped=db_escape($billing_uid);
 
@@ -265,9 +265,9 @@ function bill_forecast_close_period() {
 SUM(bphs.`grc_amount`) AS grc_amount,
 SUM(bphs.`currency_amount`) AS currency_amount,
 bu.`payout_address`
-FROM `boincmgr_project_host_stats` AS bphs
-JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+FROM `project_host_stats` AS bphs
+JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`is_payed_out`=0 AND bphs.`timestamp` BETWEEN '$start_date' AND '$stop_date'
 GROUP BY bh.`username_uid`,bphs.`currency`
 HAVING SUM(bphs.`currency_amount`)>0
@@ -290,21 +290,21 @@ HAVING SUM(bphs.`currency_amount`)>0
                 $payout_address_escaped=db_escape($payout_address);
                 $rate_escaped=db_escape($rate);
 
-                db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
+                db_query("INSERT INTO `payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
 VALUES ('$billing_uid_escaped','$user_uid_escaped','$grc_amount_escaped','$currency_escaped','$rate_escaped',
         '$payout_address_escaped','$currency_amount_escaped')");
                 boincmgr_update_balance($user_uid);
         }
 
         // Mark as payed out
-        db_query("UPDATE `boincmgr_project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
+        db_query("UPDATE `project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
 }
 
 // Send unsent
 function bill_send_unsent() {
-        $start_date=db_query_to_variable("SELECT MIN(`timestamp`) FROM `boincmgr_project_host_stats` WHERE `is_payed_out`=0");
-        $stop_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `boincmgr_billing_periods`");
-        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `boincmgr_project_host_stats`
+        $start_date=db_query_to_variable("SELECT MIN(`timestamp`) FROM `project_host_stats` WHERE `is_payed_out`=0");
+        $stop_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `billing_periods`");
+        $grc_reward=db_query_to_variable("SELECT SUM(`grc_amount`) FROM `project_host_stats`
                                                 WHERE `is_payed_out`=0 AND `interval` IS NOT NULL
                                                 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
 
@@ -317,18 +317,18 @@ function bill_send_unsent() {
 
 echo "Period is from $start_date to $stop_date reward $grc_reward\n";
 //die();
-//      db_query("INSERT INTO `boincmgr_billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
-//      $billing_uid=mysql_insert_id();
-//      $billing_uid_escaped=db_escape($billing_uid);
+        db_query("INSERT INTO `billing_periods` (`comment`,`start_date`,`stop_date`,`reward`) VALUES ('$comment_escaped','$start_date_escaped','$stop_date_escaped','$grc_reward_escaped')");
+        $billing_uid=mysql_insert_id();
+        $billing_uid_escaped=db_escape($billing_uid);
 
         // Get all unsent payouts
         $unsent_payouts_array=db_query_to_array("SELECT bh.`username_uid`,bphs.`currency`,
 SUM(bphs.`grc_amount`) AS grc_amount,
 SUM(bphs.`currency_amount`) AS currency_amount,
 bu.`payout_address`
-FROM `boincmgr_project_host_stats` AS bphs
-JOIN `boincmgr_hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-JOIN `boincmgr_users` AS bu ON bu.`uid`=bh.`username_uid`
+FROM `project_host_stats` AS bphs
+JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
+JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`is_payed_out`=0 AND bphs.`timestamp` BETWEEN '$start_date' AND '$stop_date'
 GROUP BY bh.`username_uid`,bphs.`currency`
 HAVING SUM(bphs.`currency_amount`)>0
@@ -352,15 +352,15 @@ HAVING SUM(bphs.`currency_amount`)>0
                 $rate_escaped=db_escape($rate);
 
 echo "$payout_address $grc_amount GRC\n";
-continue;
-                db_query("INSERT INTO `boincmgr_payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
+//continue;
+                db_query("INSERT INTO `payouts` (`billing_uid`,`user_uid`,`grc_amount`,`currency`,`rate`,`payout_address`,`amount`)
 VALUES ('$billing_uid_escaped','$user_uid_escaped','$grc_amount_escaped','$currency_escaped','$rate_escaped',
         '$payout_address_escaped','$currency_amount_escaped')");
                 boincmgr_update_balance($user_uid);
         }
 
         // Mark as payed out
-        //db_query("UPDATE `boincmgr_project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
+        db_query("UPDATE `project_host_stats` SET `is_payed_out`=1 WHERE `is_payed_out`=0 AND `timestamp` BETWEEN '$start_date' AND '$stop_date'");
 }
 
 ?>
