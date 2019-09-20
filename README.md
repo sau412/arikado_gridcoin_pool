@@ -75,7 +75,7 @@ rpcport=port
 
 # Common interface guide
 ## Pool info
-You can read about pool here
+You can read about pool here. Admin can edit it in Pool info editor.
 ## Payouts
 You can see reward payouts here.
 ## Pool stats
