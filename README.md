@@ -6,7 +6,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 2) Apache web server, mysql, tested in ubuntu
 3) At least 10000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
-5) Optionally crypt_prog from BOINC for signing urls
+5) Optionally crypt_prog from BOINC for signing urls (but you can use my signed urls also)
 6) If you want more security: second computer for storing staking wallet outside of web server
 
 # Automatic installation
