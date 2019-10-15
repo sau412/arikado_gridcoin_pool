@@ -231,6 +231,13 @@ ul li a:hover {
 }
 
 /* Menu bar */
+.main_bar_dark{
+        display:block;
+        background:#3c3d3c;
+        border: outset 0.1em #c2c6c4;
+        box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
+}
+
 .main_bar_light{
         display:block;
         background:#3c3d3c;
@@ -238,6 +245,16 @@ ul li a:hover {
         box-shadow: 0.02em 0.2em 0.4em 0em #c2c6c4;
 }
 
+.menu_item_light{
+        background:grey;
+        border: 1px solid lightgray;
+}
+
+.menu_item_dark{
+        background:#3c3d3c;
+}
+
 input, select{
         font-size:100%;
 }
+

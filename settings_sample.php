@@ -2,36 +2,33 @@
 // Settings file
 
 // DB variables
-$db_host="localhost";
-$db_login="login";
-$db_password="password";
-$db_base="database";
+$db_host="";
+$db_login="";
+$db_password="";
+$db_base="";
 
 // Pool variables
-$pool_name="pool name";
-$pool_message="Welcome to $pool_name pool";
+$pool_name="";
+$pool_message="";
 $pool_min_password_length=8;
 
 // BOINC variables
-$boinc_account="your boinc account here";
-// Password hash is
-// echo -n '<password><login>' | md5sum
-// Login should be lowercase
-$boinc_passwd_hash="your password hash here";
+$boinc_account="";
+$boinc_passwd_hash="";
 
 // Gridcoin RPC variables
-$grc_rpc_host="localhost";
-$grc_rpc_port="port";
-$grc_rpc_login="login";
-$grc_rpc_password="password";
-$grc_rpc_wallet_passphrase="wallet passphrase";
+$grc_rpc_host="";
+$grc_rpc_port="";
+$grc_rpc_login="";
+$grc_rpc_password="";
+$grc_rpc_wallet_passphrase="";
+
+// Gridcoin online wallet API key
+$grc_api_url="https://wallet.arikado.ru/api.php";
+$grc_api_key="";
 
 // Gridcoin CPID to automated billings
-$pool_cpid="YOUR CPID HERE";
-
-// ReCAPTCHA
-$recaptcha_public_key="public key here";
-$recaptcha_private_key="private key here";
+$pool_cpid="";
 
 // Email service
 $email_api_url="https://api.smtp2go.com/v3/email/send";
@@ -40,16 +37,13 @@ $email_sender="";
 $email_reply_to="";
 
 // Salt for token
-$token_salt="your_salt";
+$token_salt="ru4z6pdm";
 
 // Debug mode
 $debug_mode=FALSE;
 
-// Faucet
-$faucet_plain_amount=0.1;
-
 // Language file
-require_once("language.php");
+require_once("../lib/language.php");
 
 // Public signing key for URLs
 $signing_key="1024

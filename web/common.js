@@ -62,3 +62,4 @@ function hide_all_submenu(id) {
                 }
         });
 }
+
