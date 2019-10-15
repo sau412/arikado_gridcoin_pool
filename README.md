@@ -48,7 +48,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 # Update user reward
 */10 * * * * www-data cd /var/www/boinc_pool/tasks && php update_rewards.php
 # Move user rewards to payments
-30 10 * * * www-data cd /var/www/boinc_pool/tasks && php do_billing.php
+30 10 * * * www-data cd /var/www/boinc_pool/tasks && php do_billing_unsent.php
 # Send user rewards
 25,55 * * * * www-data cd /var/www/boinc_pool/tasks && php send_rewards_grc.php
 # Send faucet rewards
