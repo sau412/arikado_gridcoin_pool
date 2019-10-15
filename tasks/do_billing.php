@@ -34,26 +34,26 @@ if($owes_amount=='') $owes_amount=0;
 echo "Pool GRC owes: $owes_amount\n";
 
 if($owes_amount>=$current_balance) {
-        auth_log("Send rewards: Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'");
-        die("Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'\n");
+	auth_log("Send rewards: Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'");
+	die("Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'\n");
 }
 
 if($owes_amount==0) {
-        auth_log("Send rewards: nothing to bill");
-        echo "Nothing to bill\n";
-        //die("Nothing to send\n");
+	auth_log("Send rewards: nothing to bill");
+	echo "Nothing to bill\n";
+	//die("Nothing to send\n");
 } else {
-        // Do billing
-        $billing_today=db_query_to_variable("SELECT 1 FROM `billing_periods` HAVING DATE(MAX(`stop_date`))=DATE(NOW())");
-        if($billing_today=='') {
-                auth_log("Send rewards: billing today started");
-                echo "Billing today started\n";
-                bill_forecast_close_period();
-        } else {
-                echo "Billing already done today\n";
-                auth_log("Send rewards: Billing already done today");
-//              die("Billing already done today\n");
-        }
+	// Do billing
+	$billing_today=db_query_to_variable("SELECT 1 FROM `billing_periods` HAVING DATE(MAX(`stop_date`))=DATE(NOW())");
+	if($billing_today=='') {
+		auth_log("Send rewards: billing today started");
+		echo "Billing today started\n";
+		bill_forecast_close_period();
+	} else {
+		echo "Billing already done today\n";
+		auth_log("Send rewards: Billing already done today");
+//		die("Billing already done today\n");
+	}
 }
 
 ?>

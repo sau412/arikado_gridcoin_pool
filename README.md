@@ -6,7 +6,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 2) Apache web server, mysql, tested in ubuntu
 3) At least 10000 gridcoins for staking (more GRC means faster stakes)
 4) Gridcoin Research client
-5) Optionally crypt_prog from BOINC for signing urls (but you can use my signed urls also)
+5) Optionally crypt_prog from BOINC for signing urls
 6) If you want more security: second computer for storing staking wallet outside of web server
 
 # Automatic installation
@@ -75,7 +75,7 @@ rpcport=port
 
 # Common interface guide
 ## Pool info
-You can read about pool here. Admin can edit it in Pool info editor.
+You can read about pool here
 ## Payouts
 You can see reward payouts here.
 ## Pool stats
@@ -147,4 +147,5 @@ In gridcoin you receive rewards for BOINC projects when your coins stake. You ne
 2018-06-07 Estimated GRC/day, view last sync log (for admin), 'project not whitelisted, no rewards' status for project
 
 # To do
-* Deploy on commit
+* Option for distribute coins equally between users (for rains or faucets)
+* Comments to host, user, project

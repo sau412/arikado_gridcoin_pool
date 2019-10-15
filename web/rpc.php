@@ -246,3 +246,4 @@ if(headers_sent($file,$line)) auth_log("Headers warning: already sent, file '$fi
 
 echo $reply_xml;
 ?>
+
