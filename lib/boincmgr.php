@@ -355,38 +355,67 @@ ON DUPLICATE KEY UPDATE `content`=VALUES(`content`),`valid_until`=DATE_ADD(NOW()
 	return $result;
 }
 
-// Get payout rate
-function boincmgr_get_payout_rate($currency) {
-	switch($currency) {
-		case "GRC2":
-		case "GRC":
-			return 1;
-		default:
-			$currency_escaped=db_escape($currency);
-			return db_query_to_variable("SELECT `rate_per_grc` FROM `currency` WHERE `name`='$currency_escaped'");
-	}
-}
-
 // Load currency cache
 $boincmgr_cache_payout_limit=NULL;
 $boincmgr_cache_tx_fee=NULL;
 $boincmgr_cache_service_fee=NULL;
+$boincmgr_cache_tx_url=NULL;
+$boicnmgr_cache_address_url=NULL;
+$boincmgr_cache_rate_per_grc=NULL;
 function boincmgr_load_currency_data() {
 	global $boincmgr_cache_payout_limit;
 	global $boincmgr_cache_tx_fee;
 	global $boincmgr_cache_service_fee;
+	global $boincmgr_cache_tx_url;
+	global $boincmgr_cache_address_url;
+	global $boincmgr_cache_rate_per_grc;
 
-	$data=db_query_to_array("SELECT `name`,`payout_limit`,`tx_fee`,`project_fee` FROM `currency`");
+	$data=db_query_to_array("SELECT `name`,`payout_limit`,`tx_fee`,
+					`project_fee`,`url_tx`,`url_wallet`,`rate_per_grc`
+				FROM `currency`");
 	foreach($data as $row) {
 		$name = $row['name'];
 		$payout_limit = $row['payout_limit'];
 		$tx_fee = $row['tx_fee'];
 		$service_fee = $row['project_fee'];
+		$tx_url = $row['url_tx'];
+		$address_url = $row['url_wallet'];
+		$rate_per_grc = $row['rate_per_grc'];
 
 		$boincmgr_cache_payout_limit[$name] = $payout_limit;
 		$boincmgr_cache_tx_fee[$name] = $tx_fee;
 		$boincmgr_cache_service_fee[$name] = $service_fee;
+		$boincmgr_cache_tx_url[$name] = $tx_url;
+		$boincmgr_cache_address_url[$name] = $address_url;
+		$boincmgr_cache_rate_per_grc[$name] = $rate_per_grc;
 	}
+}
+
+// Get payout rate
+function boincmgr_get_payout_rate($currency) {
+	global $boincmgr_cache_rate_per_grc;
+	if(is_null($boincmgr_cache_rate_per_grc)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_rate_per_grc[$currency];
+}
+
+// Get tx url
+function boincmgr_get_tx_url($currency) {
+	global $boincmgr_cache_tx_url;
+	if(is_null($boincmgr_cache_tx_url)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_tx_url[$currency];
+}
+
+// Get addres url
+function boincmgr_get_address_url($currency) {
+	global $boincmgr_cache_address_url;
+	if(is_null($boincmgr_cache_address_url)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_address_url[$currency];
 }
 
 // Get payout limit
@@ -398,7 +427,7 @@ function boincmgr_get_payout_limit($currency) {
 	return $boincmgr_cache_payout_limit[$currency];
 }
 
-// Get payout limit
+// Get tx fee
 function boincmgr_get_tx_fee_estimation($currency) {
 	global $boincmgr_cache_tx_fee;
 	if(is_null($boincmgr_cache_tx_fee)) {
