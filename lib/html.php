@@ -184,7 +184,7 @@ function html_payout_address_link($coin,$address) {
                 $address_explorer_link="";
         }
 
-        $result.="<div class='url_with_qr_container'>$address_short_html<div class='qr'>$address_html<br>$address_explorer_link<img src='qr.php?str=$address_urlencoded'></div></div>";
+        $result.="<div class='url_with_qr_container'>$address_short_html<div class='qr'>$address_html<br>$address_explorer_link</div></div>";
         return $result;
 }
 
