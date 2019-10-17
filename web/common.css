@@ -253,6 +253,8 @@ ul li a:hover {
 	visibility: hidden;
 	position: absolute;
 	padding: 0.5em;
+	background-color: black;
+	border: solid 1px gray;
 }
 
 .block_with_container:hover .block_with_container_inside {
