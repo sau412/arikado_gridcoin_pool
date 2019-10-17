@@ -1226,10 +1226,10 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
 		$header=str_replace("%reward%",$reward,$header);
 		$header=str_replace("%comment%",$comment,$header);
 		$result.=$header;
-/*
+
 		$payout_data_array=db_query_to_array("SELECT `currency`,`grc_amount`,`rate`,`payout_address`,`amount`,`txid`,`timestamp` FROM `payouts`
 WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDER BY `payout_address` ASC");
-*/$payout_data_array=array();
+
 		$result.=html_block_desc("payout_billings_grc_table_pre");
 		$result.="<p><table align=center>\n";
 		$result.=html_table_header("payout_billings_grc_table_header");
@@ -1257,9 +1257,9 @@ WHERE `billing_uid`='$billing_uid_escaped' AND `currency` IN ('GRC','GRC2') ORDE
 			$result.="<tr><td>$payout_address_link</td><td>$grc_amount_html</td><td>$txid_link</td><td>$timestamp_html</td></tr>\n";
 			}
 		$result.="</table></p>\n";
-/*
+
 		$payout_data_array=db_query_to_array("SELECT `currency`,`grc_amount`,`rate`,`payout_address`,`amount`,`txid`,`timestamp` FROM `payouts` WHERE `billing_uid`='$billing_uid_escaped' AND `currency` NOT IN ('GRC','GRC2') ORDER BY `payout_address` ASC");
-*/$payout_data_array=array();		if(count($payout_data_array)==0) continue;
+		if(count($payout_data_array)==0) continue;
 
 		$result.=html_block_desc("payout_billings_alt_table_pre");
 		$result.="<p><table align=center>\n";
