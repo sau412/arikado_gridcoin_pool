@@ -1206,6 +1206,7 @@ WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`
 		}
 		$result.="</table>\n";
 	}
+return $result;
 	$result.=html_block_desc("payout_billings_pre");
 
 	$billings_array=db_query_to_array("SELECT `uid`,`comment`,`start_date`,`stop_date`,`reward` FROM `billing_periods` ORDER BY `stop_date` DESC LIMIT 10");
