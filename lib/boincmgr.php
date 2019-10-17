@@ -367,25 +367,53 @@ function boincmgr_get_payout_rate($currency) {
 	}
 }
 
+// Load currency cache
+$boincmgr_cache_payout_limit=NULL;
+$boincmgr_cache_tx_fee=NULL;
+$boincmgr_cache_service_fee=NULL;
+function boincmgr_load_currency_data() {
+	global $boincmgr_cache_payout_limit;
+	global $boincmgr_cache_tx_fee;
+	global $boincmgr_cache_service_fee;
+
+	$data=db_query_to_array("SELECT `name`,`payout_limit`,`tx_fee`,`project_fee` FROM `currency`");
+	foreach($data as $row) {
+		$name = $row['name'];
+		$payout_limit = $row['payout_limit'];
+		$tx_fee = $row['tx_fee'];
+		$service_fee = $row['project_fee'];
+
+		$boincmgr_cache_payout_limit[$name] = $payout_limit;
+		$boincmgr_cache_tx_fee[$name] = $tx_fee;
+		$boincmgr_cache_service_fee[$name] = $service_fee;
+	}
+}
+
 // Get payout limit
 function boincmgr_get_payout_limit($currency) {
-	if($currency=="GRC2") $currency="GRC";
-	$currency_escaped=db_escape($currency);
-	return db_query_to_variable("SELECT `payout_limit` FROM `currency` WHERE `name`='$currency_escaped'");
+	global $boincmgr_cache_payout_limit;
+	if(is_null($boincmgr_cache_payout_limit)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_payout_limit[$currency];
 }
 
 // Get payout limit
 function boincmgr_get_tx_fee_estimation($currency) {
-	if($currency=="GRC2") $currency="GRC";
-	$currency_escaped=db_escape($currency);
-	return db_query_to_variable("SELECT `tx_fee` FROM `currency` WHERE `name`='$currency_escaped'");
+	global $boincmgr_cache_tx_fee;
+	if(is_null($boincmgr_cache_tx_fee)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_tx_fee[$currency];
 }
 
 // Get payout fee
 function boincmgr_get_service_fee($currency) {
-	if($currency=="GRC2") $currency="GRC";
-	$currency_escaped=db_escape($currency);
-	return db_query_to_variable("SELECT `project_fee` FROM `currency` WHERE `name`='$currency_escaped'");
+	global $boincmgr_cache_service_fee;
+	if(is_null($boincmgr_cache_service_fee)) {
+		boincmgr_load_currency_data();
+	}
+	return $boincmgr_cache_service_fee[$currency];
 }
 
 // Add message
