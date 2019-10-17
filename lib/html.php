@@ -180,12 +180,12 @@ function html_payout_address_link($coin,$address) {
         $address_short_html=html_escape($address_short);
 
         if($address_url!='') {
-                $address_explorer_link="<a href='${address_url}${address_urlencoded}'>$address_short_html</a><br>";
+                $address_explorer_link="$address_html<br>\n<a href='${address_url}${address_urlencoded}'>Block explorer</a><br>";
         } else {
                 $address_explorer_link="$address_html";
         }
 
-        $result.="<div class='block_with_container'>$address_short_html<div class='block_with_container_inside'>$address_html<br>$address_explorer_link</div></div>";
+        $result.="<div class='block_with_container'>$address_short_html <div class='block_with_container_inside'>$address_explorer_link</div></div>";
 	//$result.=$address_explorer_link;
         return $result;
 }
