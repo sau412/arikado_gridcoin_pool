@@ -253,7 +253,18 @@ ul li a:hover {
 	visibility: hidden;
 	position: absolute;
 	padding: 0.5em;
+	color: white;
 	background-color: black;
+	border: solid 1px gray;
+	z-index: 1;
+}
+
+.html_day .block_with_container .block_with_container_inside {
+	visibility: hidden;
+	position: absolute;
+	padding: 0.5em;
+	color: black;
+	background-color: white;
 	border: solid 1px gray;
 	z-index: 1;
 }
