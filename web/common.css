@@ -242,3 +242,19 @@ ul li a:hover {
         background:#3c3d3c;
 }
 
+/* Popup */
+.block_with_container {
+	position: relative;
+	display: inline-block;
+	border-bottom: 1px dotted gray;
+}
+
+.block_with_container .block_with_container_inside {
+	visibility: hidden;
+	position: absolute;
+	padding: 0.5em;
+}
+
+.block_with_container .block_with_container_inside {
+	visibility: visible;
+}
