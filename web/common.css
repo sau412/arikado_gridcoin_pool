@@ -250,6 +250,7 @@ ul li a:hover {
 }
 
 .block_with_container .block_with_container_inside {
+	display: none;
 	visibility: hidden;
 	position: absolute;
 	padding: 0.5em;
