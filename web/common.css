@@ -255,6 +255,7 @@ ul li a:hover {
 	padding: 0.5em;
 	background-color: black;
 	border: solid 1px gray;
+	z-index: 1;
 }
 
 .block_with_container:hover .block_with_container_inside {
