@@ -189,8 +189,6 @@ _END;
         echo <<<_END
 # Update BOINC projects data
 5 * * * * $username php $catalog/update_projects.php
-# Update gridcoin research blocks data
-15 * * * * $username php $catalog/update_blocks.php
 # Update currency rates
 20,50 * * * * $username php $catalog/update_rates.php
 # Send rewards (if exists)

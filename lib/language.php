@@ -679,24 +679,6 @@ $lang_data_json=<<<_END
         "de":{"1":"Name","2":"Kurs zu 1 GRC","3":"Payout Limit","4":"TX Gebühr","5":"Projekt Gebühr"},
         "zh":{"1":"Full name","2":"Rate per 1 GRC","3":"Payout limit","4":"TX fee","5":"Project fee"}
         },
-"block_explorer_header":{
-        "en":"Last 500 blocks",
-        "ru":"Последние 500 блоков",
-        "de":"Die letzten 500 Blöcke",
-        "zh":"最后500个区块"
-        },
-"block_explorer_desc":{
-        "en":"Data from blockchain (at least 110 confirmations, updated hourly)",
-        "ru":"Данные блокчейна (блоки со 110 подтверждениями и более, обновляются ежечасно)",
-        "de":"Blockchain-Daten (Blöcke mit mindestens 110 Bestätigungen, stündlich aktualisiert",
-        "zh":"区块链数据（至少110个确认，每小时更新）"
-        },
-"block_explorer_table_header":{
-        "en":{"1":"Number","2":"Hash","3":"Mint","4":"Interest","5":"CPID","6":"Rewards","7":"Timestamp"},
-        "ru":{"1":"Номер","2":"Хэш","3":"Всего монет","4":"За блок","5":"CPID","6":"Выплата","7":"Время"},
-        "de":{"1":"Nummer","2":"Hash","3":"Münzzahl","4":"Verzinsung","5":"CPID","6":"Vergütung","7":"Zeitstempel"},
-        "zh":{"1":"Number","2":"Hash","3":"Mint","4":"Interest","5":"CPID","6":"Rewards","7":"Timestamp"}
-        },
 "feedback_header":{
         "en":"Feedback",
         "ru":"Обратная связь",

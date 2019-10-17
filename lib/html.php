@@ -1602,61 +1602,6 @@ function html_currencies() {
 	return $result;
 }
 
-// Block explorer block
-function html_block_explorer() {
-	global $pool_cpid;
-	global $current_language;
-
-	$result="";
-	$result.="<div id=block_explorer_block class=selectable_block>\n";
-
-	$result.=html_block_header_1("block_explorer_header");
-	$result.=html_block_desc("block_explorer_desc");
-
-	$result.="<p><table align=center>\n";
-	$result.=html_table_header("block_explorer_table_header");
-
-	$blocks_data_array=db_query_to_array("SELECT `number`,`hash`,`mint`,`interest`,`cpid`,`rewards_sent`,`timestamp` FROM `blocks` ORDER BY `number` DESC LIMIT 500");
-
-	foreach($blocks_data_array as $blocks_data) {
-		$number=$blocks_data['number'];
-		$hash=$blocks_data['hash'];
-		$mint=$blocks_data['mint'];
-		$interest=$blocks_data['interest'];
-		$cpid=$blocks_data['cpid'];
-		$rewards_sent=$blocks_data['rewards_sent'];
-		$timestamp=$blocks_data['timestamp'];
-
-		$number_html=html_escape($number);
-		$number_link="<a href='https://www.gridcoinstats.eu/block/$number_html'>$number_html</a>";
-
-		$hash_short_html=html_escape(substr($hash,0,10)."...");
-		$hash_html=html_escape($hash);
-		$hash_link="<a href='https://www.gridcoinstats.eu/block/$hash_html'>$hash_short_html</a>";
-
-		$mint_html=html_escape($mint);
-		$interest_html=html_escape($interest);
-
-		$cpid_html=html_escape($cpid);
-		if($cpid=="INVESTOR") $cpid_link=$cpid_html;
-		else $cpid_link="<a href='https://www.gridcoinstats.eu/cpid/$cpid_html'>$cpid_html</a>";
-
-		$timestamp_html=html_escape($timestamp);
-		if($pool_cpid==$cpid) {
-			if($rewards_sent) $rewards_html="<span class='status_good'>yes</span>";
-			else $rewards_html="<span class='status_bad'>no</span>";
-		} else {
-			$rewards_html="not mine";
-		}
-
-		$result.="<tr><td>$number_link</td><td>$hash_link</td><td>$mint_html</td><td>$interest_html</td><td>$cpid_link</td><td>$rewards_html</td><td>$timestamp_html</td></tr>\n";
-	}
-
-	$result.="</table></p>\n";
-	$result.="</div>\n";
-	return $result;
-}
-
 // Messages form
 function html_message_send() {
 	global $username;

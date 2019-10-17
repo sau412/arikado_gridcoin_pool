@@ -39,8 +39,6 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 5 * * * * www-data cd /var/www/boinc_pool/tasks && php update_projects.php
 # Update gridcoin superblock data
 4 * * * * www-data cd /var/www/boinc_pool/tasks && php update_superblock_data.php
-# Update latest gridcoin blocks
-15 * * * * www-data cd /var/www/boinc_pool/tasks && php update_blocks.php
 # Cache graphs
 25 * * * * www-data cd /var/www/boinc_pool/tasks && php update_graphs.php
 # Update task statuses and send emails on errors
