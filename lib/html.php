@@ -168,7 +168,8 @@ function html_project_name_link($project_name,$project_url) {
 function html_payout_address_link($coin,$address) {
         $result="";
         $coin_escaped=db_escape($coin);
-        $address_url=db_query_to_variable("SELECT `url_wallet` FROM `currency` WHERE `name`='$coin_escaped'");
+	$address_url=boincmgr_get_address_url($coin);
+        //$address_url=db_query_to_variable("SELECT `url_wallet` FROM `currency` WHERE `name`='$coin_escaped'");
         if(strlen($address)>20) {
                 $address_short=substr($address,0,20)."...";
         } else {
@@ -201,7 +202,8 @@ function html_txid_link($currency,$txid) {
 		$txid_html=html_escape($txid);
 
 		$currency_escaped=db_escape($currency);
-		$tx_url=db_query_to_variable("SELECT `url_tx` FROM `currency` WHERE `name`='$currency_escaped'");
+		$tx_url=boincmgr_get_tx_url($currency);
+		//$tx_url=db_query_to_variable("SELECT `url_tx` FROM `currency` WHERE `name`='$currency_escaped'");
 		if($tx_url!="") {
 			return "<a href='${tx_url}${txid_html}'>${txid_short_html}&hellip;</a>";
 		} else {
