@@ -1730,7 +1730,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
@@ -1788,7 +1788,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bp.`name`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
@@ -1846,7 +1846,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
@@ -1897,7 +1897,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`username`<>'' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bp.`name`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
@@ -1943,7 +1943,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`username`='$username_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`username`='$username_escaped' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
