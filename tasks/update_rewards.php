@@ -92,6 +92,13 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
 		$grc_amount=($magnitude_total/$project_count) * $magnitude_unit * ($time_delta/86400) * $expavg_credit/$project_superblock_expavg_credit;
 	}
 
+        // Calculate per-day estimation
+        // If it less than $min_payout_grc than pay nothing
+        $grc_per_day_est=86400*$grc_amount/$time_delta;
+        if($grc_per_day_est < $min_payout_grc) {
+                $grc_amount=0;
+        }
+
 	// Byteball rewards for WCG
 	if($project_uid==15) {
 		//$byteball_amount=0;
