@@ -26,5 +26,7 @@ WHERE `present_in_superblock`=1
 GROUP BY `host_uid`
 HAVING $mag_per_project*SUM(phl.`expavg_credit`/p.`team_expavg_credit`)>1) AS a");
 
-echo "mag:$mag users:$users users_mag:$users_mag hosts:$hosts hosts_mag:$hosts_mag\n";
+$wallet_balance=db_query_to_variable("SELECT `value` FROM `variables` WHERE `name`='hot_wallet_balance'");
+
+echo "mag:$mag users:$users users_mag:$users_mag hosts:$hosts hosts_mag:$hosts_mag wallet_balance:$wallet_balance\n";
 ?>
