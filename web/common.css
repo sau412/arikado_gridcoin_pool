@@ -242,3 +242,33 @@ ul li a:hover {
         background:#3c3d3c;
 }
 
+/* Popup */
+.block_with_container {
+	position: relative;
+	display: inline-block;
+	border-bottom: 1px dotted gray;
+}
+
+.block_with_container .block_with_container_inside {
+	visibility: hidden;
+	position: absolute;
+	padding: 0.5em;
+	color: white;
+	background-color: black;
+	border: solid 1px gray;
+	z-index: 1;
+}
+
+.html_day .block_with_container .block_with_container_inside {
+	visibility: hidden;
+	position: absolute;
+	padding: 0.5em;
+	color: black;
+	background-color: white;
+	border: solid 1px gray;
+	z-index: 1;
+}
+
+.block_with_container:hover .block_with_container_inside {
+	visibility: visible;
+}
