@@ -131,6 +131,7 @@ set_night_mode(sessionStorage.getItem("night_mode"));
 <hr>
 <center>
 <p>${current_language["page_footer_text"]}</p>
+<p><img src='https://arikado.xyz/counter/?site=grc.arikado.ru'></p>
 </center>
 </body>
 </html>
