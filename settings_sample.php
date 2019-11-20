@@ -11,6 +11,10 @@ $db_base="";
 $pool_name="";
 $pool_message="";
 $pool_min_password_length=8;
+// For counter
+$project_counter_name="";
+// For logging
+$project_log_name="";
 
 // BOINC variables
 $boinc_account="";

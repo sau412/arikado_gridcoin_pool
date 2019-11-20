@@ -81,6 +81,7 @@ _END;
 // End html page
 function html_page_end() {
 	global $current_language;
+	global $project_counter_name;
 
 	echo <<<_END
 <script>
@@ -131,7 +132,7 @@ set_night_mode(sessionStorage.getItem("night_mode"));
 <hr>
 <center>
 <p>${current_language["page_footer_text"]}</p>
-<p><img src='https://arikado.xyz/counter/?site=grc.arikado.ru'></p>
+<p><img src='https://arikado.xyz/counter/?site=$project_counter_name'></p>
 </center>
 </body>
 </html>
