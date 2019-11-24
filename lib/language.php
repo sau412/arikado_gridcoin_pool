@@ -812,10 +812,10 @@ $lang_data_json=<<<_END
         "zh":"您要使用faucet至少需要1个magnitude (您当前magnitude有 %magnitude%)"
         },
 "page_footer_text":{
-        "en":"Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 on telegram, twitter, facebook, gmail, github, vk, gridcoin slack and discord.",
-        "ru":"Пул для майнинга Gridcoin, (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>). Автор - Царев Владимир, мой ник sau412 в контакте, телеграме, твиттере, фейсбуке, gmail, github, gridcoin slack и discord",
-        "de":"Opensource gridcoin Pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) von Vladimir Tsarev, mein Nickname ist sau412 bei telegram, twitter, facebook, gmail, github, vk, gridcoin slack und discord.",
-        "zh":"gridcoin开源矿池 (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by Vladimir Tsarev, my nickname is sau412 on telegram, twitter, facebook, gmail, github, vk, gridcoin slack and discord."
+        "en":"Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>) by <a href='htps://arikado.xyz/'>sau412</a>.",
+        "ru":"Пул для майнинга Gridcoin, (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>). Автор - <a href='htps://arikado.xyz/'>sau412</a>.",
+        "de":"Opensource gridcoin Pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) von <a href='htps://arikado.xyz/'>sau412</a>.",
+        "zh":"gridcoin开源矿池 (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by <a href='htps://arikado.xyz/'>sau412</a>."
         }
 }
 _END;
