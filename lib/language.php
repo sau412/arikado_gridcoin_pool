@@ -812,10 +812,10 @@ $lang_data_json=<<<_END
         "zh":"您要使用faucet至少需要1个magnitude (您当前magnitude有 %magnitude%)"
         },
 "page_footer_text":{
-        "en":"Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>) by <a href='htps://arikado.xyz/'>sau412</a>.",
-        "ru":"Пул для майнинга Gridcoin, (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>). Автор - <a href='htps://arikado.xyz/'>sau412</a>.",
-        "de":"Opensource gridcoin Pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) von <a href='htps://arikado.xyz/'>sau412</a>.",
-        "zh":"gridcoin开源矿池 (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by <a href='htps://arikado.xyz/'>sau412</a>."
+        "en":"Opensource gridcoin pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>) by <a href='https://arikado.xyz/'>sau412</a>.",
+        "ru":"Пул для майнинга Gridcoin, (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github</a>). Автор - <a href='https://arikado.xyz/'>sau412</a>.",
+        "de":"Opensource gridcoin Pool (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) von <a href='https://arikado.xyz/'>sau412</a>.",
+        "zh":"gridcoin开源矿池 (<a href='https://github.com/sau412/arikado_gridcoin_pool'>github link</a>) by <a href='https://arikado.xyz/'>sau412</a>."
         }
 }
 _END;
