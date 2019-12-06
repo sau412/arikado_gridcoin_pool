@@ -46,6 +46,10 @@ $token_salt="ru4z6pdm";
 // Debug mode
 $debug_mode=FALSE;
 
+// Memcached options
+$memcached_server="localhost";
+$memcached_interval=3600;
+
 // Language file
 require_once("../lib/language.php");
 
