@@ -46,6 +46,10 @@ $token_salt="ru4z6pdm";
 // Debug mode
 $debug_mode=FALSE;
 
+// Minimal payouts
+$min_payout_grc=0;
+$faucet_plain_amount=0.1;
+
 // Memcached options
 $memcached_server="localhost";
 $memcached_interval=3600;
