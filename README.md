@@ -1,5 +1,5 @@
 # General
-Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
+Simple gridcoin pool with automated payments. Can work on Raspberry Pi 2 or 3.
 
 # Requirements
 1) PHP 5 with openssl lib or PHP 7
@@ -29,7 +29,7 @@ Simple gridcoin pool with automated payments. Can work on raspberry pi 2 or 3.
 4) Run manual.sql in pool's DB
 5) Set cron 1h to update_projects_data.php, update_blocks.php and send_rewards.php
 6) Change settings in your settings.php
-7) Regiter new user via web, then change his status to "admin" in boincmgs_users
+7) Register new user via web, then change his status to "admin" in boincmgs_users
 
 ## Cron jobs
 ```
@@ -122,7 +122,7 @@ Samples:
 ```
 
 ## Pool info editor
-You chan change pool info here. Any HTML or scripting allowed.
+You can change pool info here. Any HTML or scripting allowed.
 
 ## Messages
 You can read feedback messages here.
