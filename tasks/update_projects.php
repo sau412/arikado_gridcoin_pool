@@ -255,6 +255,7 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 		$domain_name=(string)$host_data->domain_name;
 		$p_model=(string)$host_data->p_model;
 		$expavg_credit=(string)$host_data->expavg_credit;
+		$expavg_time=(string)$host_data->expavg_time;
 
 		// Validate data
 		if(auth_validate_integer($host_id)==FALSE) { echo "Host id validation error\n"; continue; }
@@ -262,6 +263,13 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 		if(auth_validate_domain($domain_name)==FALSE) { echo "Host domain name validation error\n"; continue; }
 		if(auth_validate_ascii($p_model)==FALSE) { echo "Host CPU model validation error\n"; continue; }
 		if(auth_validate_float($expavg_credit)==FALSE) { echo "Host expavg_credit validation error\n"; continue; }
+		if(auth_validate_float($expavg_time)==FALSE) { echo "Host expavg_time validation error\n"; continue; }
+
+		// If expavg not updated for a month then skip it
+		if((time() - $expavg_time) > 86400 * 30) {
+			echo "Skipping host_id $host_id host cpid $host_cpid expavg time $expavg_time is too old\n";
+			continue;
+		}
 
 		// Escape data
 		$host_id_escaped=db_escape($host_id);
