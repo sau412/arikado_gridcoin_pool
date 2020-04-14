@@ -696,7 +696,7 @@ _END;
 		}
 
 		if(auth_is_admin($username)) {
-			$projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects`
+			$projects_array=db_query_to_array("SELECT `uid`,`name`,`present_in_superblock` FROM `projects`
 WHERE `uid` NOT IN (
 	SELECT bap.`project_uid` FROM `hosts` h
 	LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
@@ -725,7 +725,7 @@ _END;
 				$project_name = $project_data['name'];
 				$in_superblock = $project_data['present_in_superblock'];
 				if($in_superblock == 0) {
-					$project_name .= "(not in superblock)";
+					$project_name .= " (not in superblock)";
 				}
 				$attach_form.="<option value='$project_uid'>$project_name</option>";
 			}
@@ -1447,6 +1447,9 @@ function html_pool_stats() {
 		$expavg_credit=$project_data['expavg_credit'];
 		$team_expavg_credit=$project_data['team_expavg_credit'];
 		$status=$project_data['status'];
+
+		// Disabled projects are not visible here
+		if($status == 'disabled') continue;
 
 		$project_uid_escaped=db_escape($uid);
 		$pool_project_hosts=db_query_to_variable("SELECT count(*) FROM `attach_projects` AS bap
