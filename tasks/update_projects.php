@@ -300,7 +300,7 @@ ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpi
 VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
 		}
 	}
-
+/*
 	// =============================================================
 	// Update project tasks data
 	// =============================================================
@@ -313,6 +313,7 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
 		$skip+=20;
 		//var_dump($data);
 	} while(results_parse_page($project_uid,$data));
+*/
 	echo "----\n";
 	$full_sync_count++;
 }
