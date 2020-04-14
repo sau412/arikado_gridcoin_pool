@@ -1112,7 +1112,7 @@ function html_project_control_form() {
 
 	$form_hidden_action="<input type=hidden name=action value='change_project_status'>";
 	$form_hidden_token="<input type=hidden name=token value='$username_token'>";
-	$project_options="<select name=status><option>auto</option><option>enabled</option><option>stats only</option><option>disabled</option></select>";
+	$project_options="<select name=status><option>enabled</option><option>stats only</option><option>disabled</option></select>";
 	$submit_button="<input type=submit value='change'>";
 
 	foreach($projects_array as $project_record) {
