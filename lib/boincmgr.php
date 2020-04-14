@@ -16,7 +16,7 @@ function boincmgr_attach($username,$host_uid,$project_uid) {
 	$host_name=boincmgr_get_host_name($host_uid);
 	if(auth_is_admin($username)==FALSE) {
 		$host_correct=db_query_to_variable("SELECT 1 FROM `hosts` WHERE `uid`='$host_uid_escaped' AND `username_uid`='$username_uid_escaped'");
-		$project_correct=db_query_to_variable("SELECT 1 FROM `projects` WHERE `uid`='$project_uid_escaped' AND `status` IN ('enabled','auto enabled')");
+		$project_correct=db_query_to_variable("SELECT 1 FROM `projects` WHERE `uid`='$project_uid_escaped' AND `status` IN ('enabled')");
 	}
 	if(auth_is_admin($username) || ($host_correct && $project_correct)) {
 		auth_log("Attach username '$username' project '$project_name' to host '$host_name'");
@@ -475,7 +475,7 @@ function boincmgr_leave_only_ascii($string) {
 // Get magnitude per project
 function boincmgr_get_mag_per_project() {
 	$magnitude_total=115000;
-	$whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `projects` WHERE `status` IN ('enabled','auto enabled','stats only')");
+	$whiltelisted_count=db_query_to_variable("SELECT count(*) FROM `projects` WHERE `status` IN ('enabled','stats only')");
 	if($whiltelisted_count!=0) $mag_per_project=$magnitude_total/$whiltelisted_count;
 	else $mag_per_project=0;
 	return $mag_per_project;
@@ -492,7 +492,7 @@ function boincmgr_get_relative_contribution_project_host($project_uid,$host_uid)
 	$host_uid_escaped=db_escape($host_uid);
 	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
-WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
 }
@@ -504,7 +504,7 @@ function boincmgr_get_relative_contribution_project_user($project_uid,$user_uid)
 	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 LEFT OUTER JOIN `hosts` AS bh ON bh.uid=bphl.host_uid
-WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
 }
@@ -513,7 +513,7 @@ WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid
 function boincmgr_get_relative_contribution_project($project_uid) {
 	$project_uid_escaped=db_escape($project_uid);
 	$relative_contribution=db_query_to_variable("SELECT SUM(bp.`expavg_credit`/bp.`team_expavg_credit`) FROM `projects` AS bp
-WHERE bp.`uid`='$project_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+WHERE bp.`uid`='$project_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
 }
@@ -523,7 +523,7 @@ function boincmgr_get_relative_contribution_host($host_uid) {
 	$host_uid_escaped=db_escape($host_uid);
 	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
-WHERE bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+WHERE bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
 }
@@ -534,7 +534,7 @@ function boincmgr_get_relative_contribution_user($user_uid) {
 	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 LEFT OUTER JOIN `hosts` AS bh ON bh.uid=bphl.host_uid
-WHERE bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')");
+WHERE bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
 }
@@ -555,7 +555,7 @@ FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
-WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','auto enabled','stats only')
+WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','stats only')
 GROUP BY bu.`username`
 HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
 ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC

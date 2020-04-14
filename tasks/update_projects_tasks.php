@@ -27,7 +27,7 @@ require_once("../lib/results_parser.php");
 db_connect();
 
 // Get enabled and stats only projects
-$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`update_weak_auth` FROM `projects` WHERE `status` IN ('enabled','stats only','auto','auto enabled','auto disabled')");
+$project_data_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`update_weak_auth` FROM `projects` WHERE `status` IN ('enabled','stats only')");
 
 // Setup cURL
 $ch=curl_init();
