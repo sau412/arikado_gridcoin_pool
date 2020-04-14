@@ -80,9 +80,12 @@ function auth_validate_password($password) {
 	else return FALSE;
 }
 
-// Check GRC address format
+// Check payout address format
 function auth_validate_payout_address($payout_address) {
-	return auth_validate_ascii($payout_address);
+	if(auth_validate_ascii($payout_address)) {
+		if(strlen($payout_address) > 0) return TRUE;
+	}
+	return FALSE;
 	//if(preg_match('/^[A-Za-z0-9]{34,34}$/',$grc_address)) return TRUE;
 	//else return FALSE;
 }
