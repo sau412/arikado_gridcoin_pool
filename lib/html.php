@@ -1432,7 +1432,9 @@ function html_pool_stats() {
 	if($start_date=="") $start_date="2018-01-01 20:20:16";
 	$stop_date=db_query_to_variable("SELECT NOW()");
 
-	$project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,`team_expavg_credit`,`status` FROM `projects` ORDER BY `name` ASC");
+	$project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,
+										`team_expavg_credit`,`status`,`present_in_superblock`
+										FROM `projects` ORDER BY `name` ASC");
 
 	$magnitude_unit=boincmgr_get_magnitude_unit();
 	$mag_per_project=boincmgr_get_mag_per_project();
@@ -1441,15 +1443,20 @@ function html_pool_stats() {
 	$total_pool_grc_per_day=0;
 
 	foreach($project_array as $project_data) {
-		$name=$project_data['name'];
-		$project_url=$project_data['project_url'];
-		$uid=$project_data['uid'];
-		$expavg_credit=$project_data['expavg_credit'];
-		$team_expavg_credit=$project_data['team_expavg_credit'];
-		$status=$project_data['status'];
-
+		$name = $project_data['name'];
+		$project_url = $project_data['project_url'];
+		$uid = $project_data['uid'];
+		$expavg_credit = $project_data['expavg_credit'];
+		$team_expavg_credit = $project_data['team_expavg_credit'];
+		$status = $project_data['status'];
+		$present_in_superblock = $project_data['present_in_superblock'];
 		// Disabled projects are not visible here
 		if($status == 'disabled') continue;
+
+		// Not in superblock = no rewards
+		if($present_in_superblock == 0) {
+			$status = "no rewards";
+		}
 
 		$project_uid_escaped=db_escape($uid);
 		$pool_project_hosts=db_query_to_variable("SELECT count(*) FROM `attach_projects` AS bap
@@ -1468,21 +1475,18 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 		$pool_project_hosts_html=html_escape($pool_project_hosts);
 		$task_report_url="<a href='tasks.php?project_uid=$uid'>view</a>";
 
+		
+
 		switch($status) {
-			case "auto enabled":
-				$status_html="<span class='project_status_auto'>".html_escape($status)."</span>";
 			case "enabled":
 				$status_html="<span class='project_status_enabled'>".html_escape($status)."</span>";
 				break;
-			default:
-			case "auto":
-				$pool_grc_per_day=0;
-				$project_magnitude=0;
 			case "stats only":
 				$status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
 				break;
-			case "auto disabled":
+			default:
 			case "disabled":
+			case "no rewards":
 				$status_html="<span class='project_status_disabled'>".html_escape($status)."</span>";
 				$pool_grc_per_day=0;
 				break;
