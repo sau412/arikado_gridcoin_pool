@@ -566,11 +566,12 @@ LIMIT 100
 	$currency = db_query_to_variable("SELECT `currency` FROM `users` WHERE `uid`='$username_uid_escaped'");
 
 	if($user_magnitude>1 && $claim_today!=1 && ($currency=='GRC' || $currency=='GRC2')) {
-		db_query("INSERT INTO `faucet` (`user_uid`,`grc_amount`,`date`) VALUES ('$username_uid_escaped','$amount_escaped',NOW())");
-
 		$grc_address=db_query_to_variable("SELECT `payout_address` FROM `users` WHERE `uid`='$username_uid_escaped'");
+		if($grc_address == '') return;
+
 		$grc_address_escaped=db_escape($grc_address);
 
+		db_query("INSERT INTO `faucet` (`user_uid`,`grc_amount`,`date`) VALUES ('$username_uid_escaped','$amount_escaped',NOW())");
 		db_query("INSERT INTO `faucet_payouts` (`grc_address`,`amount`) VALUES ('$grc_address_escaped','$amount_escaped')");
 	}
 }
