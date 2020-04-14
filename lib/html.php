@@ -362,7 +362,7 @@ function html_greeting_user() {
 		$not_in_superblock=db_query_to_variable("SELECT GROUP_CONCAT(DISTINCT bp.`name` SEPARATOR ', ') FROM `hosts` AS bh
 JOIN `attach_projects` AS bap ON bap.`host_uid`=bh.`uid`
 JOIN `projects` AS bp ON bp.`uid`=bap.`project_uid`
-WHERE bh.`username_uid`='$user_uid_escaped' AND bap.`status`='attached' AND bp.`present_in_superblock`=0 AND bp.`status` IN ('enabled','auto enabled')");
+WHERE bh.`username_uid`='$user_uid_escaped' AND bap.`status`='attached' AND bp.`present_in_superblock`=0 AND bp.`status` IN ('enabled')");
 
 		if($not_in_superblock!='') {
 			$not_in_superblock_message="Warning: $not_in_superblock is not in superblock";
@@ -666,7 +666,7 @@ WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
 			if(in_array("detach_when_done",$options_array)) {
 				$attached_project_msg="<span class=host_status_detach>detach when done</span>";
 			}
-			if($project_status=="disabled" || $project_status=="auto disabled") {
+			if($project_status=="disabled") {
 				$attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
 			}
 
@@ -704,7 +704,7 @@ WHERE `uid` NOT IN (
 ) ORDER BY `name` ASC");
 		} else {
 			$projects_array=db_query_to_array("SELECT `uid`,`name`,`present_in_superblock` FROM `projects`
-WHERE `status` IN ('enabled','auto enabled') AND `uid` NOT IN (
+WHERE `status` IN ('enabled') AND `uid` NOT IN (
 	SELECT bap.`project_uid` FROM `hosts` h
 	LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
 	WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
@@ -1136,10 +1136,6 @@ function html_project_control_form() {
 		$form_hidden_project_uid="<input type=hidden name=project_uid value='$uid'>";
 
 		switch($status) {
-			case "auto":
-				$status_html="<span class='project_status_auto'>".html_escape($status)."</span>";
-				break;
-			case "auto enabled":
 			case "enabled":
 				$status_html="<span class='project_status_enabled'>".html_escape($status)."</span>";
 				break;
@@ -1147,7 +1143,6 @@ function html_project_control_form() {
 			case "stats only":
 				$status_html="<span class='project_status_stats_only'>".html_escape($status)."</span>";
 				break;
-			case "auto disabled":
 			case "disabled":
 				$status_html="<span class='project_status_disabled'>".html_escape($status)."</span>";
 				break;

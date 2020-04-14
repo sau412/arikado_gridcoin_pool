@@ -13,7 +13,7 @@ function bill_close_period($comment,$start_date,$stop_date,$total_reward,$check_
 	}
 
 	$reward_array=array();
-	$enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','auto enabled','stats only') ORDER BY `name` ASC");
+	$enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','stats only') ORDER BY `name` ASC");
 
 	if($bill_single_project_uid==0) $proportions_array=bill_calculate_projects_proportion($start_date,$stop_date);
 	else $proportions_array=array($bill_single_project_uid=>1);
@@ -69,7 +69,7 @@ function bill_calculate_projects_proportion($start_date,$stop_date) {
 	$stop_date_escaped=db_escape($stop_date);
 	$pre_result=array();
 	$result=array();
-	$enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','auto enabled','stats only') AND `present_in_superblock`=1");
+	$enabled_projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects` WHERE `status` IN ('enabled','stats only') AND `present_in_superblock`=1");
 	$contrib_sum=0;
 	foreach($enabled_projects_array as $project) {
 		$project_uid=$project['uid'];
