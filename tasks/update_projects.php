@@ -330,4 +330,6 @@ if($test_mode==FALSE) {
 } else {
 	auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count".$faults_str);
 }
+
+echo "DB queries count $db_queries_count\n";
 ?>

@@ -121,4 +121,6 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
 `exchange_rate`='$rate_per_grc_escaped',`currency`='$currency_escaped',`currency_amount`='$currency_amount_escaped',`is_payed_out`=0 WHERE `uid`='$uid_escaped'");
 	db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
 }
+
+echo "DB queries count $db_queries_count\n";
 ?>
