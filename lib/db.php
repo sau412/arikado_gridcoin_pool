@@ -1,6 +1,8 @@
 <?php
 // Various DB functions
 
+$db_queries_count = 0;
+
 // Connect to DB
 function db_connect() {
 	global $db_host,$db_login,$db_password,$db_base;
@@ -11,6 +13,8 @@ function db_connect() {
 
 // Query
 function db_query($query) {
+	global $db_queries_count;
+	$db_queries_count++;
 	if(defined("DB_DEBUG")) echo "$query\n";
 	$result=mysql_query($query);
 	if($result===FALSE) {
