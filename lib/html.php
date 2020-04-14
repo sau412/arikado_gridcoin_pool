@@ -703,7 +703,7 @@ WHERE `uid` NOT IN (
 	WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
 ) ORDER BY `name` ASC");
 		} else {
-			$projects_array=db_query_to_array("SELECT `uid`,`name` FROM `projects`
+			$projects_array=db_query_to_array("SELECT `uid`,`name`,`present_in_superblock` FROM `projects`
 WHERE `status` IN ('enabled','auto enabled') AND `uid` NOT IN (
 	SELECT bap.`project_uid` FROM `hosts` h
 	LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
@@ -721,8 +721,12 @@ WHERE `status` IN ('enabled','auto enabled') AND `uid` NOT IN (
 <select name=project_uid>
 _END;
 			foreach($projects_array as $project_data) {
-				$project_uid=$project_data['uid'];
-				$project_name=$project_data['name'];
+				$project_uid = $project_data['uid'];
+				$project_name = $project_data['name'];
+				$in_superblock = $project_data['present_in_superblock'];
+				if($in_superblock == 0) {
+					$project_name .= "(not in superblock)";
+				}
 				$attach_form.="<option value='$project_uid'>$project_name</option>";
 			}
 			$attach_form.=<<<_END
