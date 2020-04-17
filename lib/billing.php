@@ -81,7 +81,7 @@ LEFT JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bphs.`project_uid`='$project_uid_escaped' AND bu.`status` IN ('user','admin') AND bphs.`timestamp`>'$start_date_escaped' AND bphs.`timestamp`<='$stop_date_escaped'");
 		//$pool_expavg_sum=db_query_to_variable("SELECT AVG(`expavg_credit`) FROM `project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
-		$team_expavg_sum=db_query_to_variable("SELECT AVG(`team_expavg_credit`) FROM `project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
+		$team_expavg_sum=db_query_to_variable("SELECT AVG(`superblock_expavg_credit`) FROM `project_stats` WHERE `project_uid`='$project_uid_escaped' AND `timestamp`>'$start_date_escaped' AND `timestamp`<='$stop_date_escaped'");
 		if($team_expavg_sum==0 || $pool_expavg_sum==0) continue;
 		$contrib_pool_to_team=$pool_expavg_sum/$team_expavg_sum;
 		$contrib_sum+=$contrib_pool_to_team;

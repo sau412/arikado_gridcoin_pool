@@ -257,7 +257,7 @@ function canvas_graph_host_project($host_uid,$project_uid,$big_canvas=0) {
 	}
 	$graph_name="Magnitude for single host for project $project_name for $days days";
 
-	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`superblock_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 WHERE bphs.`host_uid`='$host_uid_escaped' AND bphs.`project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
@@ -279,7 +279,7 @@ function canvas_graph_host_all_projects($host_uid,$big_canvas=0) {
 	}
 	$graph_name="Magnitude for single host for all projects for $days days";
 
-	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`superblock_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 WHERE bphs.`host_uid`='$host_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
@@ -303,7 +303,7 @@ function canvas_graph_username_project($username_uid,$project_uid,$big_canvas=0)
 	}
 	$graph_name="Magnitude for user $user_name for $project_name for $days days";
 
-	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`superblock_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
@@ -328,7 +328,7 @@ function canvas_graph_username($username_uid,$big_canvas=0) {
 	}
 	$graph_name="Magnitude for user $user_name for all projects for $days days";
 
-	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
+	$data=db_query_to_array("SELECT $mag_per_project*AVG(bphs.`expavg_credit`/bp.`superblock_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) AS timestamp
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
@@ -352,7 +352,7 @@ function canvas_graph_project_total($project_uid,$big_canvas=0) {
 	}
 	$graph_name="Magnitude for project $project_name for $days days";
 
-	$data=db_query_to_array("SELECT $mag_per_project*AVG(bps.`expavg_credit`/bp.`team_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bps.`timestamp`),-4) AS timestamp
+	$data=db_query_to_array("SELECT $mag_per_project*AVG(bps.`expavg_credit`/bp.`superblock_expavg_credit`) AS value,TRUNCATE(UNIX_TIMESTAMP(bps.`timestamp`),-4) AS timestamp
 FROM `project_stats` AS bps
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bps.`project_uid`
 WHERE bps.`project_uid`='$project_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bps.`timestamp`
