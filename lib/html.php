@@ -412,7 +412,7 @@ function html_table_header($header_code) {
 
 // Currency selector
 function html_currency_selector($selected_currency="") {
-	if($selected_currency=="") $selected_currency="GRC2";
+	if($selected_currency=="") $selected_currency="GRC";
 
 	$currency_data_array=db_query_to_array("SELECT `name`,`full_name`
 											FROM `currency`
