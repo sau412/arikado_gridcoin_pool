@@ -414,7 +414,10 @@ function html_table_header($header_code) {
 function html_currency_selector($selected_currency="") {
 	if($selected_currency=="") $selected_currency="GRC2";
 
-	$currency_data_array=db_query_to_array("SELECT `name`,`full_name` FROM `currency` ORDER BY `uid`");
+	$currency_data_array=db_query_to_array("SELECT `name`,`full_name`
+											FROM `currency`
+											WHERE `is_visible` = 1
+											ORDER BY `uid`");
 	$result="";
 	$result.="<select name=payout_currency>";
 	foreach($currency_data_array as $currency_data) {
@@ -1583,7 +1586,10 @@ function html_currencies() {
 	$result.="<p><table align=center>\n";
 	$result.=html_table_header("currencies_table_header");
 
-	$currency_data_array=db_query_to_array("SELECT `name`,`full_name`,`payout_limit`,`tx_fee`,`project_fee` FROM `currency` ORDER BY `name`");
+	$currency_data_array=db_query_to_array("SELECT `name`,`full_name`,`payout_limit`,`tx_fee`,`project_fee`
+												FROM `currency`
+												WHERE `is_visible` = 1
+												ORDER BY `name`");
 
 	foreach($currency_data_array as $currency_data) {
 		$name=$currency_data['name'];
