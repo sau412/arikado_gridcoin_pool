@@ -465,7 +465,7 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
 	db_query("INSERT INTO `messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
 	// Send message to admin email
 	if(isset($feedback_email)) {
-		$username = boincmgr_get_username_by_uid($username_uid);
+		$username = boincmgr_get_user_name_by_uid($username_uid);
 		$email = "";
 		$email .= "Username: $username\n";
 		$email .= "Reply-to: $reply_to\n";
