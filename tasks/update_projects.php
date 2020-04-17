@@ -5,13 +5,19 @@ if(!isset($argc)) die();
 if(isset($argv[1]) && $argv[1]=="test") $test_mode=TRUE;
 else $test_mode=FALSE;
 
+$pid_file = "/tmp/lockfile_projects.pid";
+$prev_process_pid = file_get_contents($pid_file);
+
 $f=fopen("/tmp/lockfile_projects","w");
 if($f) {
         echo "Checking locks\n";
         if(!flock($f,LOCK_EX|LOCK_NB)) {
-		die("Lockfile locked\n");
+			//die("Lockfile locked\n");
+			posix_kill($prev_process_pid, SIGTERM);
 	}
 }
+
+file_put_contents($pid_file,getmypid());
 
 //$test_mode=TRUE;
 
