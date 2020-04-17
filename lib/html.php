@@ -1305,7 +1305,7 @@ function html_billing_form() {
 
 	$result="";
 	$result.="<div id=billing_block class=selectable_block>\n";
-
+/*
 	$start_date=db_query_to_variable("SELECT MAX(`stop_date`) FROM `billing_periods`");
 	if($start_date=="") $start_date="2018-01-01 20:20:16";
 	$stop_date=db_query_to_variable("SELECT NOW()");
@@ -1332,7 +1332,7 @@ _END;
 
 
 	$result.="</div>\n";
-
+*/
 	$owes_data_array=db_query_to_array("SELECT bp.`payout_address`,bp.`currency`,SUM(bp.`amount`) AS amount,MIN(bbp.`start_date`) AS start_date,MAX(bbp.`stop_date`) AS stop_date
 FROM `payouts` AS bp
 LEFT OUTER JOIN `billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
