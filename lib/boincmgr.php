@@ -474,7 +474,7 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
 		$email_escaped = db_escape($email);
 		$feedback_email_escaped = db_escape($feedback_email);
 		
-		db_query("INSERT INTO `email` (`to`,`subject`,`message`) VALUES ('$feedback_email','Pool feedback query','$message_escaped')");
+		db_query("INSERT INTO `email` (`to`,`subject`,`message`) VALUES ('$feedback_email','Pool feedback query','$email_escaped')");
 	}
 }
 
