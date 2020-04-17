@@ -46,6 +46,9 @@ $token_salt="ru4z6pdm";
 // Debug mode
 $debug_mode=FALSE;
 
+// Email for sending feedbacks to
+$feedback_email = "";
+
 // Minimal payouts
 $min_payout_grc=0;
 $faucet_plain_amount=0.1;
