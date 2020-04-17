@@ -64,7 +64,7 @@ foreach($tasks_stats_array as $task_stats) {
 	}
 }
 
-$subject="gridcoinpool.ru errors alert";
+$subject="$pool_name errors alert";
 
 foreach($error_email_to_error as $email => $errors_array) {
 	$body=implode("<br>\n<br>\n",$errors_array);
