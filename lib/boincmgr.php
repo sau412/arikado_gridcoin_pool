@@ -490,7 +490,7 @@ function boincmgr_get_magnitude_unit() {
 function boincmgr_get_relative_contribution_project_host($project_uid,$host_uid) {
 	$project_uid_escaped=db_escape($project_uid);
 	$host_uid_escaped=db_escape($host_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_creditsuperblock_expavg_credit`) FROM `project_hosts_last` AS bphl
+	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
