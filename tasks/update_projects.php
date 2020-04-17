@@ -13,6 +13,7 @@ if($f) {
         echo "Checking locks\n";
         if(!flock($f,LOCK_EX|LOCK_NB)) {
 			//die("Lockfile locked\n");
+			echo "Prev process is not ended yet, killing pid $prev_process_pid\n";
 			posix_kill($prev_process_pid, SIGTERM);
 	}
 }
