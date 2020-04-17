@@ -490,7 +490,7 @@ function boincmgr_get_magnitude_unit() {
 function boincmgr_get_relative_contribution_project_host($project_uid,$host_uid) {
 	$project_uid_escaped=db_escape($project_uid);
 	$host_uid_escaped=db_escape($host_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
+	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_creditsuperblock_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
@@ -501,7 +501,7 @@ WHERE bphl.`project_uid`='$project_uid_escaped' AND bphl.`host_uid`='$host_uid_e
 function boincmgr_get_relative_contribution_project_user($project_uid,$user_uid) {
 	$project_uid_escaped=db_escape($project_uid);
 	$user_uid_escaped=db_escape($user_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
+	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 LEFT OUTER JOIN `hosts` AS bh ON bh.uid=bphl.host_uid
 WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
@@ -512,7 +512,7 @@ WHERE bphl.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$user_uid
 // Get project relative contribution
 function boincmgr_get_relative_contribution_project($project_uid) {
 	$project_uid_escaped=db_escape($project_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bp.`expavg_credit`/bp.`team_expavg_credit`) FROM `projects` AS bp
+	$relative_contribution=db_query_to_variable("SELECT SUM(bp.`expavg_credit`/bp.`superblock_expavg_credit`) FROM `projects` AS bp
 WHERE bp.`uid`='$project_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
 	return $relative_contribution;
@@ -521,7 +521,7 @@ WHERE bp.`uid`='$project_uid_escaped' AND bp.`status` IN ('enabled','stats only'
 // Get host relative contribution
 function boincmgr_get_relative_contribution_host($host_uid) {
 	$host_uid_escaped=db_escape($host_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
+	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 WHERE bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats only')");
 	if($relative_contribution=="") $relative_contribution=0;
@@ -531,7 +531,7 @@ WHERE bphl.`host_uid`='$host_uid_escaped' AND bp.`status` IN ('enabled','stats o
 // Get user relative contribution
 function boincmgr_get_relative_contribution_user($user_uid) {
 	$user_uid_escaped=db_escape($user_uid);
-	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) FROM `project_hosts_last` AS bphl
+	$relative_contribution=db_query_to_variable("SELECT SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) FROM `project_hosts_last` AS bphl
 LEFT OUTER JOIN `projects` AS bp ON bp.uid=bphl.project_uid
 LEFT OUTER JOIN `hosts` AS bh ON bh.uid=bphl.host_uid
 WHERE bh.`username_uid`='$user_uid_escaped' AND bp.`status` IN ('enabled','stats only')");

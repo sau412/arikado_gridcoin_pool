@@ -1428,7 +1428,7 @@ function html_pool_stats() {
 	$stop_date=db_query_to_variable("SELECT NOW()");
 
 	$project_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`expavg_credit`,
-										`team_expavg_credit`,`status`,`present_in_superblock`
+										`superblock_expavg_credit`,`status`,`present_in_superblock`
 										FROM `projects` ORDER BY `name` ASC");
 
 	$magnitude_unit=boincmgr_get_magnitude_unit();
@@ -1442,7 +1442,7 @@ function html_pool_stats() {
 		$project_url = $project_data['project_url'];
 		$uid = $project_data['uid'];
 		$expavg_credit = $project_data['expavg_credit'];
-		$team_expavg_credit = $project_data['team_expavg_credit'];
+		$superblock_expavg_credit = $project_data['superblock_expavg_credit'];
 		$status = $project_data['status'];
 		$present_in_superblock = $project_data['present_in_superblock'];
 		// Disabled projects are not visible here
@@ -1465,7 +1465,7 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 		$expavg_credit=round($expavg_credit);
 
 		$name_link=html_project_name_link($name,$project_url);
-		$team_expavg_credit_html=html_escape($team_expavg_credit);
+		$superblock_expavg_credit_html=html_escape($superblock_expavg_credit);
 		$expavg_credit_html=html_escape($expavg_credit);
 		$pool_project_hosts_html=html_escape($pool_project_hosts);
 		$task_report_url="<a href='tasks.php?project_uid=$uid'>view</a>";
@@ -1497,7 +1497,7 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 		$graph=boincmgr_cache_function("canvas_graph_project_total",array($uid));
 		//$graph=canvas_graph_project_total($uid);
 
-		$result.="<tr><td>$name_link</td><td align=right>$team_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$mag_formatted</td><td align=right>$grc_per_day</td><td>$pool_project_hosts_html</td><td>$task_report_url</td><td>$status_html</td><td>$graph</td></tr>\n";
+		$result.="<tr><td>$name_link</td><td align=right>$superblock_expavg_credit_html</td><td align=right>$expavg_credit_html</td><td align=right>$mag_formatted</td><td align=right>$grc_per_day</td><td>$pool_project_hosts_html</td><td>$task_report_url</td><td>$status_html</td><td>$graph</td></tr>\n";
 	}
 
 	$total_pool_mag_html=html_format_number($total_pool_mag);
