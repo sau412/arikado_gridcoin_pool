@@ -71,6 +71,4 @@ foreach($error_email_to_error as $email => $errors_array) {
 	email_add($email,$subject,$body);
 }
 
-email_send_all();
-
 ?>
