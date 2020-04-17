@@ -455,6 +455,8 @@ function boincmgr_get_service_fee($currency) {
 
 // Add message
 function boincmgr_message_send($username_uid,$reply_to,$message) {
+	global $feedback_email;
+
 	if($username_uid!='') $username_uid_escaped="'".db_escape($username_uid)."'";
 	else $username_uid_escaped="NULL";
 	$reply_to_escaped=db_escape($reply_to);
