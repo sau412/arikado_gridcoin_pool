@@ -550,15 +550,15 @@ function boincmgr_claim_faucet($username_uid) {
 	$magnitude_unit=boincmgr_get_magnitude_unit();
 	$mag_per_project=boincmgr_get_mag_per_project();
 
-	$user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`uid`='$username_uid_escaped' AND bp.`status` IN ('enabled','stats only')
 GROUP BY bu.`username`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100
 ");
 

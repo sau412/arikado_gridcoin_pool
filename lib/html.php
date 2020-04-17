@@ -780,14 +780,14 @@ function html_boinc_results_by_host() {
 
 	if(auth_is_admin($username)) {
 		$result.=html_table_header("boinc_results_by_host_table_header_admin");
-		$boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model` ORDER BY bu.`username`,bphl.`domain_name`,bphl.`p_model` ASC");
 	} else {
 		$result.=html_table_header("boinc_results_by_host_table_header_user");
-		$boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
@@ -847,12 +847,12 @@ function html_boinc_results_by_project() {
 	$username_uid_escaped=db_escape($username_uid);
 
 	if(auth_is_admin($username)) {
-		$boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 GROUP BY bphl.`project_uid`,bp.`name` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bp.`name` ASC");
 	} else {
-		$boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bphl.`project_uid`,bp.`name`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 WHERE bh.`username_uid`='$username_uid_escaped' GROUP BY bphl.`project_uid`,bp.`name` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bp.`name` ASC");
@@ -907,13 +907,13 @@ function html_boinc_results_by_user() {
 	$username_uid_escaped=db_escape($username_uid);
 
 	if(auth_is_admin($username)) {
-		$boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 GROUP BY bh.`username_uid`,bu.`username` HAVING SUM(bphl.`expavg_credit`)>=1 ORDER BY bu.`username` ASC");
 	} else {
-		$boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
+		$boinc_host_data_array=db_query_to_array("SELECT bh.`username_uid`,bu.`username`,SUM(bphl.`expavg_credit`) AS rac,SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
@@ -974,7 +974,7 @@ function html_boinc_results_all($threshold) {
 		$result.=html_table_header("boinc_results_all_table_header_admin");
 
 		$boinc_host_data_array=db_query_to_array("
-SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
+SELECT bu.`username`,bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -985,7 +985,7 @@ ORDER BY bu.`username`,bphl.`domain_name`,bp.`name` ASC");
 		$result.=html_table_header("boinc_results_all_table_header_user");
 
 		$boinc_host_data_array=db_query_to_array("
-SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`team_expavg_credit`) AS relative_credit
+SELECT bphl.`host_uid`,bphl.`project_uid`,bphl.`host_id`,bphl.`host_cpid`,bphl.`domain_name`,bphl.`p_model`,bp.`name`,bphl.`expavg_credit`,(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) AS relative_credit
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
@@ -1492,7 +1492,7 @@ WHERE bap.`project_uid`='$project_uid_escaped' AND bap.`host_uid` IS NOT NULL");
 		$total_pool_grc_per_day+=$grc_per_day;
 		$total_pool_mag+=$mag_formatted;
 
-		$team_expavg_credit_html=html_format_number($team_expavg_credit_html);
+		$superblock_expavg_credit_html=html_format_number($superblock_expavg_credit_html);
 		$expavg_credit_html=html_format_number($expavg_credit_html);
 		$graph=boincmgr_cache_function("canvas_graph_project_total",array($uid));
 		//$graph=canvas_graph_project_total($uid);
@@ -1733,15 +1733,15 @@ function html_rating_by_host_mag() {
 	$username_uid=boincmgr_get_username_uid($username);
 	$username_uid_escaped=db_escape($username_uid);
 
-	$host_stats_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$host_stats_data_array=db_query_to_array("SELECT bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100");
 
 	$n=1;
@@ -1791,15 +1791,15 @@ function html_rating_by_host_project_mag() {
 	$username_uid=boincmgr_get_username_uid($username);
 	$username_uid_escaped=db_escape($username_uid);
 
-	$host_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$host_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bp.`name`,bphl.`host_uid`,bphl.`domain_name`,bphl.`p_model`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100");
 
 	$n=1;
@@ -1849,15 +1849,15 @@ function html_rating_by_user_mag() {
 	$username_uid=boincmgr_get_username_uid($username);
 	$username_uid_escaped=db_escape($username_uid);
 
-	$user_stats_data_array=db_query_to_array("SELECT bu.`username`,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$user_stats_data_array=db_query_to_array("SELECT bu.`username`,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100");
 
 	$n=1;
@@ -1900,15 +1900,15 @@ function html_rating_by_user_project_mag() {
 	$username_uid=boincmgr_get_username_uid($username);
 	$username_uid_escaped=db_escape($username_uid);
 
-	$user_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$user_stats_data_array=db_query_to_array("SELECT bu.`username`,bp.`name` AS project_name,count(DISTINCT bphl.`host_uid`) as host_count,SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`username`<>'' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`,bp.`name`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100");
 
 	$n=1;
@@ -1946,15 +1946,15 @@ function html_faucet() {
 
 	$username_escaped=db_escape($username);
 
-	$user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`)) AS magnitude
+	$user_magnitude=db_query_to_variable("SELECT SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`)) AS magnitude
 FROM `project_hosts_last` AS bphl
 LEFT JOIN `hosts` AS bh ON bh.`uid`=bphl.`host_uid`
 LEFT JOIN `projects` AS bp ON bp.`uid`=bphl.`project_uid`
 LEFT JOIN `users` AS bu ON bu.`uid`=bh.`username_uid`
 WHERE bu.`username`='$username_escaped' AND bp.`present_in_superblock`=1
 GROUP BY bu.`username`
-HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`team_expavg_credit`))>=0.01
-ORDER BY SUM(bphl.`expavg_credit`/bp.`team_expavg_credit`) DESC
+HAVING SUM($mag_per_project*bphl.`expavg_credit`/(bp.`superblock_expavg_credit`))>=0.01
+ORDER BY SUM(bphl.`expavg_credit`/bp.`superblock_expavg_credit`) DESC
 LIMIT 100
 ");
 

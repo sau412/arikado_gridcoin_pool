@@ -114,7 +114,7 @@ GROUP BY bp.`name`,bt.`status`");
 
 $page.="<h2>Project stats</h2>\n";
 $tasks_data=db_query_to_array("SELECT bp.`name`,count(*) AS 'total count',SUM(IF(bt.`status` IN ('Completed and validated','Completed and validated (1<sup>st</sup>)'),1,0)) AS 'completed',ROUND(SUM(bt.score)) AS score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,
-ROUND(AVG(bp.`team_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `tasks` AS bt
+ROUND(AVG(bp.`superblock_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`superblock_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `tasks` AS bt
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bt.`project_uid`
 WHERE $where
 GROUP BY bp.`name`");
@@ -122,11 +122,11 @@ $page.=array_to_table($tasks_data);
 
 $page.="<h2>Project/app stats (completed)</h2>\n";
 $tasks_data=db_query_to_array("SELECT bp.`name`,bt.`app`,count(*) AS count,ROUND(SUM(bt.score)) AS sum_score,ROUND(SUM(bt.`cpu_time`)) AS cpu_time,
-ROUND(AVG(bp.`team_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `tasks` AS bt
+ROUND(AVG(bp.`superblock_expavg_credit`)) AS total_rac,ROUND(1E9*SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`superblock_expavg_credit`)),4) AS '10<sup>9</sup>*score/(elapsed_time*total_rac)' FROM `tasks` AS bt
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bt.`project_uid`
 WHERE $where AND bt.status IN ('Completed and validated','Completed and validated (1<sup>st</sup>)')
 GROUP BY bp.`name`,bt.`app`
--- ORDER BY SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`team_expavg_credit`))
+-- ORDER BY SUM(bt.score)/(SUM(bt.`elapsed_time`)*AVG(bp.`superblock_expavg_credit`))
 ");
 $page.=array_to_table($tasks_data);
 
