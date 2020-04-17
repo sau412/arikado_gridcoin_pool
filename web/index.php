@@ -167,7 +167,7 @@ if($username!="") {
                                 $status_escaped=db_escape($status);
                                 db_query("UPDATE `projects` SET `status`='$status_escaped' WHERE `uid`='$project_uid_escaped'");
                                 setcookie("action_message",$message_project_status_changed);
-                        // Calculate payouts
+                        // Calculate payouts (not available now)
                         } else if($_POST['action']=='billing') {
                                 $start_date=html_strip($_POST['start_date']);
                                 $stop_date=html_strip($_POST['stop_date']);

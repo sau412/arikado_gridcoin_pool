@@ -459,7 +459,21 @@ function boincmgr_message_send($username_uid,$reply_to,$message) {
 	else $username_uid_escaped="NULL";
 	$reply_to_escaped=db_escape($reply_to);
 	$message_escaped=db_escape($message);
+	// Save message into messages
 	db_query("INSERT INTO `messages` (`username_uid`,`reply_to`,`is_read`,`message`,`timestamp`) VALUES ($username_uid_escaped,'$reply_to_escaped','0','$message_escaped',NOW())");
+	// Send message to admin email
+	if(isset($feedback_email)) {
+		$username = boincmgr_get_username_by_uid($username_uid);
+		$email = "";
+		$email .= "Username: $username\n";
+		$email .= "Reply-to: $reply_to\n";
+		$email .= "Message: $message\n";
+		
+		$email_escaped = db_escape($email);
+		$feedback_email_escaped = db_escape($feedback_email)
+		
+		db_query("INSERT INTO `email` (`to`,`subject`,`message`) VALUES ('$feedback_email','Pool feedback query','$message_escaped')");
+	}
 }
 
 // Strip non-ascii chars
