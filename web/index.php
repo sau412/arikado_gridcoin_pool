@@ -311,6 +311,7 @@ if($username!="") {
                                 echo html_user_hosts();
                                 break;
                 }
+                echo "<!-- DB queries count $db_queries_count -->\n";
                 die();
         }
 
