@@ -242,7 +242,19 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 		else $team_name=$team_id_from_account;
 
 		$team_name_escaped=db_escape($team_name);
-		db_query("UPDATE `projects` SET `team`='$team_name',`expavg_credit`='$expavg_credit_escaped',`team_expavg_credit`='$team_expavg_credit_escaped',`timestamp`=CURRENT_TIMESTAMP WHERE `uid`='$project_uid_escaped'");
+		// Team expavg credit cannot be obtained from project easily.
+		// Pool will use superblock data instead
+		db_query("UPDATE `projects`
+					SET `team`='$team_name',
+						`expavg_credit`='$expavg_credit_escaped',
+						`timestamp`=CURRENT_TIMESTAMP
+					WHERE `uid`='$project_uid_escaped'");
+/*		db_query("UPDATE `projects`
+					SET `team`='$team_name',
+						`expavg_credit`='$expavg_credit_escaped',
+						`team_expavg_credit`='$team_expavg_credit_escaped',
+						`timestamp`=CURRENT_TIMESTAMP
+					WHERE `uid`='$project_uid_escaped'");*/
 	}
 
 	// Update project CPID
