@@ -48,12 +48,14 @@ if(preg_match('/<AVERAGES>([^<]+)<\\/AVERAGES>/',$transaction_data,$matches)) {
 		$project_count++;
 	}
 
-	// Mark other projects as absent
-	$present_list_str=implode("','",$present_list);
-	db_query("UPDATE `projects` SET `present_in_superblock`=0 WHERE `superblock_name` NOT IN ('$present_list_str')");
+	if($project_count > 0) {
+		// Mark other projects as absent
+		$present_list_str=implode("','",$present_list);
+		db_query("UPDATE `projects` SET `present_in_superblock`=0 WHERE `superblock_name` NOT IN ('$present_list_str')");
 
-	// Add project_count
-	echo "Project count in SB: $project_count\n";
+		// Add project_count
+		echo "Project count in SB: $project_count\n";
+	}
 //	boincmgr_set_variable("project_count",$project_count);
 }
 
@@ -61,8 +63,6 @@ $magnitude_unit=grc_api_get_magnitude_unit();
 echo "Magnitude unit: $magnitude_unit\n";
 if($magnitude_unit!==FALSE && $magnitude_unit>0) boincmgr_set_variable("magnitude_unit",$magnitude_unit);
 
-//$projects=grc_rpc_get_projects();
-//$project_count=count($projects);
 echo "Project count: $project_count\n";
 if($project_count!==FALSE && $project_count>0) boincmgr_set_variable("project_count",$project_count);
 //var_dump($projects);
