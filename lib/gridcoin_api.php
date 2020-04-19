@@ -22,7 +22,7 @@ function grc_api_get_block_info($hash) {
 // Get transaction
 function grc_api_get_transaction($hash) {
 	global $grc_api_url;
-	return json_decode(file_get_contents($grc_api_url."?method=gettransaction&hash=$hash"));
+	return file_get_contents($grc_api_url."?method=gettransaction&hash=$hash");
 }
 
 // Validate address
