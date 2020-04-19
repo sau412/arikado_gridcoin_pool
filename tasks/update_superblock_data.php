@@ -1,7 +1,7 @@
 <?php
 require_once("../lib/settings.php");
 require_once("../lib/db.php");
-require_once("../lib/gridcoin.php");
+require_once("../lib/gridcoin_api.php");
 require_once("../lib/boincmgr.php");
 
 $f=fopen("/tmp/lockfile_superblock","w");
@@ -14,21 +14,21 @@ if($f) {
 
 db_connect();
 
-$current_superblock_number=grc_rpc_get_current_superblock_number();
+$current_superblock_number=grc_api_get_superblock_number();
 
 echo "Last superblock: $current_superblock_number\n";
 
-$current_superblock_hash=grc_rpc_get_block_hash($current_superblock_number);
+$current_superblock_hash=grc_api_get_block_hash($current_superblock_number);
 
 echo "Superblock hash: $current_superblock_hash\n";
 
-$current_superblock_info=grc_rpc_get_block_info($current_superblock_hash);
+$current_superblock_info=grc_api_get_block_info($current_superblock_hash);
 
 $data_tx_hash=$current_superblock_info->tx[0];
 
 echo "Project data tx hash: $data_tx_hash\n";
 
-$transaction_data=grc_rpc_get_transaction($data_tx_hash);
+$transaction_data=grc_api_get_transaction($data_tx_hash);
 
 //var_dump($transaction_data);
 if(preg_match('/<AVERAGES>([^<]+)<\\/AVERAGES>/',$transaction_data,$matches)) {
@@ -57,12 +57,12 @@ if(preg_match('/<AVERAGES>([^<]+)<\\/AVERAGES>/',$transaction_data,$matches)) {
 //	boincmgr_set_variable("project_count",$project_count);
 }
 
-$magnitude_unit=grc_rpc_get_magnitude_unit();
+$magnitude_unit=grc_api_get_magnitude_unit();
 echo "Magnitude unit: $magnitude_unit\n";
 if($magnitude_unit!==FALSE && $magnitude_unit>0) boincmgr_set_variable("magnitude_unit",$magnitude_unit);
 
-$projects=grc_rpc_get_projects();
-$project_count=count($projects);
+//$projects=grc_rpc_get_projects();
+//$project_count=count($projects);
 echo "Project count: $project_count\n";
 if($project_count!==FALSE && $project_count>0) boincmgr_set_variable("project_count",$project_count);
 //var_dump($projects);
