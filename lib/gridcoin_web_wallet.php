@@ -5,16 +5,16 @@
 
 // Send query to gridcoin client
 function grc_web_send_query($query) {
-	global $grc_api_url;
-	global $grc_api_key;
+	global $grc_wallet_url;
+	global $grc_wallet_key;
 
-	$ch=curl_init($grc_api_url);
+	$ch=curl_init($grc_wallet_url);
 
 	curl_setopt($ch,CURLOPT_RETURNTRANSFER,TRUE);
 	curl_setopt($ch,CURLOPT_POST,TRUE);
 curl_setopt($ch,CURLOPT_SSL_VERIFYHOST,0);
 curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,0);
-	curl_setopt($ch, CURLOPT_POSTFIELDS,"api_key=$grc_api_key&".$query);
+	curl_setopt($ch, CURLOPT_POSTFIELDS,"api_key=$grc_wallet_key&".$query);
 	$result=curl_exec($ch);
 
 //var_dump("curl error",curl_error($ch));

@@ -20,16 +20,12 @@ $project_log_name="";
 $boinc_account="";
 $boinc_passwd_hash="";
 
-// Gridcoin RPC variables
-$grc_rpc_host="";
-$grc_rpc_port="";
-$grc_rpc_login="";
-$grc_rpc_password="";
-$grc_rpc_wallet_passphrase="";
+// Gridcoin API
+$grc_api_url = "https://api.arikado.ru/grc.php";
 
 // Gridcoin online wallet API key
-$grc_api_url="https://wallet.arikado.ru/api.php";
-$grc_api_key="";
+$grc_wallet_url="https://wallet.arikado.ru/api.php";
+$grc_wallet_key="";
 
 // Gridcoin CPID to automated billings
 $pool_cpid="";
