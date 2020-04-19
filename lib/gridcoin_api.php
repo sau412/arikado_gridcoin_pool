@@ -34,5 +34,5 @@ function grc_api_validate_address($address) {
 // Get magnitude unit
 function grc_api_get_magnitude_unit() {
 	global $grc_api_url;
-	return json_decode(file_get_contents($grc_api_url."?method=megnitude_unit"));
+	return json_decode(file_get_contents($grc_api_url."?method=magnitude_unit"));
 }
