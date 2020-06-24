@@ -66,7 +66,7 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Get project config (name, master url, rpc url)
 	// ================================================
-	$url = $project_url . "get_project_config.php"
+	$url = $project_url . "get_project_config.php";
 	curl_setopt($ch,CURLOPT_POST,FALSE);
 	curl_setopt($ch,CURLOPT_URL, $url);
 	$data = curl_exec ($ch);
@@ -349,18 +349,11 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
 	$full_sync_count++;
 }
 
-// Make faults info string
-if(count($faults_str_array)>=1) {
-	$faults_str=", errors: ".implode(", ",$faults_str_array);
-} else {
-	$faults_str="";
-}
-
 // Write results to log
 if($test_mode==FALSE) {
-	auth_log("Projects to sync $project_count, synced $full_sync_count".$faults_str);
+	auth_log("Projects to sync $project_count, synced $full_sync_count");
 } else {
-	auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count".$faults_str);
+	auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count");
 }
 
 echo "DB queries count $db_queries_count\n";
