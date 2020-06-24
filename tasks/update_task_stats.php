@@ -8,6 +8,7 @@ require_once("../lib/db.php");
 require_once("../lib/auth.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/email.php");
+require_once("../lib/broker.php");
 
 $f=fopen("/tmp/lockfile_task_stats","w");
 if($f) {
@@ -68,7 +69,7 @@ $subject="$pool_name errors alert";
 
 foreach($error_email_to_error as $email => $errors_array) {
 	$body=implode("<br>\n<br>\n",$errors_array);
-	email_add($email,$subject,$body);
+	email_add($email, $subject, $body);
 }
 
 ?>

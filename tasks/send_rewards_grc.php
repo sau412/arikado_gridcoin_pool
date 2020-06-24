@@ -10,6 +10,7 @@ require_once("../lib/billing.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/html.php");
 require_once("../lib/gridcoin_web_wallet.php");
+require_once("../lib/broker.php");
 
 $f=fopen("/tmp/lockfile_send","w");
 if($f) {
