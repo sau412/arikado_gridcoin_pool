@@ -317,12 +317,14 @@ function auth_check_token($username,$token) {
 }
 
 // Write action to log
-function auth_log($message) {
+function auth_log($message, $severity = 7) {
 	global $project_log_name;
-	syslog(LOG_DEBUG,"[$project_log_name] $message");
-
-	$message_escaped=db_escape($message);
-	db_query("INSERT INTO `log` (`message`) VALUES ('$message_escaped')");
+	
+	broker_add("logger", [
+		"source" => $project_log_name,
+		"severity" => $severity,
+		"message" => $message,
+	]);
 }
 
 // Write debug log

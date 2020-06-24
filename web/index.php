@@ -1,9 +1,4 @@
 <?php
-if(!file_exists("../lib/settings.php")) {
-        header("Location: setup.php");
-        die();
-}
-
 require_once("../lib/settings.php");
 require_once("../lib/db.php");
 require_once("../lib/auth.php");
@@ -13,6 +8,7 @@ require_once("../lib/boincmgr.php");
 require_once("../lib/canvas.php");
 require_once("../lib/xml_parser.php");
 require_once("../lib/captcha.php");
+require_once("../lib/broker.php");
 
 db_connect();
 
