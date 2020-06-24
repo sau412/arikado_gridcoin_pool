@@ -4,6 +4,7 @@ require_once("../lib/db.php");
 require_once("../lib/html.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/canvas.php");
+require_once("../lib/broker.php");
 
 db_connect();
 

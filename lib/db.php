@@ -8,7 +8,7 @@ function db_connect() {
 	global $db_host,$db_login,$db_password,$db_base;
 	$res=mysql_pconnect($db_host,$db_login,$db_password);
 	mysql_select_db($db_base);
-//	db_query("SET NAMES 'utf8'");
+	db_query("SET NAMES 'utf8'");
 }
 
 // Query
@@ -18,19 +18,10 @@ function db_query($query) {
 	if(defined("DB_DEBUG")) echo "$query\n";
 	$result=mysql_query($query);
 	if($result===FALSE) {
-		$query_escaped=db_escape($query);
-		auth_log("MySQL query error: ".mysql_error());
-		auth_log("Query: $query");
-		$debug_backtrace_array=debug_backtrace();
-		$backtrace_string="Stack trace:\n";
-		foreach($debug_backtrace_array as $stack_info) {
-			$file=$stack_info['file'];
-			$line=$stack_info['line'];
-			$func=$stack_info['function'];
-			$args=implode("','",$stack_info['args']);
-			$backtrace_string.="File '$file' line '$line' function '$func' arguments '$args'\n";
-		}
-		auth_log($backtrace_string);
+		$message["mysql_error"] = mysql_error();
+        $message["query"] = $query;
+        $message["debug_backtrace"] = debug_backtrace();
+        auth_log($message, 3);
 		die("Query error");
 	}
 	return $result;

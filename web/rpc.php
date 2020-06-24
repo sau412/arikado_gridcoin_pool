@@ -6,6 +6,7 @@ require_once("../lib/db.php");
 require_once("../lib/auth.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/xml_parser.php");
+require_once("../lib/broker.php");
 
 function xml_error_message($message,$code) {
         global $pool_name;
