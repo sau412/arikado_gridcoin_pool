@@ -307,10 +307,8 @@ function html_get_menu($flag) {
 			$submenu.=html_menu_element("project_control",$current_language["menu_project_control"]);
 			$submenu.=html_menu_element("billing",$current_language["menu_billing"]);
 			$submenu.=html_menu_element("pool_info_editor",$current_language["menu_pool_info_editor"]);
-			$submenu.=html_menu_element("log",$current_language["menu_log"]);
 			$submenu.=html_menu_element("messages_view",$current_language["menu_messages_view"]);
-			$submenu.=html_menu_element("email_view",$current_language["menu_email_view"]);
-
+			
 			$result.=html_dropdown_menu_element("control",$current_language["menu_control"],$submenu);
 		} else if($flag=="editor") {
 			$submenu="";
