@@ -53,7 +53,12 @@ foreach($project_data_array as $project_data)
 	$project_name=$project_data['name'];
 	$project_url=$project_data['project_url'];
 	$update_weak_auth=$project_data['update_weak_auth'];
-	boincmgr_project_last_query_clear($project_uid);
+	
+	$log_message = [];
+	$log_message[] = [
+		"project_name" => $project_name,
+		"project_url" => $project_url,
+	];
 
 	$project_uid_escaped=db_escape($project_uid);
 	echo "Updating data for $project_name\n";
@@ -61,26 +66,29 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Get project config (name, master url, rpc url)
 	// ================================================
+	$url = $project_url . "get_project_config.php"
 	curl_setopt($ch,CURLOPT_POST,FALSE);
-	curl_setopt($ch,CURLOPT_URL,$project_url."get_project_config.php");
+	curl_setopt($ch,CURLOPT_URL, $url);
 	$data = curl_exec ($ch);
-	boincmgr_project_last_query_append($project_uid,"Query: GET ${project_url}get_project_config.php\n\nReply:\n$data\n\n");
 
-	if($debug_mode==TRUE) {
-		$data_escaped=db_escape($data);
-		db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name get_project_config','$data_escaped')");
-	}
+	$log_message[] = [
+		"url" => $url,
+		"request" => "",
+		"reply" => $data,
+	];
 
-	if($data=="") {
-		$faults_str_array[]="$project_name (no data from project)";
+	if($data == "") {
 		echo "No data from project\n";
+		$log_message[] = "No data from project";
+		auth_log($log_message, 4);
 		continue;
 	}
 
 	$xml=simplexml_load_string($data);
 
 	if($xml==FALSE) {
-		$faults_str_array[]="$project_name (get project config error)";
+		$log_message[] = "Error parsing XML from project";
+		auth_log($log_message, 4);
 		echo "Error: $project_url\n\n";
 		continue;
 	}
@@ -92,17 +100,20 @@ foreach($project_data_array as $project_data)
 
 	// Validate data
 	if(auth_validate_ascii($name)==FALSE) {
-		$faults_str_array[]="$project_name (validate project name error)";
+		$log_message[] = "Project name validation error";
+		auth_log($log_message, 4);
 		echo "Project name validation error\n";
 		continue;
 	}
 	if(auth_validate_ascii($rpc_url)==FALSE) {
-		$faults_str_array[]="$project_name (validate rpc url error)";
+		$log_message[] = "Project RPC URL validation error";
+		auth_log($log_message, 4);
 		echo "Project RPC URL validation error\n";
 		continue;
 	}
 	if(auth_validate_ascii($master_url)==FALSE) {
-		$faults_str_array[]="$project_name (validate master url error)";
+		$log_message[] = "Project master URL validation error";
+		auth_log($log_message, 4);
 		echo "Project master URL validation error\n";
 		continue;
 	}
@@ -113,20 +124,21 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Login to project
 	// ================================================
-	curl_setopt($ch,CURLOPT_URL,$rpc_url."lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash");
+	$url = $rpc_url."lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash";
+	curl_setopt($ch,CURLOPT_URL, $url);
 	$data=curl_exec($ch);
-	boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n\nReply:\n$data\n\n");
+	
+	$log_message[] = [
+		"url" => $url,
+		"request" => "",
+		"reply" => $data,
+	];
 
-	if($debug_mode==TRUE) {
-		$data_escaped=db_escape($data);
-		db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name lookup_account','$data_escaped')");
-	}
-
-	$xml=simplexml_load_string($data);
-	if($xml==FALSE || isset($xml->error_msg)) {
-		$faults_str_array[]="$project_name (login error)";
+	$xml = simplexml_load_string($data);
+	if($xml == false || isset($xml->error_msg)) {
+		$log_message[] = "Login to project error\n";
+		auth_log($log_message, 4);
 		echo "Login to project error\n";
-		echo $rpc_url."/lookup_account.php?email_addr=$boinc_account&passwd_hash=$boinc_passwd_hash\n";
 		continue;
 	}
 
@@ -135,19 +147,21 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Get weak auth key
 	// ================================================
-	curl_setopt($ch,CURLOPT_URL,$rpc_url."am_get_info.php?account_key=$auth");
-	$data=curl_exec($ch);
-	boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}am_get_info.php?account_key=$auth\n\nReply:\n$data\n\n");
+	$url = $rpc_url."am_get_info.php?account_key=$auth";
+	curl_setopt($ch,CURLOPT_URL, $url);
+	$data = curl_exec($ch);
 
-	if($debug_mode==TRUE) {
-		$data_escaped=db_escape($data);
-		db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name am_get_info','$data_escaped')");
-	}
+	$log_message[] = [
+		"url" => $url,
+		"request" => "",
+		"reply" => $data,
+	];
 
 	$xml=simplexml_load_string($data);
 
-	if($xml==FALSE) {
-		$faults_str_array[]="$project_name (get weak key error)";
+	if($xml == false) {
+		$log_message[] = "Get weak auth key error";
+		auth_log($log_message, 4);
 		echo "Get weak auth key error\n";
 		continue;
 	}
@@ -156,6 +170,7 @@ foreach($project_data_array as $project_data)
 	$weak_auth=$xml->weak_auth;
 	$weak_auth_escaped=db_escape($weak_auth);
 	$team_id_from_account=(int)$xml->teamid;
+	
 	// World Community Grid returns wrong weak key, so do not update keys for now (update_weak_auth is false only for that project)
 	if($update_weak_auth==TRUE && $weak_auth!='') {
 		db_query("UPDATE `projects` SET `name`='$name_escaped',`weak_auth`='$weak_auth_escaped' WHERE `uid`='$project_uid'");
@@ -166,19 +181,21 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Get Gridcoin team stats (for billing purposes)
 	// ================================================
-	curl_setopt($ch,CURLOPT_URL,$rpc_url."team_lookup.php?team_name=Gridcoin&format=xml");
-	$data=curl_exec($ch);
-	boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}team_lookup.php?team_name=Gridcoin&format=xml\n\nReply:\n$data\n\n");
+	$url = $rpc_url."team_lookup.php?team_name=Gridcoin&format=xml";
+	curl_setopt($ch, CURLOPT_URL, $url);
+	$data = curl_exec($ch);
 
-	if($debug_mode==TRUE) {
-		$data_escaped=db_escape($data);
-		db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name team_lookup','$data_escaped')");
-	}
+	$log_message[] = [
+		"url" => $url,
+		"request" => "",
+		"reply" => $data,
+	];
 
 	$xml=simplexml_load_string($data);
 	if($xml==FALSE) {
-		$faults_str_array[]="$project_name (get gridcoin team stats error)";
+		$log_message[] = "Get gridcoin team stats error";
 		echo "Get gridcoin team stats error\n";
+		auth_log($log_message, 4);
 		continue;
 	}
 
@@ -188,7 +205,7 @@ foreach($project_data_array as $project_data)
 			$team_id_from_team=(int)$team_info->id;
 			$team_expavg_credit=(string)$team_info->expavg_credit;
 			if(auth_validate_float($team_expavg_credit)==FALSE) {
-				$faults_str_array[]="$project_name (validate gridcoin team expavg error)";
+				$log_message[] = "Gridcoin team expavg_credit validation error";
 				echo "Gridcoin team expavg_credit validation error\n";
 				continue;
 			}
@@ -201,20 +218,21 @@ foreach($project_data_array as $project_data)
 	// ================================================
 	// Get pool account stats (for billing purposes)
 	// ================================================
-	curl_setopt($ch,CURLOPT_URL,$rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml");
+	$url = $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml";
+	curl_setopt($ch, CURLOPT_URL, $url);
 	$data=curl_exec($ch);
-	boincmgr_project_last_query_append($project_uid,"Query: GET ${rpc_url}show_user.php?userid=$boinc_account&auth=$auth&format=xml\n\nReply:\n$data\n\n");
-
-	if($debug_mode==TRUE) {
-		$data_escaped=db_escape($data);
-		db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('project $project_name show_user','$data_escaped')");
-	}
-
+	
+	$log_message[] = [
+		"url" => $url,
+		"request" => "",
+		"reply" => $data,
+	];
+	
 	$xml=simplexml_load_string($data);
 	if($xml==FALSE) {
-		$faults_str_array[]="$project_name (get hosts info error)";
+		$log_message[] = "Get hosts info error";
+		auth_log($log_message, 4);
 		echo "Get hosts info error\n";
-		echo $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml\n";
 		continue;
 	}
 
@@ -223,12 +241,14 @@ foreach($project_data_array as $project_data)
 
 	// Validate data
 	if(auth_validate_hash($project_cpid)==FALSE) {
-		$faults_str_array[]="$project_name (validate pool cpid error)";
+		$log_message[] = "Project cpid validation error";
+		auth_log($log_message, 4);
 		echo "Project cpid validation error\n";
 		continue;
 	}
 	if(auth_validate_float($expavg_credit)==FALSE) {
-		$faults_str_array[]="$project_name (validate pool expavg_credit error)";
+		$log_message[] = "Project expavg_credit validation error";
+		auth_log($log_message, 4);
 		echo "Project expavg_credit validation error\n";
 		continue;
 	}
@@ -239,8 +259,8 @@ foreach($project_data_array as $project_data)
 
 	// Expavg credit and gridcoin team expavg credit
 	if($gridcoin_team_stats_found==FALSE) {
-		$faults_str_array[]="$project_name (gridcoin team not found)";
-		auth_log("Sync error: gridcoin team not found for project $project_name");
+		$log_message[] = "Sync error: gridcoin team not found for project";
+		auth_log($log_message, 4);
 	} else {
 		// Write project expavg_credit for billing purposes
 		db_query("INSERT INTO `project_stats` (`project_uid`,`expavg_credit`,`team_expavg_credit`)
@@ -257,12 +277,6 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 						`expavg_credit`='$expavg_credit_escaped',
 						`timestamp`=CURRENT_TIMESTAMP
 					WHERE `uid`='$project_uid_escaped'");
-/*		db_query("UPDATE `projects`
-					SET `team`='$team_name',
-						`expavg_credit`='$expavg_credit_escaped',
-						`team_expavg_credit`='$team_expavg_credit_escaped',
-						`timestamp`=CURRENT_TIMESTAMP
-					WHERE `uid`='$project_uid_escaped'");*/
 	}
 
 	// Update project CPID
@@ -287,6 +301,7 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 
 		// If expavg not updated for a month then skip it
 		if((time() - $expavg_time) > 86400 * 30) {
+			$log_message[] = "Skipping host_id $host_id host cpid $host_cpid expavg time $expavg_time is too old";
 			echo "Skipping host_id $host_id host cpid $host_cpid expavg time $expavg_time is too old\n";
 			continue;
 		}
@@ -328,20 +343,8 @@ ON DUPLICATE KEY UPDATE `host_id`=VALUES(`host_id`),`host_cpid`=VALUES(`host_cpi
 VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_credit_escaped')");
 		}
 	}
-/*
-	// =============================================================
-	// Update project tasks data
-	// =============================================================
-	$skip=0;
-	do {
-		echo $rpc_url."results.php?userid=$account_id&show_names=1&offset=$skip\n";
-		curl_setopt($ch,CURLOPT_URL,$rpc_url."results.php?userid=$account_id&show_names=1&offset=$skip");
-		curl_setopt($ch,CURLOPT_COOKIE,"auth=$auth");
-		$data=curl_exec($ch);
-		$skip+=20;
-		//var_dump($data);
-	} while(results_parse_page($project_uid,$data));
-*/
+	
+	auth_log($log_message);
 	echo "----\n";
 	$full_sync_count++;
 }
