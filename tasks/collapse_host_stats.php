@@ -1,6 +1,7 @@
 <?php
 require_once("../lib/settings.php");
 require_once("../lib/db.php");
+require_once("../lib/broker.php");
 
 db_connect();
 
