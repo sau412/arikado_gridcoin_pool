@@ -321,13 +321,12 @@ function auth_log($message, $severity = 7) {
         global $logger_url;
         global $project_log_name;
 
-		if(is_array($message)) $message = json_encode($message);
-
-        $ch = curl_init($logger_url);
+		$ch = curl_init($logger_url);
         $body = json_encode([
         	"source" => $project_log_name,
         	"severity" => $severity,
-        	"message" => $message]);
+        	"message" => $message,
+        ]);
 
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
@@ -336,12 +335,6 @@ function auth_log($message, $severity = 7) {
         $result = json_decode($result_json, true);
         return $result;
 }
-
-// Write debug log
-//function auth_log_debug($type,$message) {
-//	$message_escaped=db_escape($message);
-//	db_query("INSERT INTO `log` (`message`) VALUES ('$message_escaped')");
-//}
 
 function auth_recaptcha_check($response) {
 	global $recaptcha_private_key;
