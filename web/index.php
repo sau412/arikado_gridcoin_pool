@@ -9,6 +9,7 @@ require_once("../lib/canvas.php");
 require_once("../lib/xml_parser.php");
 require_once("../lib/captcha.php");
 require_once("../lib/broker.php");
+require_once("../lib/email.php");
 
 db_connect();
 
