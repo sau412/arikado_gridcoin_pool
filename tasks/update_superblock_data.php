@@ -31,8 +31,8 @@ echo "Project data tx hash: $data_tx_hash\n";
 
 $transaction_data=grc_api_get_transaction($data_tx_hash);
 
-//var_dump($transaction_data);
-if(preg_match('/<AVERAGES>([^<]+)<\\/AVERAGES>/',$transaction_data,$matches)) {
+var_dump($transaction_data);
+if(preg_match('/<AVERAGES>([^<]+)</',$transaction_data,$matches)) {
 	$projects_data_str=$matches[1];
 	$projects_data_array=explode(";",$projects_data_str);
 	$present_list=array();
@@ -58,6 +58,9 @@ if(preg_match('/<AVERAGES>([^<]+)<\\/AVERAGES>/',$transaction_data,$matches)) {
 		echo "Project count in SB: $project_count\n";
 	}
 //	boincmgr_set_variable("project_count",$project_count);
+}
+else {
+	die("Project averages not found\n");
 }
 
 $magnitude_unit=grc_api_get_magnitude_unit();
