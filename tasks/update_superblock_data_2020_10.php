@@ -19,10 +19,22 @@ $scraper_stats = file_get_contents("../../scraper/ConvergedStats.csv.gz");
 $scraper_stats = gzdecode($scraper_stats);
 $scraper_stats = explode("\n", $scraper_stats);
 
+$project_count = 0;
 foreach($scraper_stats as $str) {
-	$row = explode(";", $str);
+	$row = explode(",", $str);
 	if($row[0] != "byProject") continue;
-	var_dump($row);
+	$project_name = $row[1];
+	$total_rac = $row[5];
+
+	$project_name_escaped = db_escape($project_name);
+	$exists = db_query_to_variable("SELECT 1 FROM `projects` WHERE `superblock_name`='$project_name_escaped'");
+	if($exists) echo "Project $project_name exists with RAC $total_rac\n";
+	else echo "Project $project_name not exists with RAC $total_rac\n";
+	/*	db_query("UPDATE `projects`
+				SET `present_in_superblock`=1,`superblock_expavg_credit`='$total_rac'
+				WHERE `superblock_name`='$project_name_escaped'");
+*/
+	$project_count ++;
 }
 
 //var_dump($scraper_stats);
