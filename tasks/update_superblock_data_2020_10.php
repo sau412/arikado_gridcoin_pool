@@ -19,6 +19,7 @@ $projects_list = grc_api_get_projects_list();
 //var_dump($projects_list);
 $project_count = count($projects_list);
 
+
 foreach($projects_list as $project_data) {
 	$name = $project_data['display_name'];
 	$stats_url = $project_data['stats_url'];
@@ -27,7 +28,13 @@ foreach($projects_list as $project_data) {
 	$user_stats = file_get_contents("$user_stats_file");
 	$user_stats = gzdecode($user_stats);
 	$user_stats = simplexml_load_string($user_stats);
-	var_dump($user_stats);
+	//var_dump($user_stats);
+	$total_rac = 0;
+	foreach($user_stats as $user_row) {
+		$expavg_credit = $user_row['expavg_credit'];
+		$total_rac += $expavg_credit;
+	}
+	echo "Total RAC $total_rac\n";
 	die();
 }
 
