@@ -26,6 +26,7 @@ $present_list = [];
 foreach($scraper_stats as $str) {
 	$row = explode(",", $str);
 	if($row[0] != "byProject") continue;
+	
 	$project_name = $row[1];
 	$total_rac = $row[5];
 	$project_count ++;
