@@ -15,52 +15,47 @@ if($f) {
 
 db_connect();
 
+if(!file_exists("../../scraper/ConvergedStats.csv.gz")) die("Stats file not exists\n");
+
 $scraper_stats = file_get_contents("../../scraper/ConvergedStats.csv.gz");
 $scraper_stats = gzdecode($scraper_stats);
 $scraper_stats = explode("\n", $scraper_stats);
 
 $project_count = 0;
+$present_list = [];
 foreach($scraper_stats as $str) {
 	$row = explode(",", $str);
 	if($row[0] != "byProject") continue;
 	$project_name = $row[1];
 	$total_rac = $row[5];
+	$project_count ++;
 
 	$project_name_escaped = db_escape($project_name);
+	$present_list[] = $project_name_escaped;
+
 	$exists = db_query_to_variable("SELECT 1 FROM `projects` WHERE `superblock_name`='$project_name_escaped'");
-	if($exists) echo "Project $project_name exists with RAC $total_rac\n";
-	else echo "Project $project_name not exists with RAC $total_rac\n";
-	/*	db_query("UPDATE `projects`
-				SET `present_in_superblock`=1,`superblock_expavg_credit`='$total_rac'
-				WHERE `superblock_name`='$project_name_escaped'");
-*/
-	$project_count ++;
+	if($exists) {
+		echo "Project $project_name exists with RAC $total_rac\n";
+		db_query("UPDATE `projects`
+			SET `present_in_superblock` = 1,
+				`superblock_expavg_credit` = '$total_rac'
+			WHERE `superblock_name` = '$project_name_escaped'");
+	}
+	else {
+		echo "Error: Project $project_name not exists\n";
+	}	
 }
 
-//var_dump($scraper_stats);
-/*
-$projects_list = grc_api_get_projects_list();
-//var_dump($projects_list);
-$project_count = count($projects_list);
+if($project_count > 0) {
+	// Mark other projects as absent
+	$present_list_str=implode("','",$present_list);
+	db_query("UPDATE `projects`
+				SET `present_in_superblock`=0
+				WHERE `superblock_name` NOT IN ('$present_list_str')");
 
-
-foreach($projects_list as $project_data) {
-	$name = $project_data['display_name'];
-	$stats_url = $project_data['stats_url'];
-	echo "$name $stats_url\n";
-	$user_stats_file = $stats_url."/user.gz";
-	$user_stats = file_get_contents("$user_stats_file");
-	$user_stats = gzdecode($user_stats);
-	$user_stats = simplexml_load_string($user_stats);
-	var_dump($user_stats);
-	$total_rac = 0;
-	foreach($user_stats->user as $user_row) {
-		$expavg_credit = $user_row['expavg_credit'];
-		$total_rac += $expavg_credit;
-	}
-	echo "Total RAC $total_rac\n";
-	die();
-}*/
+	// Add project_count
+	echo "Project count in SB: $project_count\n";
+}
 
 $magnitude_unit=grc_api_get_magnitude_unit();
 echo "Magnitude unit: $magnitude_unit\n";
