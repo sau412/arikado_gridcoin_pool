@@ -17,7 +17,13 @@ db_connect();
 
 $projects_list = grc_api_get_projects_list();
 var_dump($projects_list);
-//$project_count = 
+$project_count = count($projects_list);
+
+foreach($projects_list as $project_data) {
+	$name = $project_data['display_name'];
+	$stats_url = $project_data['stats_url'];
+	echo "$name $stats_url\n";
+}
 /*
 $current_superblock_number=grc_api_get_superblock_number();
 
