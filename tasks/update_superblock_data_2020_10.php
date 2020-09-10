@@ -16,7 +16,7 @@ if($f) {
 db_connect();
 
 $projects_list = grc_api_get_projects_list();
-var_dump($projects_list);
+//var_dump($projects_list);
 $project_count = count($projects_list);
 
 foreach($projects_list as $project_data) {
@@ -25,7 +25,8 @@ foreach($projects_list as $project_data) {
 	echo "$name $stats_url\n";
 	$user_stats_file = $stats_url."/user.gz";
 	$user_stats = file_get_contents("$user_stats_file");
-	$user_stats = gzuncompress($user_stats);
+	$user_stats = gzdecode($user_stats);
+	$user_stats = simplexml_load_string($user_stats);
 	var_dump($user_stats);
 	die();
 }
