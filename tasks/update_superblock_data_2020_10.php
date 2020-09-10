@@ -17,8 +17,15 @@ db_connect();
 
 $scraper_stats = file_get_contents("../../scraper/ConvergedStats.csv.gz");
 $scraper_stats = gzdecode($scraper_stats);
-$scraper_stats = explode("\n");
-var_dump($scraper_stats);
+$scraper_stats = explode("\n", $scraper_stats);
+
+foreach($scraper_stats as $str) {
+	$row = explode(";", $str);
+	if($row[0] != "byProject") continue;
+	var_dump($row);
+}
+
+//var_dump($scraper_stats);
 /*
 $projects_list = grc_api_get_projects_list();
 //var_dump($projects_list);
