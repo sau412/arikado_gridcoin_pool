@@ -15,6 +15,11 @@ if($f) {
 
 db_connect();
 
+$scraper_stats = file_get_contents("../../scraper/ConvergedStats.csv.gz");
+$scraper_stats = gzdecode($scraper_stats);
+$scraper_stats = explode("\n")
+var_dump($scraper_stats);
+/*
 $projects_list = grc_api_get_projects_list();
 //var_dump($projects_list);
 $project_count = count($projects_list);
@@ -28,15 +33,15 @@ foreach($projects_list as $project_data) {
 	$user_stats = file_get_contents("$user_stats_file");
 	$user_stats = gzdecode($user_stats);
 	$user_stats = simplexml_load_string($user_stats);
-	//var_dump($user_stats);
+	var_dump($user_stats);
 	$total_rac = 0;
-	foreach($user_stats as $user_row) {
+	foreach($user_stats->user as $user_row) {
 		$expavg_credit = $user_row['expavg_credit'];
 		$total_rac += $expavg_credit;
 	}
 	echo "Total RAC $total_rac\n";
 	die();
-}
+}*/
 
 $magnitude_unit=grc_api_get_magnitude_unit();
 echo "Magnitude unit: $magnitude_unit\n";
