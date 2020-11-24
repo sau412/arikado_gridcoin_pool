@@ -1334,10 +1334,17 @@ _END;
 
 	$result.="</div>\n";
 */
-	$owes_data_array=db_query_to_array("SELECT bp.`payout_address`,bp.`currency`,SUM(bp.`amount`) AS amount,MIN(bbp.`start_date`) AS start_date,MAX(bbp.`stop_date`) AS stop_date
-FROM `payouts` AS bp
-LEFT OUTER JOIN `billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
-WHERE bp.`txid` IS NULL GROUP BY bp.`payout_address`,bp.`currency` ORDER BY bp.`payout_address` ASC");
+	$owes_data_array=db_query_to_array("SELECT
+			bp.`payout_address`,bp.`currency`,
+			SUM(bp.`amount`) AS amount,
+			MIN(bbp.`start_date`) AS start_date,
+			MAX(bbp.`stop_date`) AS stop_date
+		FROM `payouts` AS bp
+		LEFT OUTER JOIN `billing_periods` AS bbp ON bbp.`uid`=bp.`billing_uid`
+		LEFT OUTER JOIN `currency` AS bc ON bc.`name` = bp.`currency`
+		WHERE bp.`txid` IS NULL
+		GROUP BY bp.`payout_address`,bp.`currency`
+		ORDER BY SUM(bp.`amount`)/bc.`payout_limit` DESC");
 	if(count($owes_data_array)) {
 		$result.="<h3>Pool owes:</h3>\n";
 		foreach($owes_data_array as $owe_data) {
