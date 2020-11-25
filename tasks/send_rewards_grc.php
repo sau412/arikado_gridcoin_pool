@@ -50,7 +50,7 @@ $payout_data_array=db_query_to_array("SELECT
 	SUM(`amount`) AS amount_sum,
 	`wallet_send_uid`
 FROM `payouts`
-WHERE `currency` IN ('GRC','GRC2') AND (`txid` IS NULL OR `txid`='')
+WHERE `currency` IN ('GRC','GRC2') AND (`txid` IS NULL OR `txid`='') AND (`payout_address` != '')
 GROUP BY `user_uid`,`payout_address`,`currency`,`wallet_send_uid`
 HAVING SUM(`amount`)>='$minimal_amount_escaped'");
 
