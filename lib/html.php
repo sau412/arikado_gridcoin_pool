@@ -1363,7 +1363,7 @@ _END;
 			$payout_threshold=boincmgr_get_payout_limit($currency);
 			$payout_fee=boincmgr_get_tx_fee_estimation($currency);
 			$payout_service_fee=boincmgr_get_service_fee($currency);
-			$total_fee=$payout_fee+$payout_service_fee;
+			$total_fee = sprintf("%0.8f", $payout_fee+$payout_service_fee);
 			if($currency=="GRC2") $currency="GRC";
 
 			$result.="<tr><th>Address</th><td>$payout_address_link</td><td rowspan=6><img src='qr.php?str=$payout_address_html'></td></tr>\n";
