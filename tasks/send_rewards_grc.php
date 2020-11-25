@@ -41,9 +41,14 @@ if($owes_amount>=$current_balance) {
 
 // Get payout information for GRC
 $minimal_amount=db_query_to_variable("SELECT `payout_limit` FROM `currency` WHERE `name`='GRC'");
-$minimal_amount=0.001;
 $minimal_amount_escaped=db_escape($minimal_amount);
-$payout_data_array=db_query_to_array("SELECT GROUP_CONCAT(`uid`) AS uid_list,`user_uid`,`payout_address`,`currency`,SUM(`amount`) AS amount_sum,`wallet_send_uid`
+$payout_data_array=db_query_to_array("SELECT
+	GROUP_CONCAT(`uid`) AS uid_list,
+	`user_uid`,
+	`payout_address`,
+	`currency`,
+	SUM(`amount`) AS amount_sum,
+	`wallet_send_uid`
 FROM `payouts`
 WHERE `currency` IN ('GRC','GRC2') AND (`txid` IS NULL OR `txid`='')
 GROUP BY `user_uid`,`payout_address`,`currency`,`wallet_send_uid`
