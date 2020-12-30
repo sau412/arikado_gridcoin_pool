@@ -351,4 +351,3 @@ function auth_recaptcha_check($response) {
 	if($data->success) return TRUE;
 	else return FALSE;
 }
-?>

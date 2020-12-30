@@ -4,6 +4,7 @@ require_once("../lib/db.php");
 require_once("../lib/gridcoin_api.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/broker.php");
+require_once("../lib/auth.php");
 
 $f=fopen("/tmp/lockfile_superblock","w");
 if($f) {
@@ -59,10 +60,19 @@ if($project_count > 0) {
 }
 
 $magnitude_unit = grc_api_get_magnitude_unit();
-echo "Magnitude unit: $magnitude_unit\n";
-if(is_numeric($magnitude_unit) && $magnitude_unit > 0) boincmgr_set_variable("magnitude_unit",$magnitude_unit);
+if(is_numeric($magnitude_unit) && $magnitude_unit > 0) {
+	echo "Magnitude unit: $magnitude_unit\n";
+	boincmgr_set_variable("magnitude_unit",$magnitude_unit);
+}
+else {
+	auth_log("Cannot update magnitude unit", 5);
+}
 
 echo "Project count: $project_count\n";
-if(is_numeric($project_count) && $project_count > 0) boincmgr_set_variable("project_count",$project_count);
+if(is_numeric($project_count) && $project_count > 0) {
+	boincmgr_set_variable("project_count",$project_count);
+}
+else {
+	auth_log("Cannot update project count", 5);
+}
 //var_dump($projects);
-?>
