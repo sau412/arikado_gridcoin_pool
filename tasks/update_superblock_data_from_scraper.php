@@ -58,11 +58,11 @@ if($project_count > 0) {
 	echo "Project count in SB: $project_count\n";
 }
 
-$magnitude_unit=grc_api_get_magnitude_unit();
+$magnitude_unit = grc_api_get_magnitude_unit();
 echo "Magnitude unit: $magnitude_unit\n";
-if($magnitude_unit!==FALSE && $magnitude_unit>0) boincmgr_set_variable("magnitude_unit",$magnitude_unit);
+if(is_numeric($magnitude_unit) && $magnitude_unit > 0) boincmgr_set_variable("magnitude_unit",$magnitude_unit);
 
 echo "Project count: $project_count\n";
-if($project_count!==FALSE && $project_count>0) boincmgr_set_variable("project_count",$project_count);
+if(is_numeric($project_count) && $project_count > 0) boincmgr_set_variable("project_count",$project_count);
 //var_dump($projects);
 ?>
