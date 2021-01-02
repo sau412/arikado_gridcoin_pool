@@ -589,6 +589,12 @@ $lang_data_json=<<<_END
         "de":"",
         "zh":""
         },
+"payouts_header":{
+        "en":"Payouts",
+        "ru":"Выплаты",
+        "de":"Zahlungen",
+        "zh":"付款方式"
+        },
 "payout_owes_header":{
         "en":"Pool owes",
         "ru":"Ещё не выплачено",
