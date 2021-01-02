@@ -577,23 +577,17 @@ $lang_data_json=<<<_END
         "de":{"0":"Name","1":"URL","2":"CPID","3":"Schwacher authentikator","4":"Team","5":"Letzte Anfrage","6":"Letzte Aktualisierung","7":"Status","8":"Aktion"},
         "zh":{"0":"Name","1":"URL","2":"CPID","3":"Weak auth","4":"Team","5":"Last query","6":"Last update","7":"Status","8":"Action"}
         },
-"payouts_header":{
+"payout_header":{
         "en":"Payouts",
         "ru":"Выплаты",
         "de":"Auszahlungen",
         "zh":"支付"
         },
-"payouts_desc":{
+"payout_desc":{
         "en":"",
         "ru":"",
         "de":"",
         "zh":""
-        },
-"payouts_header":{
-        "en":"Payouts",
-        "ru":"Выплаты",
-        "de":"Zahlungen",
-        "zh":"付款方式"
         },
 "payout_owes_header":{
         "en":"Pool owes",
