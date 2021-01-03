@@ -35,7 +35,7 @@ if($owes_amount=='') $owes_amount=0;
 echo "Pool GRC owes: $owes_amount\n";
 
 if($owes_amount>=$current_balance) {
-	auth_log("Send rewards: Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'");
+	auth_log("Send rewards: Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'", 4);
 	die("Insufficient GRC balance: owes '$owes_amount' wallet balance '$current_balance'\n");
 }
 
@@ -76,7 +76,7 @@ foreach($payout_data_array as $payout_data) {
 			switch($tx_data->status) {
 				case 'address error':
 					db_query("UPDATE `payouts` SET `txid`='address error' WHERE `wallet_send_uid`='$wallet_send_uid_escaped'");
-					auth_log("Address error wallet uid '$wallet_send_uid' for address '$grc_address' amount '$amount'");
+					auth_log("Address error wallet uid '$wallet_send_uid' for address '$grc_address' amount '$amount'", 5);
 					break;
 				case 'sending error':
 					//db_query("UPDATE `payouts` SET `txid`='sending error' WHERE `uid`='$uid_escaped'");
@@ -86,12 +86,12 @@ foreach($payout_data_array as $payout_data) {
 					$tx_id=$tx_data->tx_id;
 					$tx_id_escaped=db_escape($tx_id);
 					db_query("UPDATE `payouts` SET `txid`='$tx_id_escaped' WHERE `wallet_send_uid`='$wallet_send_uid_escaped'");
-					auth_log("Sent wallet uid '$wallet_send_uid' for address '$grc_address' amount '$amount'");
+					auth_log("Sent wallet uid '$wallet_send_uid' for address '$grc_address' amount '$amount'", 7);
 					boincmgr_update_balance($user_uid);
 					break;
 			}
 		}
-	} else if($amount<$current_balance) {
+	} else if($amount < $current_balance) {
 		echo "Sending $amount to $grc_address\n";
 
 		// Send coins, get txid
@@ -102,7 +102,7 @@ foreach($payout_data_array as $payout_data) {
 			$payout_address_escaped=db_escape($grc_address);
 			db_query("UPDATE `payouts` SET `wallet_send_uid`='$wallet_send_uid_escaped' WHERE `uid` IN ($uid_list)");
 		} else {
-			auth_log("Sending error, no wallet uid for address '$grc_address' amount '$amount'");
+			auth_log("Sending error, no wallet uid for address '$grc_address' amount '$amount'", 5);
 		}
 
 		$current_balance=grc_web_get_balance();
@@ -113,7 +113,7 @@ foreach($payout_data_array as $payout_data) {
 	} else {
 		// No funds
 		echo "Insufficient funds for sending rewards\n";
-		auth_log("Insufficient funds for sending rewards");
+		auth_log("Insufficient funds for sending rewards", 4);
 		break;
 	}
 }
