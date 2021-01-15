@@ -162,7 +162,7 @@ ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
                                 } else {
                                         // Stop sync, may be host stealing attempt
                                         auth_log("Sync username '$username' error, username is not owner host_cpid '$host_cpid' project '$project_name' host_id '$project_host_id'");
-                                        echo xml_error_message($message_host_error,-102);
+                                        echo xml_error_message($message_host_project_error.$project_name, -102);
                                         die();
                                 }
                         }
