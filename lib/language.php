@@ -43,6 +43,7 @@ $message_billing_ok="Billing ok";
 $message_bad_token="Bad token";
 
 $message_host_error="Host already belongs to another user";
+$message_host_project_error="Host already belongs to another user for project ";
 
 $message_pool_info_changed="Pool info changed";
 $message_pool_txid_set="TX ID is set";
