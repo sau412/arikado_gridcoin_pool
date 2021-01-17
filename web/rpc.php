@@ -35,7 +35,7 @@ $xml_data=xml_parse_user_request($data);
 
 if(count($xml_data)==0) {
         echo xml_error_message($message_xml_error,-101);
-        auth_log("Sync error parsing XML");
+        auth_log("Sync error parsing XML", 5);
         die();
 }
 
@@ -61,7 +61,7 @@ if(auth_validate_ascii($p_model)==FALSE) xml_error_message("CPU model validation
 if(auth_check_hash($username,$password_hash)==FALSE) {
 //var_dump($xml_data);
         echo xml_error_message($message_login_error,-100);
-        auth_log("Sync username '$username' auth error");
+        auth_log("Sync username '$username' auth error", 5);
         die();
 }
 
@@ -237,14 +237,19 @@ if(auth_validate_ascii($domain_name)==FALSE) {
         $domain_name=base64_encode($domain_name);
 }
 
-auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'");
+auth_log("Sync username '$username' host '$domain_name' p_model '$p_model'", 6);
 
 if($debug_mode==TRUE) db_query("INSERT INTO boincmgr_xml (`type`,`message`) VALUES ('client reply','$reply_xml_escaped')");
 
 $file="";
 $line=0;
-if(headers_sent($file,$line)) auth_log("Headers warning: already sent, file '$file', line '$line'");
+if(headers_sent($file,$line)) {
+        auth_log("Headers warning: already sent, file '$file', line '$line'", 4);
+}
+
+auth_log([
+        "request" => $data,
+        "reply" => $reply_xml,
+], 7);
 
 echo $reply_xml;
-?>
-
