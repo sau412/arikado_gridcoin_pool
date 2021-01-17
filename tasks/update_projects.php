@@ -80,7 +80,8 @@ foreach($project_data_array as $project_data)
 	if($data == "") {
 		echo "No data from project\n";
 		$log_message[] = "No data from project";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("No project config for project $project_name", 4);
 		continue;
 	}
 
@@ -88,7 +89,8 @@ foreach($project_data_array as $project_data)
 
 	if($xml==FALSE) {
 		$log_message[] = "Error parsing XML from project";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Error parsing XML from project $project_name", 4);
 		echo "Error: $project_url\n\n";
 		continue;
 	}
@@ -101,19 +103,22 @@ foreach($project_data_array as $project_data)
 	// Validate data
 	if(auth_validate_ascii($name)==FALSE) {
 		$log_message[] = "Project name validation error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Project name validation error for $project_name", 4);
 		echo "Project name validation error\n";
 		continue;
 	}
 	if(auth_validate_ascii($rpc_url)==FALSE) {
 		$log_message[] = "Project RPC URL validation error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Project RPC URL validation error for $project_name", 4);
 		echo "Project RPC URL validation error\n";
 		continue;
 	}
 	if(auth_validate_ascii($master_url)==FALSE) {
 		$log_message[] = "Project master URL validation error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Project master URL validation error for $project_name", 4);
 		echo "Project master URL validation error\n";
 		continue;
 	}
@@ -137,7 +142,8 @@ foreach($project_data_array as $project_data)
 	$xml = simplexml_load_string($data);
 	if($xml == false || isset($xml->error_msg)) {
 		$log_message[] = "Login to project error\n";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Login to project error for project $project_name", 4);
 		echo "Login to project error\n";
 		continue;
 	}
@@ -161,7 +167,8 @@ foreach($project_data_array as $project_data)
 
 	if($xml == false) {
 		$log_message[] = "Get weak auth key error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Get weak auth key error for project $project_name", 4);
 		echo "Get weak auth key error\n";
 		continue;
 	}
@@ -195,7 +202,8 @@ foreach($project_data_array as $project_data)
 	if($xml==FALSE) {
 		$log_message[] = "Get gridcoin team stats error";
 		echo "Get gridcoin team stats error\n";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Get gridcoin team stats error for project $project_name", 4);
 		continue;
 	}
 
@@ -231,7 +239,8 @@ foreach($project_data_array as $project_data)
 	$xml=simplexml_load_string($data);
 	if($xml==FALSE) {
 		$log_message[] = "Get hosts info error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Get hosts info error for project $project_name", 4);
 		echo "Get hosts info error\n";
 		continue;
 	}
@@ -242,13 +251,15 @@ foreach($project_data_array as $project_data)
 	// Validate data
 	if(auth_validate_hash($project_cpid)==FALSE) {
 		$log_message[] = "Project cpid validation error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Project cpid validation error for project $project_name", 4);
 		echo "Project cpid validation error\n";
 		continue;
 	}
 	if(auth_validate_float($expavg_credit)==FALSE) {
 		$log_message[] = "Project expavg_credit validation error";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7;
+		auth_log("Project expavg_credit validation error for project $project_name", 4);
 		echo "Project expavg_credit validation error\n";
 		continue;
 	}
@@ -260,7 +271,8 @@ foreach($project_data_array as $project_data)
 	// Expavg credit and gridcoin team expavg credit
 	if($gridcoin_team_stats_found==FALSE) {
 		$log_message[] = "Sync error: gridcoin team not found for project";
-		auth_log($log_message, 4);
+		auth_log($log_message, 7);
+		auth_log("Sync error: gridcoin team not found for project $project_name", 4);
 	} else {
 		// Write project expavg_credit for billing purposes
 		db_query("INSERT INTO `project_stats` (`project_uid`,`expavg_credit`,`team_expavg_credit`)
@@ -344,17 +356,17 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
 		}
 	}
 	
-	auth_log($log_message);
+	auth_log($log_message, 7);
+	auth_log("Project $project_name synced", 6);
 	echo "----\n";
 	$full_sync_count++;
 }
 
 // Write results to log
 if($test_mode==FALSE) {
-	auth_log("Projects to sync $project_count, synced $full_sync_count");
+	auth_log("Projects to sync $project_count, synced $full_sync_count", 6);
 } else {
-	auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count");
+	auth_log("Projects to sync (test mode) $project_count, synced $full_sync_count", 6);
 }
 
 echo "DB queries count $db_queries_count\n";
-?>
