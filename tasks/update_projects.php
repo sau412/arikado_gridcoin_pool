@@ -258,7 +258,7 @@ foreach($project_data_array as $project_data)
 	}
 	if(auth_validate_float($expavg_credit)==FALSE) {
 		$log_message[] = "Project expavg_credit validation error";
-		auth_log($log_message, 7;
+		auth_log($log_message, 7);
 		auth_log("Project expavg_credit validation error for project $project_name", 4);
 		echo "Project expavg_credit validation error\n";
 		continue;
