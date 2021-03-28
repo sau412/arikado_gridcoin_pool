@@ -598,10 +598,21 @@ LIMIT 100
 
 // Get mined balance
 function boincmgr_get_balance($user_uid) {
-	$user_uid_escaped=db_escape($user_uid);
-	$currency=db_query_to_variable("SELECT `currency` FROM `users` WHERE `uid`='$user_uid_escaped'");
-	$balance=db_query_to_variable("SELECT `balance` FROM `users` WHERE `uid`='$user_uid_escaped'");
-	return array("currency"=>$currency,"currency_amount"=>$balance);
+	$user_uid_escaped = db_escape($user_uid);
+	$currency = db_query_to_variable("SELECT `currency` FROM `users` WHERE `uid` = '$user_uid_escaped'");
+	$balance = db_query_to_variable("SELECT `balance` FROM `users` WHERE `uid` = '$user_uid_escaped'");
+
+	// Too much questions about balance
+	// Now unpayed balance shows as the part of user's balance
+	$currency_escaped = db_escape($currency);
+	$balance_not_sent_yet = db_query_to_variable("SELECT SUM(`amount`)
+													FROM `payouts`
+													WHERE `user_uid` = '$user_uid_escaped' AND
+													`txid` IS NULL AND `currency` = '$currency_escaped'");
+	return [
+		"currency" => $currency,
+		"currency_amount" => $balance + $balance_not_sent_yet,
+	];
 }
 
 // Recalculate mined balance
