@@ -15,6 +15,8 @@ if($f) {
 
 db_connect();
 
+$users_to_update = [];
+
 $magnitude_unit=boincmgr_get_variable("magnitude_unit");
 $magnitude_unit_escaped=db_escape($magnitude_unit);
 echo "Magnitude unit: $magnitude_unit\n";
@@ -120,8 +122,13 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
 
 	db_query("UPDATE `project_host_stats` SET `interval`='$time_delta_escaped',`magnitude_unit`='$magnitude_unit_escaped',`grc_amount`='$grc_amount_escaped',
 `exchange_rate`='$rate_per_grc_escaped',`currency`='$currency_escaped',`currency_amount`='$currency_amount_escaped',`is_payed_out`=0 WHERE `uid`='$uid_escaped'");
-	db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
+	//db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
+	$users_to_update = array_merge($users_to_update, [$user_uid]);
 }
 
+foreach($users_to_update as $user_uid) {
+	boincmgr_update_balance($user_uid);
+}
+
+
 echo "DB queries count $db_queries_count\n";
-?>
