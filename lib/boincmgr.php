@@ -602,21 +602,16 @@ function boincmgr_get_balance($user_uid) {
 	$currency = db_query_to_variable("SELECT `currency` FROM `users` WHERE `uid` = '$user_uid_escaped'");
 	$balance = db_query_to_variable("SELECT `balance` FROM `users` WHERE `uid` = '$user_uid_escaped'");
 
-	// Too much questions about balance
-	// Now unpayed balance shows as the part of user's balance
-	$currency_escaped = db_escape($currency);
-	$balance_not_sent_yet = db_query_to_variable("SELECT SUM(`amount`)
-													FROM `payouts`
-													WHERE `user_uid` = '$user_uid_escaped' AND
-													`txid` IS NULL AND `currency` = '$currency_escaped'");
 	return [
 		"currency" => $currency,
-		"currency_amount" => $balance + $balance_not_sent_yet,
+		"currency_amount" => $balance,
 	];
 }
 
 // Recalculate mined balance
 function boincmgr_update_balance($user_uid) {
+	$prev_balance_data = boincmgr_get_balance($user_uid);
+
 	$user_uid_escaped=db_escape($user_uid);
 
 	// Get user currency
@@ -642,6 +637,17 @@ GROUP BY bphs.`currency`");
 	// Update balance
 	db_query("UPDATE `users` SET `balance`='$balance_escaped' WHERE `uid`='$user_uid_escaped'");
 
+	$new_balance_data = boincmgr_get_balance($user_uid);
+
+	auth_log([
+		"function" => "boincmgr_update_balance",
+		"user_uid" => $user_uid,
+		"prev_balance_data" => $prev_balance_data,
+		"new_balance_data" => $new_balance_data,
+		"balance" => $balance,
+		"balance_owed" => $balance_owed,
+		]);
+	
 	return $balance;
 }
 
