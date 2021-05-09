@@ -123,7 +123,9 @@ WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AN
 	db_query("UPDATE `project_host_stats` SET `interval`='$time_delta_escaped',`magnitude_unit`='$magnitude_unit_escaped',`grc_amount`='$grc_amount_escaped',
 `exchange_rate`='$rate_per_grc_escaped',`currency`='$currency_escaped',`currency_amount`='$currency_amount_escaped',`is_payed_out`=0 WHERE `uid`='$uid_escaped'");
 	//db_query("UPDATE `users` SET `balance`=`balance`+'$currency_amount_escaped' WHERE `uid`='$user_uid_escaped'");
-	$users_to_update = array_merge($users_to_update, [$user_uid]);
+	if($grc_amount > 0) {
+		$users_to_update = array_merge($users_to_update, [$user_uid]);
+	}
 }
 
 foreach($users_to_update as $user_uid) {
