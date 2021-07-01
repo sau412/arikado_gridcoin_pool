@@ -85,7 +85,9 @@ foreach($project_data_array as $project_data)
 		continue;
 	}
 
-	$xml=simplexml_load_string($data);
+	// SiDock fix
+	$data = str_replace("<https://www.gnu.org/licenses/>.", "", $data);
+	$xml = simplexml_load_string($data);
 
 	if($xml==FALSE) {
 		$log_message[] = "Error parsing XML from project";
