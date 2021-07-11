@@ -531,10 +531,10 @@ $lang_data_json=<<<_END
         "zh":"各BOINC项目接收的信息"
         },
 "boinc_results_all_table_header_user":{
-        "en":{"1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"},
-        "ru":{"1":"Название","2":"Проект","3":"Маг за 7 дней","4":"Магнитуда","5":"&#8776;GRC в день"},
-        "de":{"1":"Host Name","2":"Projekt","3":"7 Tage mag Graph","4":"Mag","5":"&#8776;GRC/Tag"},
-        "zh":{"1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"}
+        "en":{"1":"Domain name","2":"Project","3":"RAC","4":"Mag 7d graph","5":"Mag","6":"&#8776;GRC/day","7":"Tasks"},
+        "ru":{"1":"Название","2":"Проект","3":"RAC","4":"Маг за 7 дней","5":"Магнитуда","6":"&#8776;GRC в день","7":"Задачи"},
+        "de":{"1":"Host Name","2":"Projekt","3":"RAC","4":"7 Tage mag Graph","5":"Mag","6":"&#8776;GRC/Tag","7":"Tasks"},
+        "zh":{"1":"Domain name","2":"Project","3":"RAC","4":"Mag 7d graph","5":"Mag","6":"&#8776;GRC/day","7":"Tasks"}
         },
 "boinc_results_all_table_header_admin":{
         "en":{"0":"Username","1":"Domain name","2":"Project","3":"Mag 7d graph","4":"Mag","5":"&#8776;GRC/day"},
