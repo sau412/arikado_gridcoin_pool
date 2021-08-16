@@ -83,8 +83,8 @@ _END;
 $username_uid=boincmgr_get_username_uid($username);
 $username_uid_escaped=db_escape($username_uid);
 
-$host_uid=boincmgr_get_host_uid($username_uid,$host_cpid);
-$host_uid_escaped=db_escape($host_uid);
+$host_uid = boincmgr_get_host_uid($username_uid, $host_cpid);
+$host_uid_escaped = db_escape($host_uid);
 
 $host_owner_uid=db_query_to_variable("SELECT `username_uid` FROM `hosts` WHERE `internal_host_cpid`='$host_cpid_escaped'");
 if(FALSE && $host_owner_uid!="" && $username_uid!=$host_owner_uid) {
@@ -153,10 +153,12 @@ WHERE bhp.`project_uid`='$project_uid_escaped' AND bhp.`host_id`='$project_host_
                                 // If new host_id or user match, then store data
                                 if($exists_host_owner_uid==FALSE || $exists_host_owner_uid==$username_uid_escaped) {
                                         // Store host_id in DB
-                                        db_query("INSERT INTO `host_projects` (`host_uid`,`project_uid`,`host_id`)
+                                        if($host_uid) {
+                                                db_query("INSERT INTO `host_projects` (`host_uid`,`project_uid`,`host_id`)
 VALUES ('$host_uid_escaped','$project_uid_escaped','$project_host_id_escaped')
 ON DUPLICATE KEY UPDATE `timestamp`=CURRENT_TIMESTAMP");
-
+                                        }
+                                        
                                         // Mark attachment as correct
                                         db_query("UPDATE `attach_projects` SET `status`='attached',`timestamp`=NOW() WHERE `project_uid`='$project_uid_escaped' AND `host_uid`='$host_uid_escaped' AND `status` NOT IN ('detach')");
                                 } else {
