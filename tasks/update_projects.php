@@ -159,6 +159,9 @@ foreach($project_data_array as $project_data)
 	curl_setopt($ch,CURLOPT_URL, $url);
 	$data = curl_exec($ch);
 
+	// NFS@home fix
+	$data = str_replace('<br />
+<b>Deprecated</b>:  urlencode(): Passing null to parameter #1 ($string) of type string is deprecated in <b>/home/boincadm/projects/nfs/html/user/am_get_info.php</b> on line <b>38</b><br />', '', $data);
 	$log_message[] = [
 		"url" => $url,
 		"request" => "",
