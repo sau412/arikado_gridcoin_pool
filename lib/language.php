@@ -1,7 +1,7 @@
 <?php
 // Language file
 
-$message_logout_success="Logout successfull";
+$message_logout_success="Logout successful";
 $message_login_error="Incorrect login/password";
 $message_xml_error="XML parsing error";
 
@@ -57,7 +57,7 @@ $lang_data_json=<<<_END
         "zh":"pool_info_zh"
         },
 "message_logout_success":{
-        "en":"Logout successfull",
+        "en":"Logout successful",
         "ru":"Вы разлогинились",
         "de":"Abmelden erfolgreich",
         "zh":"成功退出"
