@@ -17,3 +17,5 @@ db_connect();
 
 $query = "DELETE FROM `tasks` WHERE DATE_SUB(NOW(), INTERVAL 3 MONTH) > `timestamp`";
 db_query($query);
+
+db_query("OPTIMIZE TABLE `tasks`");
