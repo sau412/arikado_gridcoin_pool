@@ -1,0 +1,19 @@
+<?php
+require_once("../lib/settings.php");
+require_once("../lib/db.php");
+require_once("../lib/auth.php");
+require_once("../lib/boincmgr.php");
+require_once("../lib/broker.php");
+
+$f = fopen("/tmp/lockfile_cleanup_tasks","w");
+if($f) {
+        echo "Checking locks\n";
+        if(!flock($f,LOCK_EX|LOCK_NB)) {
+		die("Lockfile locked\n");
+	}
+}
+
+db_connect();
+
+$query = "DELETE FROM `tasks` WHERE DATE_SUB(NOW(), INTERVAL 3 MONTH) > `timestamp`";
+db_query($query);
