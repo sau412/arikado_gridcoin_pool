@@ -19,3 +19,8 @@ $query = "DELETE FROM `tasks` WHERE DATE_SUB(NOW(), INTERVAL 3 MONTH) > `timesta
 db_query($query);
 
 db_query("OPTIMIZE TABLE `tasks`");
+
+$query = "DELETE FROM `task_stats` WHERE DATE_SUB(NOW(), INTERVAL 3 MONTH) > `date`";
+db_query($query);
+
+db_query("OPTIMIZE TABLE `task_stats`");
