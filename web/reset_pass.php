@@ -33,7 +33,7 @@ if($username!='') {
 <!DOCTYPE html>
 <html>
 <head>
-<title>Coinhive pool</title>
+<title>Arikado Gridcoin Pool</title>
 <meta charset="utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
 <link rel="icon" href="favicon.png" type="image/png">
