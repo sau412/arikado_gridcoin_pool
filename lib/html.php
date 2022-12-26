@@ -534,13 +534,14 @@ function html_change_settings_form() {
 
 	if($totp_secret_exists) {
 		$totp_settings = <<<_END
-"<p>2FA disabled. <input type=button id=totp_enable_button pvalue='Enable 2FA' onClick='enable_2fa();'></p>";
+<p>2FA disabled. <input type=button id=totp_enable_button pvalue='Enable 2FA' onClick='enable_2fa();'></p>
 
 _END;
 	}
 	else {
 		$totp_settings = <<<_END
-"<p>2FA enabled. <input type=button id=totp_disable_button value='Disable 2FA' onClick='disable_2fa();'></p>";
+<p>2FA enabled. <input type=button id=totp_disable_button value='Disable 2FA' onClick='disable_2fa();'></p>
+
 _END;
 	}
 
