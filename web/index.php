@@ -123,7 +123,7 @@ if($username!="") {
 
                         if(auth_check_password_by_user_uid($username_uid, $password)) {
                                 if(totp_check_current_time($totp_secret, $totp_code)) {
-                                        totp_set_user_secret($username_uid, $secret);
+                                        totp_set_user_secret($username_uid, $totp_secret);
                                         $result_message = "2FA enabled";
                                 }
                                 else {
