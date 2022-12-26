@@ -51,10 +51,10 @@ function auth_is_editor($username) {
 
 // Check password hash check by username
 function auth_check_hash_by_username($username, $passwd_hash) {
-		$username_escaped=db_escape($username);
-		$passwd_hash_salted=auth_hash_salt($username, $passwd_hash);
+		$username_escaped = db_escape($username);
+		$passwd_hash_salted = auth_hash_salt($username, $passwd_hash);
 	
-		$count=db_query_to_variable("SELECT count(*) FROM `users` WHERE LOWER(`username`) = LOWER('$username_escaped') AND `passwd_hash` = '$passwd_hash_salted' AND `status` <> 'banned'");
+		$count = db_query_to_variable("SELECT count(*) FROM `users` WHERE LOWER(`username`) = LOWER('$username_escaped') AND `passwd_hash` = '$passwd_hash_salted' AND `status` <> 'banned'");
 		if($count == 1) return TRUE;
 		return FALSE;
 	}
@@ -67,11 +67,10 @@ function auth_check_password_by_user_uid($user_uid, $password) {
 
 	$password_hash = auth_hash($username, $password);
 	$password_hash_salted = hash("sha256", $password_hash . $salt);
-	$passwd_hash_salted = auth_hash_salt($username, $passwd_hash);
 
 	$count = db_query_to_variable("SELECT count(*) FROM `users`
 		WHERE `uid` = '$user_uid_escaped' AND
-			`passwd_hash` = '$passwd_hash_salted' AND
+			`passwd_hash` = '$password_hash_salted' AND
 			`status` <> 'banned'");
 	if($count == 1) return TRUE;
 	return FALSE;
@@ -288,12 +287,11 @@ function auth_hash($username,$password) {
 }
 
 // Hash password with username salt for check
-function auth_hash_salt($username,$password_hash) {
-	$username_escaped=db_escape($username);
-	$password_hash_escaped=db_escape($password_hash);
-	$salt=db_query_to_variable("SELECT `salt` FROM `users` WHERE `username`='$username_escaped'");
-//auth_log("Debug: username '$username' hash '$hash' salt '$salt' salted hash '".hash("sha256",$password_hash.$salt)."'");
-	return hash("sha256",$password_hash.$salt);
+function auth_hash_salt($username, $password_hash) {
+	$username_escaped = db_escape($username);
+	$password_hash_escaped = db_escape($password_hash);
+	$salt = db_query_to_variable("SELECT `salt` FROM `users` WHERE `username` = '$username_escaped'");
+	return hash("sha256", $password_hash . $salt);
 }
 
 // Logout
