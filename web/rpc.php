@@ -58,7 +58,7 @@ if(auth_validate_hash($host_cpid)==FALSE) xml_error_message("Host cpid validatio
 if(auth_validate_domain($domain_name)==FALSE) { xml_error_message("Host domain name validation error\n",-96); }
 if(auth_validate_ascii($p_model)==FALSE) xml_error_message("CPU model validation error",-96);
 
-if(auth_check_hash($username,$password_hash)==FALSE) {
+if(auth_check_hash_by_username($username,$password_hash)==FALSE) {
 //var_dump($xml_data);
         echo xml_error_message($message_login_error,-100);
         auth_log("Sync username '$username' auth error", 5);

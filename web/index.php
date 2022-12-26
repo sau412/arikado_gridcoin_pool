@@ -10,6 +10,7 @@ require_once("../lib/xml_parser.php");
 require_once("../lib/captcha.php");
 require_once("../lib/broker.php");
 require_once("../lib/email.php");
+require_once("../lib/totp.php");
 
 db_connect();
 
@@ -114,6 +115,48 @@ if($username!="") {
                         boincmgr_delete_host($username,$host_uid);
 
                         setcookie("action_message",$message_host_deleted);
+                // Enable 2FA
+                } else if($_POST['action']=='enable_totp') {
+                        $user_uid = html_strip($_POST['user_uid']);
+                        $password = html_strip($_POST['password']);
+                        $totp_secret = html_strip($_POST['totp_secret']);
+                        $totp_code = html_strip($_POST['totp_code']);
+
+                        if(auth_check_password_by_user_uid($user_uid, $password)) {
+                                if(totp_check_current_time($totp_secret, $totp_code)) {
+                                        totp_set_user_secret($user_uid, $secret);
+                                        $result_message = "2FA enabled";
+                                }
+                                else {
+                                        $result_message = "Incorrect 2FA code";
+                                }
+                        }
+                        else {
+                                $result_message = "Wrong password";
+                        }
+
+                        $result_message = '';
+                        setcookie("action_message", $result_message);
+                // Disable 2FA
+                } else if($_POST['action']=='disable_totp') {
+                        $user_uid = html_strip($_POST['user_uid']);
+                        $password = html_strip($_POST['password']);
+                        $totp_code = html_strip($_POST['totp_code']);
+
+                        if(auth_check_password_by_user_uid($user_uid, $password)) {
+                                if(totp_check_user_uid_current_time($user_uid, $totp_code)) {
+                                        totp_clear_user_secret($user_uid);
+                                        $result_message = "2FA disabled";
+                                }
+                                else {
+                                        $result_message = "Incorrect 2FA code";
+                                }
+                        }
+                        else {
+                                $result_message = "Wrong password";
+                        }
+                        $result_message = '';
+                        setcookie("action_message", $result_message);
                 // Send message
                 } else if($_POST['action']=='send_message') {
                         $reply_to=html_strip($_POST['reply_to']);

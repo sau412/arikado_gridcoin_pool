@@ -30,7 +30,7 @@ function auth_check() {
 	if(isset($_COOKIE['passwd_hash'])) $passwd_hash=$_COOKIE['passwd_hash'];
 	else return FALSE;
 
-	return auth_check_hash($username,$passwd_hash);
+	return auth_check_hash_by_username($username,$passwd_hash);
 }
 
 // Checks is user admin
@@ -49,19 +49,34 @@ function auth_is_editor($username) {
 	else return FALSE;
 }
 
-// Auth hash check
-function auth_check_hash($username,$passwd_hash) {
-//	$username=strtolower($username);
-	$username_escaped=db_escape($username);
-	//$passwd_hash_escaped=db_escape($passwd_hash);
-	$passwd_hash_salted=auth_hash_salt($username,$passwd_hash);
+// Check password hash check by username
+function auth_check_hash_by_username($username, $passwd_hash) {
+		$username_escaped=db_escape($username);
+		$passwd_hash_salted=auth_hash_salt($username, $passwd_hash);
+	
+		$count=db_query_to_variable("SELECT count(*) FROM `users` WHERE LOWER(`username`) = LOWER('$username_escaped') AND `passwd_hash` = '$passwd_hash_salted' AND `status` <> 'banned'");
+		if($count == 1) return TRUE;
+		return FALSE;
+	}
 
-	$count=db_query_to_variable("SELECT count(*) FROM `users` WHERE LOWER(`username`)=LOWER('$username_escaped') AND `passwd_hash`='$passwd_hash_salted' AND `status`<>'banned'");
-	if($count==1) return TRUE;
-	else return FALSE;
+// Auth check password by user_uid
+function auth_check_password_by_user_uid($user_uid, $password) {
+	$user_uid_escaped = db_escape($user_uid);
+	$salt = db_query_to_variable("SELECT `salt` FROM `users` WHERE `uid`='$user_uid_escaped'");
+
+	$password_hash = auth_hash($username, $password);
+	$password_hash_salted = hash("sha256", $password_hash . $salt);
+	$passwd_hash_salted = auth_hash_salt($username, $passwd_hash);
+
+	$count = db_query_to_variable("SELECT count(*) FROM `users`
+		WHERE `uid` = '$username_uid_escaped' AND
+			`passwd_hash` = '$passwd_hash_salted' AND
+			`status` <> 'banned'");
+	if($count == 1) return TRUE;
+	return FALSE;
 }
-
-// Check username format
+	
+	// Check username format
 function auth_validate_username($username) {
 	if(preg_match('/^[-A-Za-z0-9_.]{1,100}$/',$username)) return TRUE;
 	else return FALSE;
@@ -230,7 +245,7 @@ function auth_login($auth_cookie,$username,$password) {
 
 	$passwd_hash=auth_hash($username,$password);
 
-	if(auth_check_hash($username,$passwd_hash)) {
+	if(auth_check_hash_by_username($username,$passwd_hash)) {
 		auth_log("Login username '$username'");
 		//$auth_cookie=bin2hex(random_bytes(32));
 		$username_uid=boincmgr_get_username_uid($username);
