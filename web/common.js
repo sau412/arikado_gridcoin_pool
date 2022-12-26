@@ -88,7 +88,7 @@ function enable_2fa(token) {
         html += "<input type=hidden name=action value='enable_totp'>\n";
         html += "<p>Scan QR code with any 2FA app and enter valid code below to enable 2FA:</p>\n";
         html += "<p><img src='qr.php?str=" + encodeURIComponent(totp_link) + "'></p>\n";
-        html += "<p>2FA code <input type=totp_secret name=text></p>\n";
+        html += "<p>2FA code <input type=text name=totp_code></p>\n";
         html += "<p>Password <input type=password name=password></p>\n";
         html += "<p><input type=submit value='Enable 2FA'></p>\n";
         html += "</form>\n";
@@ -101,7 +101,7 @@ function disable_2fa(token) {
         html += "<input type=hidden name=token value='" + token + "'>\n";
         html += "<input type=hidden name=action value='disable_totp'>\n";
         html += "<p>Enter valid 2FA code below to disable 2FA:</p>\n";
-        html += "<p>2FA code <input type=totp_secret name=text></p>\n";
+        html += "<p>2FA code <input type=totp_code name=text></p>\n";
         html += "<p>Password <input type=password name=password></p>\n";
         html += "<p><input type=submit value='Disable 2FA'></p>\n";
         html += "</form>\n";
