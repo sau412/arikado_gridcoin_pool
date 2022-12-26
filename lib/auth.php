@@ -70,7 +70,7 @@ function auth_check_password_by_user_uid($user_uid, $password) {
 	$passwd_hash_salted = auth_hash_salt($username, $passwd_hash);
 
 	$count = db_query_to_variable("SELECT count(*) FROM `users`
-		WHERE `uid` = '$username_uid_escaped' AND
+		WHERE `uid` = '$user_uid_escaped' AND
 			`passwd_hash` = '$passwd_hash_salted' AND
 			`status` <> 'banned'");
 	if($count == 1) return TRUE;
