@@ -36,7 +36,7 @@ function totp_base32tohex($base32) {
         }
         for($i = 0; $i < strlen($bits); $i += 8) {
                 $byte = substr($bits, $i, 8);
-                $hex .= base_convert($byte, 2, 16);
+                $hex .= sprintf("%02x", base_convert($byte, 2, 10));
         }
         return $hex;
 }
