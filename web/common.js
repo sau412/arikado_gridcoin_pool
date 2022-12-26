@@ -82,7 +82,7 @@ function enable_2fa(token) {
         $("#totp_enable_button").hide();
         let totp_secret = generate_totp_token();
         let totp_link = generate_totp_link(totp_secret);
-        let html = "<form name=totp_enable>\n";
+        let html = "<form name=totp_enable method=post>\n";
         html += "<input type=hidden name=token value='" + token + "'>\n";
         html += "<input type=hidden name=totp_secret value='" + totp_secret + "'>\n";
         html += "<input type=hidden name=action value='enable_totp'>\n";
@@ -97,7 +97,7 @@ function enable_2fa(token) {
 
 function disable_2fa(token) {
         $("#totp_disable_button").hide();
-        let html = "<form name=totp_disable>\n";
+        let html = "<form name=totp_disable method=post>\n";
         html += "<input type=hidden name=token value='" + token + "'>\n";
         html += "<input type=hidden name=action value='disable_totp'>\n";
         html += "<p>Enter valid 2FA code below to disable 2FA:</p>\n";
