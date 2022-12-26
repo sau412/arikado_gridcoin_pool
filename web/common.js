@@ -75,7 +75,7 @@ function generate_totp_token() {
 }
 
 function generate_totp_link(totp_secret) {
-        return "otpauth://totp/Arikado%20Gridcoin%20Pool?secret=" + totp_secret;
+        return "otpauth://totp/Arikado Gridcoin Pool?secret=" + totp_secret;
 }
 
 function enable_2fa(token) {
