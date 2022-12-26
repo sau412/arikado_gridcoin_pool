@@ -515,25 +515,41 @@ function html_change_settings_form() {
 
 	$username_escaped=db_escape($username);
 
-	$email=db_query_to_variable("SELECT `email` FROM `users` WHERE `username`='$username_escaped'");
-	$payout_currency=db_query_to_variable("SELECT `currency` FROM `users` WHERE `username`='$username_escaped'");
-	$payout_address=db_query_to_variable("SELECT `payout_address` FROM `users` WHERE `username`='$username_escaped'");
-	$send_error_reports=db_query_to_variable("SELECT `send_error_reports` FROM `users` WHERE `username`='$username_escaped'");
+	$email = db_query_to_variable("SELECT `email` FROM `users` WHERE `username`='$username_escaped'");
+	$payout_currency = db_query_to_variable("SELECT `currency` FROM `users` WHERE `username`='$username_escaped'");
+	$payout_address = db_query_to_variable("SELECT `payout_address` FROM `users` WHERE `username`='$username_escaped'");
+	$send_error_reports = db_query_to_variable("SELECT `send_error_reports` FROM `users` WHERE `username`='$username_escaped'");
+	$totp_secret_exists = db_query_to_variable("SELECT 1 FROM `users` WHERE `username`='$username_escaped' AND `totp_secret` IS NOT NULL");
 
-	$email_html=html_escape($email);
-	$payout_address_html=html_escape($payout_address);
-	$payout_currency_html=html_escape($payout_currency);
+	$email_html = html_escape($email);
+	$payout_address_html = html_escape($payout_address);
+	$payout_currency_html = html_escape($payout_currency);
 
-	$currency_selector=html_currency_selector($payout_currency);
+	$currency_selector = html_currency_selector($payout_currency);
 
 	if($send_error_reports) $send_error_reports_status="checked";
 	else $send_error_reports_status="";
+
+	$totp_settings = '';
+
+	if($totp_secret_exists) {
+		$totp_settings = <<<_END
+"<p>2FA disabled. <input type=button id=totp_enable_button pvalue='Enable 2FA' onClick='enable_2fa();'></p>";
+
+_END;
+	}
+	else {
+		$totp_settings = <<<_END
+"<p>2FA enabled. <input type=button id=totp_disable_button value='Disable 2FA' onClick='disable_2fa();'></p>";
+_END;
+	}
 
 	return <<<_END
 <div id=settings_block class=selectable_block>
 <h2>${current_language["settings_header"]}</h2>
 <p>${current_language["settings_desc"]}</p>
 <p>${current_language["settings_note"]}</p>
+<h3>Change Settings</h3>
 <form name=change_settings_form method=POST>
 <input type=hidden name="action" value="change_settings">
 <input type=hidden name="token" value="$username_token">
@@ -542,9 +558,18 @@ function html_change_settings_form() {
 <p>${current_language["settings_payout_address"]}: <input type=text name=payout_address value='$payout_address_html' size=40>
 ${current_language["settings_payout_currency"]} $currency_selector ${current_language["settings_payout_currency_after"]}</p>
 <p>${current_language["settings_password"]}: <input type=password name=password> ${current_language["settings_password_after"]}</p>
+<p><input type=submit value="${current_language["settings_submit"]}"></p>
+</form>
+<h3>2FA Settings</h3>
+$totp_settings
+<div id=totp_settings_block></div>
+<h3>Change Password</h3>
+<form name=change_password_form method=POST>
+<input type=hidden name="action" value="change_password">
+<input type=hidden name="token" value="$username_token">
+<p>${current_language["settings_password"]}: <input type=password name=password> ${current_language["settings_password_after"]}</p>
 <p>${current_language["settings_new_password1"]}: <input type=password name=new_password1> ${current_language["settings_new_password1_after"]}</p>
 <p>${current_language["settings_new_password2"]}: <input type=password name=new_password2></p>
-<!--<p><label><input type=checkbox onClick='check_deletion();' name=delete_account> delete my account</label></p>-->
 <p><input type=submit value="${current_language["settings_submit"]}"></p>
 </form>
 </div>
@@ -2021,4 +2046,3 @@ function html_captcha() {
 _END;
 	return $result;
 }
-?>

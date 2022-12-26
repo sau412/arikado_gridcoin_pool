@@ -1,3 +1,5 @@
+"use strict";
+
 // Show only one block from the page
 function show_block(block_name) {
         $("#main_block").load("./?ajax=1&block=" + encodeURI(block_name));
@@ -63,3 +65,45 @@ function hide_all_submenu(id) {
         });
 }
 
+function generate_totp_token() {
+        let result = '';
+        let base32chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        for(let i = 0; i < 32; i++) {
+                result += base32chars[Math.floor(Math.random() * base32chars.length)]
+        }
+        return result;
+}
+
+function generate_totp_link(totp_secret) {
+        return "otpauth://totp/Arikado%20Gridcoin%20Pool?secret=" + totp_secret;
+}
+
+function enable_2fa(token) {
+        $("#totp_enable_button").hide();
+        let totp_secret = generate_totp_token();
+        let totp_link = generate_totp_link(totp_secret);
+        let html = "<form name=totp_enable>\n";
+        html += "<input type=hidden name=token value='" + token + "'>\n";
+        html += "<input type=hidden name=totp_secret value='" + totp_secret + "'>\n";
+        html += "<input type=hidden name=action value='enable_totp'>\n";
+        html += "<p>Scan QR code with any 2FA app and enter valid code below to enable 2FA:</p>\n";
+        html += "<p><img src='qr.php?str=" + encodeURIComponent(totp_link) + "'></p>\n";
+        html += "<p>2FA code <input type=totp_secret name=text></p>\n";
+        html += "<p>Password <input type=password name=password></p>\n";
+        html += "<p><input type=submit value='Enable 2FA'></p>\n";
+        html += "</form>\n";
+        $("#totp_settings_block").html(html);
+}
+
+function disable_2fa(token) {
+        $("#totp_disable_button").hide();
+        let html = "<form name=totp_disable>\n";
+        html += "<input type=hidden name=token value='" + token + "'>\n";
+        html += "<input type=hidden name=action value='disable_totp'>\n";
+        html += "<p>Enter valid 2FA code below to disable 2FA:</p>\n";
+        html += "<p>2FA code <input type=totp_secret name=text></p>\n";
+        html += "<p>Password <input type=password name=password></p>\n";
+        html += "<p><input type=submit value='Disable 2FA'></p>\n";
+        html += "</form>\n";
+        $("#totp_settings_block").html(html);
+}
