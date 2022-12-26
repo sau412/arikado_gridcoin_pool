@@ -11,7 +11,7 @@ function totp_check_current_time($secret, $userCode) {
 }
 
 function totp_check($secret, $userCode, $time) {
-        $time = dechex(floor($time / 30) + 1);
+        $time = dechex(floor($time / 30));
         $timeHex = str_pad((string)$time, 16, "0", STR_PAD_LEFT);
 
         $secretHex = totp_base32tohex($secret);
