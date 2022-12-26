@@ -20,7 +20,7 @@ function totp_check($secret, $userCode, $time) {
 
         $offset = hexdec(substr($hash, -1, 1));
         $part = substr($hash, $offset * 2, 8);
-        $code = sprintf("%06d", hexdec($part) % 1000000);
+        $code = sprintf("%06d", (hexdec($part) & hexdec("7FFFFFFF")) % 1000000);
 
         if($code == $userCode) return true;
         return false;
