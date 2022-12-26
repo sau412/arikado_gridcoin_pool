@@ -135,7 +135,6 @@ if($username!="") {
                                 $result_message = "Wrong password";
                         }
 
-                        $result_message = '';
                         setcookie("action_message", $result_message);
                 // Disable 2FA
                 } else if($_POST['action']=='disable_totp') {
@@ -155,7 +154,7 @@ if($username!="") {
                         else {
                                 $result_message = "Wrong password";
                         }
-                        $result_message = '';
+
                         setcookie("action_message", $result_message);
                 // Send message
                 } else if($_POST['action']=='send_message') {
