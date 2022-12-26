@@ -62,7 +62,8 @@ function auth_check_hash_by_username($username, $passwd_hash) {
 // Auth check password by user_uid
 function auth_check_password_by_user_uid($user_uid, $password) {
 	$user_uid_escaped = db_escape($user_uid);
-	$salt = db_query_to_variable("SELECT `salt` FROM `users` WHERE `uid`='$user_uid_escaped'");
+	$username = db_query_to_variable("SELECT `username` FROM `users` WHERE `uid` = '$user_uid_escaped'");
+	$salt = db_query_to_variable("SELECT `salt` FROM `users` WHERE `uid` = '$user_uid_escaped'");
 
 	$password_hash = auth_hash($username, $password);
 	$password_hash_salted = hash("sha256", $password_hash . $salt);
