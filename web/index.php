@@ -117,7 +117,6 @@ if($username!="") {
                         setcookie("action_message",$message_host_deleted);
                 // Enable 2FA
                 } else if($_POST['action']=='enable_totp') {
-                        $user_uid = html_strip($_POST['user_uid']);
                         $password = html_strip($_POST['password']);
                         $totp_secret = html_strip($_POST['totp_secret']);
                         $totp_code = html_strip($_POST['totp_code']);
@@ -138,7 +137,6 @@ if($username!="") {
                         setcookie("action_message", $result_message);
                 // Disable 2FA
                 } else if($_POST['action']=='disable_totp') {
-                        $user_uid = html_strip($_POST['user_uid']);
                         $password = html_strip($_POST['password']);
                         $totp_code = html_strip($_POST['totp_code']);
 
