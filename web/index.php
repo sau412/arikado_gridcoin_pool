@@ -116,14 +116,14 @@ if($username!="") {
 
                         setcookie("action_message",$message_host_deleted);
                 // Enable 2FA
-                } else if($_POST['action']=='enable_totp') {
+                } else if($_POST['action'] == 'enable_totp') {
                         $password = html_strip($_POST['password']);
                         $totp_secret = html_strip($_POST['totp_secret']);
                         $totp_code = html_strip($_POST['totp_code']);
 
-                        if(auth_check_password_by_user_uid($user_uid, $password)) {
+                        if(auth_check_password_by_user_uid($username_uid, $password)) {
                                 if(totp_check_current_time($totp_secret, $totp_code)) {
-                                        totp_set_user_secret($user_uid, $secret);
+                                        totp_set_user_secret($username_uid, $secret);
                                         $result_message = "2FA enabled";
                                 }
                                 else {
@@ -140,9 +140,9 @@ if($username!="") {
                         $password = html_strip($_POST['password']);
                         $totp_code = html_strip($_POST['totp_code']);
 
-                        if(auth_check_password_by_user_uid($user_uid, $password)) {
-                                if(totp_check_user_uid_current_time($user_uid, $totp_code)) {
-                                        totp_clear_user_secret($user_uid);
+                        if(auth_check_password_by_user_uid($username_uid, $password)) {
+                                if(totp_check_user_uid_current_time($username_uid, $totp_code)) {
+                                        totp_clear_user_secret($username_uid);
                                         $result_message = "2FA disabled";
                                 }
                                 else {
