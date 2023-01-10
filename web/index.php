@@ -61,22 +61,32 @@ if($username!="") {
                 if($username_token!=$received_token) die($message_bad_token);
 
                 // Change settings
-                if($_POST['action']=='change_settings') {
-                        $email=html_strip($_POST['email']);
-                        $payout_currency=html_strip($_POST['payout_currency']);
-                        $payout_address=html_strip($_POST['payout_address']);
-                        $password=html_strip($_POST['password']);
-                        $new_password1=html_strip($_POST['new_password1']);
-                        $new_password2=html_strip($_POST['new_password2']);
-                        $send_error_reports=isset($_POST['send_error_reports'])?"1":"0";
+                if($_POST['action'] == 'change_settings') {
+                        $email = html_strip($_POST['email']);
+                        $payout_currency = html_strip($_POST['payout_currency']);
+                        $payout_address = html_strip($_POST['payout_address']);
+                        $password = html_strip($_POST['password']);
+                        $send_error_reports = isset($_POST['send_error_reports'])?"1":"0";
 
-                        $result=auth_change_settings($username,$email,$password,$new_password1,$new_password2,$payout_currency,$payout_address,$send_error_reports);
-                        if($result==TRUE) {
-                                setcookie("action_message",$message_change_settings_ok);
+                        $result = auth_change_settings($username, $email, $password, $payout_currency, $payout_address, $send_error_reports);
+                        if($result == TRUE) {
+                                setcookie("action_message", $message_change_settings_ok);
                         } else {
-                                setcookie("action_message",$message_change_settings_validation_fail);
+                                setcookie("action_message", $message_change_settings_validation_fail);
                         }
-                        // Attach project
+                // Change password
+                } else if($_POST['action'] == 'change_password') {
+                        $password = html_strip($_POST['password']);
+                        $new_password1 = html_strip($_POST['new_password1']);
+                        $new_password2 = html_strip($_POST['new_password2']);
+
+                        $result = auth_change_password($username, $password, $new_password1, $new_password2);
+                        if($result == TRUE) {
+                                setcookie("action_message", $message_change_settings_ok);
+                        } else {
+                                setcookie("action_message", $message_change_settings_validation_fail);
+                        }
+                // Attach project
                 } else if($_POST['action']=='attach') {
                         $project_uid=html_strip($_POST['project_uid']);
                         $host_uid=html_strip($_POST['host_uid']);
