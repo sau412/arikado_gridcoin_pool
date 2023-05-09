@@ -28,7 +28,6 @@ require_once("../lib/auth.php");
 require_once("../lib/billing.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/results_parser.php");
-require_once("../lib/broker.php");
 
 //define('DB_DEBUG',1);
 
