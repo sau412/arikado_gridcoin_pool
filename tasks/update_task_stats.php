@@ -8,7 +8,6 @@ require_once("../lib/db.php");
 require_once("../lib/auth.php");
 require_once("../lib/boincmgr.php");
 require_once("../lib/email.php");
-require_once("../lib/broker.php");
 
 $f=fopen("/tmp/lockfile_task_stats","w");
 if($f) {
