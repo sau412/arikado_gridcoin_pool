@@ -350,22 +350,18 @@ function auth_check_token($username,$token) {
 
 // Write action to log
 function auth_log($message, $severity = 7) {
-        global $logger_url;
-        global $project_log_name;
+	global $logger_url;
+	global $project_log_name;
 
-		$ch = curl_init($logger_url);
-        $body = json_encode([
-        	"source" => $project_log_name,
-        	"severity" => $severity,
-        	"message" => $message,
-        ]);
-
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
-        $result_json = curl_exec($ch);
-        curl_close($ch);        
-        $result = json_decode($result_json, true);
-        return $result;
+	openlog('php', LOG_ODELAY, LOG_USER);
+	if(gettype($message) !== "string") {
+			$message = json_encode($messageRaw);
+	}
+	else {
+			$message = $messageRaw;
+	}
+	syslog($severity, $project_log_name . " " . $message);
+	closelog();
 }
 
 function auth_recaptcha_check($response) {
