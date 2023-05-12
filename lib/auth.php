@@ -349,7 +349,7 @@ function auth_check_token($username,$token) {
 }
 
 // Write action to log
-function auth_log($message, $severity = 7) {
+function auth_log($messageRaw, $severity = 7) {
 	global $logger_url;
 	global $project_log_name;
 
