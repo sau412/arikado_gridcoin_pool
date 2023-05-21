@@ -43,6 +43,7 @@ foreach($data as $row) {
         $day_timestamp = $row['day_timestamp'];
 
         echo "Cleanup record $count_now of $count_total\n";
+        $count_now++;
 
         db_query("START TRANSACTION");
         db_query("
