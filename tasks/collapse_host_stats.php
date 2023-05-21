@@ -26,6 +26,8 @@ $data = db_query_to_array("
 ");
 
 //var_dump($data);
+$count_now = 0;
+$count_total = count($data);
 foreach($data as $row) {
         $min_uid = $row['min_uid'];
         $project_uid = $row['project_uid'];
@@ -40,7 +42,8 @@ foreach($data as $row) {
         $sum_currency_amount = $row['sum_currency_amount'];
         $day_timestamp = $row['day_timestamp'];
 
-        //var_dump($row);
+        echo "Cleanup record $count_now of $count_total\n";
+
         db_query("START TRANSACTION");
         db_query("
                 UPDATE `project_host_stats` SET
