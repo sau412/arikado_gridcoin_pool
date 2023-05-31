@@ -1187,9 +1187,9 @@ function html_project_control_form() {
 			$status_cell = "<span class='status_bad'>$status_message</span>";
 		}
 
-		$superblock_info = "<span class='status_bad'>No</span>";
+		$superblock_info = "<span class='status_bad'>no</span>";
 		if($present_in_superblock) {
-			$superblock_info = "<span class='status_good'>Yes</span>";
+			$superblock_info = "<span class='status_good'>yes</span>";
 		}
 		$timestamp_html=html_escape($timestamp);
 
