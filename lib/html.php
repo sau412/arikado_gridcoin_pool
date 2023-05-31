@@ -1128,7 +1128,7 @@ function html_project_control_form() {
 	global $current_language;
 
 	$result="";
-	$projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`timestamp` FROM `projects` ORDER BY `name` ASC");
+	$projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`present_in_superblock`,`timestamp` FROM `projects` ORDER BY `name` ASC");
 	$result.="<div id=project_control_block class=selectable_block>\n";
 
 	$result.=html_block_header_1("project_control_header");
@@ -1155,10 +1155,7 @@ function html_project_control_form() {
 		$name_html=html_escape($name);
 		$project_url_html=html_escape($project_url);
 		$url_signature_html=html_escape($url_signature);
-
-		if($pool_cpid==$cpid) $cpid_html="<span class='status_good'>match</span>";
-		else if ($cpid=="") $cpid_html="<span class='status_unknown'>no cpid</span>";
-		else $cpid_html="<span class='status_bad'>mismatch</span>";
+		$present_in_superblock = $project_record['present_in_superblock'];
 
 		$form_hidden_project_uid="<input type=hidden name=project_uid value='$uid'>";
 
@@ -1175,18 +1172,31 @@ function html_project_control_form() {
 				break;
 		}
 
-		if($weak_auth=="") $weak_auth_html="<span class='status_unknown'>no key</span>";
-		else $weak_auth_html="<span class='status_good'>present</span>";
+		$status_cell = "<span class='status_good'>ok</span>";
+		$status_message = "";
+		if($pool_cpid != $cpid) {
+			$status_message .= "CPID mismatch<br>\n";
+		}
+		if($weak_auth == "") {
+			$status_message .= "No weak key<br>\n";
+		}
+		if($team != "Gridcoin") {
+			$status_message .= "Not in Gridcoin team<br>\n";
+		}
+		if($status_message != "") {
+			$status_cell = "<span class='status_bad'>$status_message</span>";
+		}
 
-		if($team=="Gridcoin") $team_html="<span class='status_good'>$team</span>";
-		else $team_html="<span class='status_unknown'>unknown</span>";
-
+		$superblock_info = "<span status='status_bad'>No</span>";
+		if($present_in_superblock) {
+			$superblock_info = "<span status='status_good'>Yes</span>";
+		}
 		$timestamp_html=html_escape($timestamp);
 
 		$view_query="<a href='?action=view_project_last_query&project_uid=$uid&token=$username_token'>view</a>";
 
 		$actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
-		$result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$cpid_html</td><td>$weak_auth_html</td><td>$team_html</td><td>$view_query</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+		$result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$status_cell</td><td>$superblock_info</td><td>$view_query</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
 	}
 	$result.="</table></p>\n";
 	$result.="</div>\n";
