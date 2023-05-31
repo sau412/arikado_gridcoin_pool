@@ -573,10 +573,10 @@ $lang_data_json=<<<_END
         "zh":"使能（或自动使能）代表项目数据更新和奖金发放。仅统计 - 用户不能连接项目，获取奖金，自动失效 - 仅可以下载统计，没有奖金，失效 - 不能检查项目的任何信息（也没有奖金）"
         },
 "project_control_table_header":{
-        "en":{"0":"Name","1":"URL","2":"CPID","3":"Weak auth","4":"Team","5":"Last query","6":"Last update","7":"Status","8":"Action"},
-        "ru":{"0":"Проект","1":"Ссылка","2":"CPID","3":"Ключ","4":"Команда","5":"Посл опрос","6":"Обновлен","7":"Статус","8":"Действие"},
-        "de":{"0":"Name","1":"URL","2":"CPID","3":"Schwacher authentikator","4":"Team","5":"Letzte Anfrage","6":"Letzte Aktualisierung","7":"Status","8":"Aktion"},
-        "zh":{"0":"Name","1":"URL","2":"CPID","3":"Weak auth","4":"Team","5":"Last query","6":"Last update","7":"Status","8":"Action"}
+        "en":{"0":"Name","1":"URL","2":"Status","3":"Superblock","4":"Last query","5":"Last update","6":"Status","7":"Action"},
+        "ru":{"0":"Проект","1":"Ссылка","2":"Статус","3":"Суперблок","4":"Посл опрос","5":"Обновлен","6":"Статус","7":"Действие"},
+        "de":{"0":"Name","1":"URL","2":"Status","3":"Superblock","4":"Letzte Anfrage","5":"Letzte Aktualisierung","6":"Status","7":"Aktion"},
+        "zh":{"0":"Name","1":"URL","2":"Status","3":"Superblock","4":"Last query","5":"Last update","6":"Status","7":"Action"}
         },
 "payout_header":{
         "en":"Payouts",
