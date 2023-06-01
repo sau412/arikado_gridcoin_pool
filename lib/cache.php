@@ -40,6 +40,7 @@ function cache_db_get($key) {
 }
 
 function cache_db_set($key, $value) {
+    global $cache_options;
     $value_escaped = db_escape($value);
     db_query("
         INSERT INTO `cache` (`hash`, `content`, `valid_until`)
