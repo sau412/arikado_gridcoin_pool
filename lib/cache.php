@@ -37,6 +37,7 @@ function cache_db_get($key) {
     $result = db_query_to_variable("
         SELECT `content` FROM `cache` WHERE `hash` = '$key' AND NOW() < `valid_until`
     ");
+    return $result;
 }
 
 function cache_db_set($key, $value) {
@@ -44,9 +45,10 @@ function cache_db_set($key, $value) {
     $value_escaped = db_escape($value);
     db_query("
         INSERT INTO `cache` (`hash`, `content`, `valid_until`)
-        VALUES ('$key', '$value_escaped', DATE_ADD(NOW(), INTERVAL 1 HOUR))
+        VALUES ('$key', '$value_escaped',
+            DATE_ADD(NOW(), INTERVAL " . $cache_options['interval'] . " SECOND))
         ON DUPLICATE KEY UPDATE `content` = VALUES(`content`),
-            `valid_until` = DATE_ADD(NOW(),INTERVAL " . $cache_options['interval'] . " HOUR)
+            `valid_until` = VALUES(`valid_until`)
     ");
 }
 
@@ -55,6 +57,7 @@ function cache_memcached_get($key) {
     $memcache_resource = new Memcached();
     $memcache_resource->addServer($cache_options['server'], $cache_options['port']);
     $result = $memcache_resource->get($key);
+    return $result;
 }
 
 function cache_memcached_set($key, $value) {
@@ -69,7 +72,8 @@ function cache_redis_get($key) {
     $redis = new Redis();
     $redis->connect($cache_options['server'], $cache_options['port']);
     $redis->auth($cache_options['password']);
-    return $redis->get($key);
+    $result = $redis->get($key);
+    return $result;
 }
 
 function cache_redis_set($key, $value) {
@@ -77,5 +81,5 @@ function cache_redis_set($key, $value) {
     $redis = new Redis();
     $redis->connect($cache_options['server'], $cache_options['port']);
     $redis->auth($cache_options['password']);
-    return $redis->set($key, $value, $cache_options['interval']);
+    $redis->set($key, $value, $cache_options['interval']);
 }
