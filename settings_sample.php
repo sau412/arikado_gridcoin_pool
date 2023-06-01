@@ -52,9 +52,13 @@ $feedback_email = "";
 $min_payout_grc=0;
 $faucet_plain_amount=0.1;
 
-// Memcached options
-$memcached_server="localhost";
-$memcached_interval=3600;
+// Cache options
+$cache_options = [
+    "type" => "disabled", // disabled, db, memcached, redis
+    "server" => "localhost",
+    "port" => 11211,
+    "interval" => 3600,
+];
 
 // Language file
 require_once("../lib/language.php");

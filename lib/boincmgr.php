@@ -344,29 +344,13 @@ function boincmgr_project_last_query_append($project_uid,$text) {
 // Cache function
 // If memcached server set, store in memcached
 // Otherwise store in db
-function boincmgr_cache_function($function_name,$parameters,$force_update=0) {
-	global $memcached_server;
-	global $memcached_interval;
-	$call_str = "$function_name(".implode(",",$parameters).")";
-	$hash = hash("sha256",$call_str);
-	if($memcached_server) {
-		$memcache_resource = new Memcached();
-		$memcache_resource->addServer($memcached_server, 11211);
-		$result = $memcache_resource->get($hash);
-	}
-	else {
-		$result = db_query_to_variable("SELECT `content` FROM `cache` WHERE `hash`='$hash' AND NOW()<`valid_until`");
-	}
-	if($result === FALSE || $result=="" || $force_update) {
-		$result = call_user_func_array($function_name,$parameters);
-		if($memcached_server) {
-			$memcache_resource->set($hash,$result,$memcached_interval);
-		}
-		else {
-			$result_escaped = db_escape($result);
-			db_query("INSERT INTO `cache` (`hash`,`content`,`valid_until`) VALUES ('$hash','$result_escaped',DATE_ADD(NOW(),INTERVAL 1 HOUR))
-ON DUPLICATE KEY UPDATE `content`=VALUES(`content`),`valid_until`=DATE_ADD(NOW(),INTERVAL 1 HOUR)");
-		}
+function boincmgr_cache_function($function_name, $parameters, $force_update = 0) {
+	$call_str = "$function_name(" . implode(",",$parameters) . ")";
+	$hash = hash("sha256", $call_str);
+	$result = cache_get($hash);
+	if($result === FALSE || $result == "" || $force_update) {
+		$result = call_user_func_array($function_name, $parameters);
+		cache_set($hash, $result);
 	}
 	return $result;
 }
