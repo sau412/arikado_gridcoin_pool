@@ -233,7 +233,9 @@ foreach($project_data_array as $project_data)
 	$url = $rpc_url."show_user.php?userid=$boinc_account&auth=$auth&format=xml";
 	curl_setopt($ch, CURLOPT_URL, $url);
 	$data=curl_exec($ch);
-	
+	// AT&T fix
+	$data = str_replace("AT&T", "AT&amp;T", $data);
+
 	$log_message[] = [
 		"url" => $url,
 		"request" => "",
