@@ -349,8 +349,12 @@ function boincmgr_cache_function($function_name, $parameters, $force_update = 0)
 	$hash = hash("sha256", $call_str);
 	$result = cache_get($hash);
 	if($result === FALSE || $result == "" || $force_update) {
+		auth_log("Cache miss for key $hash");
 		$result = call_user_func_array($function_name, $parameters);
 		cache_set($hash, $result);
+	}
+	else {
+		auth_log("Cache hit for key $hash");
 	}
 	return $result;
 }
