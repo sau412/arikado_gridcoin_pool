@@ -296,7 +296,9 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 	}
 
 	// Update project CPID
-	db_query("UPDATE `projects` SET `cpid`='$project_cpid_escaped' WHERE uid='$project_uid_escaped'");
+	db_query("UPDATE `projects` SET `cpid` = '$project_cpid_escaped' WHERE `uid`='$project_uid_escaped'");
+	// Update last successful sync timestamp
+	db_query("UPDATE `projects` SET `last_sync` = NOW() WHERE `uid` = '$project_uid_escaped'");
 
 	foreach($xml->host as $host_data) {
 		// Get data
