@@ -71,7 +71,9 @@ function cache_redis_get($key) {
     global $cache_options;
     $redis = new Redis();
     $redis->connect($cache_options['server'], $cache_options['port']);
-    $redis->auth($cache_options['password']);
+    if($cache_options['password']) {
+        $redis->auth($cache_options['password']);
+    }
     $result = $redis->get($key);
     return $result;
 }
@@ -80,6 +82,8 @@ function cache_redis_set($key, $value) {
     global $cache_options;
     $redis = new Redis();
     $redis->connect($cache_options['server'], $cache_options['port']);
-    $redis->auth($cache_options['password']);
+    if($cache_options['password']) {
+        $redis->auth($cache_options['password']);
+    }
     $redis->set($key, $value, $cache_options['interval']);
 }
