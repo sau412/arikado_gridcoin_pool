@@ -1128,7 +1128,11 @@ function html_project_control_form() {
 	global $current_language;
 
 	$result="";
-	$projects_array=db_query_to_array("SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,`status`,`present_in_superblock`,`timestamp` FROM `projects` ORDER BY `name` ASC");
+	$projects_array=db_query_to_array("
+		SELECT `uid`,`name`,`project_url`,`cpid`,`url_signature`,`weak_auth`,`team`,
+			`status`,`present_in_superblock`,`last_sync`
+		FROM `projects` ORDER BY `name` ASC
+	");
 	$result.="<div id=project_control_block class=selectable_block>\n";
 
 	$result.=html_block_header_1("project_control_header");
@@ -1151,7 +1155,7 @@ function html_project_control_form() {
 		$cpid=$project_record['cpid'];
 		$weak_auth=$project_record['weak_auth'];
 		$team=$project_record['team'];
-		$timestamp=$project_record['timestamp'];
+		$last_sync=$project_record['last_sync'];
 		$name_html=html_escape($name);
 		$project_url_html=html_escape($project_url);
 		$url_signature_html=html_escape($url_signature);
@@ -1191,12 +1195,12 @@ function html_project_control_form() {
 		if($present_in_superblock) {
 			$superblock_info = "<span class='status_good'>yes</span>";
 		}
-		$timestamp_html=html_escape($timestamp);
+		$last_sync_html=html_escape($last_sync);
 
 		$view_query="<a href='?action=view_project_last_query&project_uid=$uid&token=$username_token'>view</a>";
 
 		$actions="<form name=change_project method=post>".$form_hidden_action.$form_hidden_project_uid.$form_hidden_token.$project_options.$submit_button."</form>";
-		$result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$status_cell</td><td>$superblock_info</td><td>$view_query</td><td>$timestamp_html</td><td>$status_html</td><td>$actions</td></tr>\n";
+		$result.="<tr><td>$name_html</td><td>$project_url_html</td><td>$status_cell</td><td>$superblock_info</td><td>$view_query</td><td>$last_sync_html</td><td>$status_html</td><td>$actions</td></tr>\n";
 	}
 	$result.="</table></p>\n";
 	$result.="</div>\n";
