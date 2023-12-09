@@ -55,7 +55,10 @@ _END;
 
 	// Check is mobile
 	// https://stackoverflow.com/questions/4117555/simplest-way-to-detect-a-mobile-device
-	$user_agent=$_SERVER['HTTP_USER_AGENT'];
+	$user_agent = "";
+	if(isset($_SERVER['HTTP_USER_AGENT'])) {
+		$user_agent = $_SERVER['HTTP_USER_AGENT'];
+	}
 	if(preg_match("/(android|avantgo|blackberry|bolt|boost|cricket|docomo|fone|hiptop|mini|mobi|palm|phone|pie|tablet|up\.browser|up\.link|webos|wos)/i", $user_agent)) {
 		$css_file='mobile.css';
 	}
