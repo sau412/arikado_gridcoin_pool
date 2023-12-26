@@ -364,6 +364,11 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
 		}
 	}
 	
+	// Update success timestamp
+	db_query("UPDATE `projects`
+		SET `last_success` = CURRENT_TIMESTAMP
+		WHERE `uid` = '$project_uid_escaped'");
+
 	auth_log($log_message, 7);
 	auth_log("Project $project_name synced", 6);
 	echo "----\n";
