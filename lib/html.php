@@ -645,10 +645,11 @@ _END;
 			SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,
 				bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status,
 				CASE
-                	WHEN last_sync IS NULL THEN 1
-                	WHEN DATE_SUB(NOW(), INTERVAL 1 DAY) > last_sync THEN 1
+                	WHEN bp.`last_sync` IS NULL THEN 1
+                	WHEN DATE_SUB(NOW(), INTERVAL 1 DAY) > bp.`last_sync` THEN 1
                     ELSE 0
-                END project_not_synced
+                END project_not_synced,
+				bp.`present_in_superblock`
 			FROM `attach_projects` AS bap
 			LEFT JOIN `projects` AS bp ON bp.`uid`=bap.`project_uid`
 			WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC
@@ -665,6 +666,7 @@ _END;
 			$project_status=$project_data['project_status'];
 			$resource_share=$project_data['resource_share'];
 			$options=$project_data['options'];
+			$present_in_superblock=$project_data['present_in_superblock'];
 
 			$project_uid_escaped=db_escape($project_uid);
 			$project_name_html=html_escape($project_name);
@@ -705,7 +707,10 @@ _END;
 			if(in_array("detach_when_done",$options_array)) {
 				$attached_project_msg="<span class=host_status_detach>detach when done</span>";
 			}
-			if($project_status=="disabled") {
+			if(!$present_in_superblock) {
+				$attached_project_msg="<span class=host_status_incorrect>project not in superblock, no rewards</span>";
+			}
+			else if($project_status=="disabled") {
 				$attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
 			}
 			else if($project_not_synced) {
