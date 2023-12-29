@@ -302,7 +302,10 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 	// Update last successful sync timestamp
 	db_query("UPDATE `projects` SET `last_sync` = NOW() WHERE `uid` = '$project_uid_escaped'");
 
+	$hosts_present = false;
 	foreach($xml->host as $host_data) {
+		$hosts_present = true;
+		
 		// Get data
 		$host_id=(string)$host_data->id;
 		$host_cpid=(string)$host_data->host_cpid;
@@ -310,7 +313,7 @@ VALUES ('$project_uid','$expavg_credit_escaped','$team_expavg_credit_escaped')")
 		$p_model=(string)$host_data->p_model;
 		$expavg_credit=(string)$host_data->expavg_credit;
 		$expavg_time=(string)$host_data->expavg_time;
-
+		
 		// Validate data
 		if(auth_validate_integer($host_id)==FALSE) { echo "Host id validation error\n"; continue; }
 		if(auth_validate_hash($host_cpid)==FALSE) { echo "Host cpid validation error\n"; continue; }
@@ -364,11 +367,12 @@ VALUES ('$project_uid_escaped','$host_uid_escaped','$host_id_escaped','$expavg_c
 		}
 	}
 	
-	// Update success timestamp
-	db_query("UPDATE `projects`
-		SET `last_success` = CURRENT_TIMESTAMP
-		WHERE `uid` = '$project_uid_escaped'");
-
+	if($hosts_present) {
+		// Update success timestamp
+		db_query("UPDATE `projects`
+			SET `last_success` = CURRENT_TIMESTAMP
+			WHERE `uid` = '$project_uid_escaped'");
+	}
 	auth_log($log_message, 7);
 	auth_log("Project $project_name synced", 6);
 	echo "----\n";
