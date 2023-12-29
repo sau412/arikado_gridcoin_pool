@@ -743,19 +743,33 @@ _END;
 		}
 
 		if(auth_is_admin($username)) {
-			$projects_array=db_query_to_array("SELECT `uid`,`name`,`present_in_superblock` FROM `projects`
-WHERE `uid` NOT IN (
-	SELECT bap.`project_uid` FROM `hosts` h
-	LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
-	WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
-) ORDER BY `name` ASC");
+			$projects_array=db_query_to_array("
+				SELECT `uid`,`name`,`present_in_superblock`,
+					CASE
+						WHEN `last_sync` IS NULL THEN 1
+						WHEN DATE_SUB(NOW(), INTERVAL 1 DAY) > `last_sync` THEN 1
+						ELSE 0
+					END project_not_synced
+				FROM `projects`
+				WHERE `uid` NOT IN (
+					SELECT bap.`project_uid` FROM `hosts` h
+					LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
+					WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
+				) ORDER BY `name` ASC");
 		} else {
-			$projects_array=db_query_to_array("SELECT `uid`,`name`,`present_in_superblock` FROM `projects`
-WHERE `status` IN ('enabled') AND `uid` NOT IN (
-	SELECT bap.`project_uid` FROM `hosts` h
-	LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
-	WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
-) ORDER BY `name` ASC");
+			$projects_array=db_query_to_array("
+				SELECT `uid`,`name`,`present_in_superblock`,
+					CASE
+						WHEN `last_sync` IS NULL THEN 1
+						WHEN DATE_SUB(NOW(), INTERVAL 1 DAY) > `last_sync` THEN 1
+						ELSE 0
+					END project_not_synced
+				FROM `projects`
+				WHERE `status` IN ('enabled') AND `uid` NOT IN (
+					SELECT bap.`project_uid` FROM `hosts` h
+					LEFT JOIN `attach_projects` bap ON bap.`host_uid`=h.`uid`
+					WHERE `host_uid`='$host_uid_escaped' AND bap.`status`<>'detach'
+				) ORDER BY `name` ASC");
 		}
 		if(count($projects_array)==0) {
 			$projects_str.="No more projects to attach<br>";
@@ -771,8 +785,12 @@ _END;
 				$project_uid = $project_data['uid'];
 				$project_name = $project_data['name'];
 				$in_superblock = $project_data['present_in_superblock'];
+				$project_not_synced = $project_data['project_not_synced'];
 				if($in_superblock == 0) {
 					$project_name .= " (not in superblock)";
+				}
+				else if($project_not_synced) {
+					$project_name .= " (no rewards)";
 				}
 				$attach_form.="<option value='$project_uid'>$project_name</option>";
 			}
