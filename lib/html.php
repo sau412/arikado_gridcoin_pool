@@ -641,10 +641,18 @@ _END;
 		// Project list for this host
 		$host_uid_escaped=db_escape($host_uid);
 
-		$attached_projects_array=db_query_to_array("SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status
-FROM `attach_projects` AS bap
-LEFT JOIN `projects` AS bp ON bp.`uid`=bap.`project_uid`
-WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
+		$attached_projects_array=db_query_to_array("
+			SELECT bap.`uid`,bap.`host_uid`,bp.`uid` as project_uid,bp.`name`,
+				bap.`status`,bap.`resource_share`,bap.`options`,bp.`status` AS project_status,
+				CASE
+                	WHEN last_sync IS NULL THEN 1
+                	WHEN DATE_SUB(NOW(), INTERVAL 1 DAY) > last_sync THEN 1
+                    ELSE 0
+                END project_not_synced
+			FROM `attach_projects` AS bap
+			LEFT JOIN `projects` AS bp ON bp.`uid`=bap.`project_uid`
+			WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC
+		");
 
 		$projects_str="";
 		foreach($attached_projects_array as $project_data) {
@@ -653,6 +661,7 @@ WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
 			$project_name=$project_data['name'];
 			$project_uid=$project_data['project_uid'];
 			$status=$project_data['status'];
+			$project_not_synced=$project_data['project_not_synced'];
 			$project_status=$project_data['project_status'];
 			$resource_share=$project_data['resource_share'];
 			$options=$project_data['options'];
@@ -698,6 +707,9 @@ WHERE bap.host_uid='$host_uid_escaped' ORDER BY bp.`name` ASC");
 			}
 			if($project_status=="disabled") {
 				$attached_project_msg="<span class=host_status_incorrect>project not whitelisted, no rewards</span>";
+			}
+			else if($project_not_synced) {
+				$attached_project_msg="<span class=host_status_incorrect>project problems, no rewards</span>";
 			}
 
 			// Tasks report link
