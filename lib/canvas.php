@@ -307,7 +307,7 @@ function canvas_graph_username_project($username_uid,$project_uid,$big_canvas=0)
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-WHERE bphs.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$username_uid' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
+WHERE bphs.`project_uid`='$project_uid_escaped' AND bh.`username_uid`='$username_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
 GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
 ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
 
@@ -332,7 +332,7 @@ function canvas_graph_username($username_uid,$big_canvas=0) {
 FROM `project_host_stats` AS bphs
 LEFT OUTER JOIN `projects` AS bp ON bp.`uid`=bphs.`project_uid`
 LEFT OUTER JOIN `hosts` AS bh ON bh.`uid`=bphs.`host_uid`
-WHERE bh.`username_uid`='$username_uid' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
+WHERE bh.`username_uid`='$username_uid_escaped' AND DATE_SUB(CURRENT_TIMESTAMP,INTERVAL $days DAY)<bphs.`timestamp`
 GROUP BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4)
 ORDER BY TRUNCATE(UNIX_TIMESTAMP(bphs.`timestamp`),-4) ASC");
 
