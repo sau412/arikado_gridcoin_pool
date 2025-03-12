@@ -58,15 +58,8 @@ if($project_count > 0) {
 	echo "Project count in SB: $project_count\n";
 }
 
-$magnitude_unit = grc_api_get_magnitude_unit();
-if(is_numeric($magnitude_unit) && $magnitude_unit > 0) {
-	echo "Magnitude unit: $magnitude_unit\n";
-	auth_log("Magnitude unit: $magnitude_unit", 6);
-	boincmgr_set_variable("magnitude_unit", $magnitude_unit);
-}
-else {
-	auth_log("Cannot update magnitude unit", 5);
-}
+$magnitude_unit = 0.25;
+boincmgr_set_variable("magnitude_unit", $magnitude_unit);
 
 if(is_numeric($project_count) && $project_count > 0) {
 	echo "Project count: $project_count\n";
