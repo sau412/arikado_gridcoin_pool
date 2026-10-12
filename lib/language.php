@@ -363,13 +363,13 @@ $lang_data_json=<<<_END
         "zh":"设置"
         },
 "settings_desc":{
-        "en":"GRC payouts are instant, alternative currencies payouts are cumulative and manual. It takes 1-2 days when payout limit reached to send payout (because manual mode now).",
+        "en":"GRC payouts are instant, but alternative currency payouts are cumulative and manual. It takes 1-2 days when your payout limit has been reached to send the payout (because it is manual mode now).",
         "ru":"Выплаты в GRC производятся сразу, выплаты в альтернативных валютах производятся вручную (пока) в течение 1-2 дней по достижению порога выплаты.",
         "de":"Zahlungen in GRC erfolgen sofort, Zahlungen in alternativen Währungen vorerst manuell innerhalb von 1-2 Tagen nach Erreichen der Zahlungsgrenze.",
         "zh":"GRC是即时支付，其他货币支付是货币累积至门限后，由人工进行支付，花费时间是1-2天（因为目前是人工模式）"
         },
 "settings_note":{
-        "en":"Changing alternative (non-GRC) currency or address notice: please note, owed amount linked to address, not to user. If you change address your previous address owed amount will not lost, but won't payed out until payout limit for previous address reached. You can contact admin for manual payout or change address back and receive payout when payout limit reached.",
+        "en":"Changing alternative (non-GRC) currencies or address notice: please note, owed amount is linked to the address, not to user. If you change your address, the previous address owed amount will not be lost, but won't be payed out until your payout limit for it has been reached. You can contact admin for manual payout or for changing your address back and receive a payout when payout limit reached.",
         "ru":"Предупреждение о смене типа валюты на альтернативный: пожалуйста учтите, что долги пула привязаны к адресу, а не к пользователю. Если вы измените адрес, то сумма не потеряется, но и не будет выплачена пока не достигнут порог выплаты. Но вы всегда можете связаться с администратором ресурса для выплаты, или изменить адрес на старый и достигнуть порога выплаты таким образом.",
         "de":"Warnung vor alternativen Währungsänderungen: Bitte beachten Sie, dass die Poolschulden an die Adresse und nicht an den Benutzer gebunden sind. Wenn Sie Ihre Adresse ändern, geht der Betrag nicht verloren, aber er wird erst bei Erreichen der Zahlungsgrenze ausgezahlt. Sie können sich aber immer an den Administrator wenden, um die Zahlung vorzunehmen, oder die Adresse auf die alte Adresse ändern und so die Zahlungsschwelle erreichen.",
         "zh":"更改其他非GRC货币或地址请注意：已拥有的货币量和地址绑定，而不是和用户绑定。如果您更改您之前的地址，已拥有的货币量不会丢失，但是这部分货币不会被发送到之前的地址，直到达到支付门限为止。您可以联系管理员进行人工支付，或者改回地址，在达到门限后收取支付"
